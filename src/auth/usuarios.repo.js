@@ -113,6 +113,44 @@ export function definirSenha(usuarioId, novaSenha) {
   return semSegredos(buscarPorId(usuarioId));
 }
 
+/** A própria pessoa troca a senha — diferente de definirSenha(), exige a atual. */
+export function trocarSenha(usuarioId, novaSenha, senhaAtual) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (!conferirSenha(senhaAtual ?? '', alvo.senha_hash, alvo.senha_salt)) {
+    throw new Error('senha atual incorreta');
+  }
+  return definirSenha(usuarioId, novaSenha);
+}
+
+export function atualizarPerfil(usuarioId, { nome, email } = {}) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+
+  const sets = [];
+  const valores = [];
+
+  if (nome !== undefined) {
+    if (!String(nome).trim()) throw new Error('nome é obrigatório');
+    sets.push('nome = ?');
+    valores.push(String(nome).trim());
+  }
+
+  if (email !== undefined) {
+    const novo = normalizarEmail(email);
+    if (!emailValido(novo)) throw new Error('informe um e-mail válido');
+    const jaUsado = buscarPorEmail(novo);
+    if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este e-mail já está cadastrado');
+    sets.push('email = ?');
+    valores.push(novo);
+  }
+
+  if (!sets.length) return semSegredos(alvo);
+
+  db.prepare(`UPDATE usuarios SET ${sets.join(', ')} WHERE id = ?`).run(...valores, Number(usuarioId));
+  return semSegredos(buscarPorId(usuarioId));
+}
+
 /* ------------------------------------------------------------------ */
 /* Autenticação e sessões                                              */
 /* ------------------------------------------------------------------ */

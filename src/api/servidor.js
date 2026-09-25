@@ -9,6 +9,7 @@ import { rotasColecao } from './routes/colecao.rotas.js';
 import { rotasAdmin } from './routes/admin.rotas.js';
 import { rotasAssinatura } from './routes/assinatura.rotas.js';
 import { rotasPagamento } from './routes/pagamento.rotas.js';
+import { rotasPerfil } from './routes/perfil.rotas.js';
 
 const log = criarLog('api');
 
@@ -55,9 +56,10 @@ export function criarServidor() {
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);
 
-  // Assinatura antes do bloqueio: estas rotas precisam responder justamente
-  // quando a conta está vencida (ex.: para a pessoa conseguir pagar).
+  // Assinatura e perfil antes do bloqueio: precisam responder mesmo com a
+  // conta vencida (ex.: para a pessoa conseguir pagar ou trocar a senha).
   app.use('/api', rotasAssinatura());
+  app.use('/api', rotasPerfil());
 
   // Daqui para baixo, escrita exige assinatura em dia (leitura sempre passa).
   app.use('/api', exigirAssinatura);

@@ -6,7 +6,10 @@ const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'valtatcg-teste-'));
 process.env.DATA_DIR = pastaTemp;
 
 const { db } = await import('../src/db/index.js');
-const { criar, autenticar, abrirSessao, usuarioDaSessao, encerrarSessao } = await import('../src/auth/usuarios.repo.js');
+const {
+  criar, autenticar, abrirSessao, usuarioDaSessao, encerrarSessao,
+  atualizarPerfil, trocarSenha, buscarPorEmail,
+} = await import('../src/auth/usuarios.repo.js');
 
 let falhas = 0;
 function ok(nome, condicao, detalhe = '') {
@@ -48,6 +51,31 @@ encerrarSessao(token);
 ok('sessão encerrada não resolve mais', usuarioDaSessao(token) === null);
 
 ok('token inválido não resolve', usuarioDaSessao('token-que-nao-existe') === null);
+
+const perfilAtualizado = atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local' });
+ok('atualizarPerfil muda nome e e-mail', perfilAtualizado.nome === 'Ana Paula' && perfilAtualizado.email === 'ana2@teste.local');
+
+const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', senha: 'Senha1234' });
+erro = null;
+try {
+  atualizarPerfil(usuario.id, { email: 'bia@teste.local' });
+} catch (e) {
+  erro = e;
+}
+ok('atualizarPerfil recusa e-mail já usado por outra conta', erro?.message.includes('já está cadastrado'));
+
+erro = null;
+try {
+  trocarSenha(usuario.id, 'SenhaNova123', 'senhaErrada');
+} catch (e) {
+  erro = e;
+}
+ok('trocarSenha exige a senha atual certa', erro?.message === 'senha atual incorreta');
+
+trocarSenha(usuario.id, 'SenhaNova123', 'Senha1234');
+ok('trocarSenha com a senha certa funciona', Boolean(autenticar('ana2@teste.local', 'SenhaNova123')));
+ok('a senha antiga para de funcionar', autenticar('ana2@teste.local', 'Senha1234') === null);
+ok('outra conta continua intacta', buscarPorEmail('bia@teste.local')?.id === outraConta.id);
 
 db.close();
 // No Windows o SQLite pode manter um lock residual por alguns instantes

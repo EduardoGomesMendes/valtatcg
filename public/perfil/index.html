@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meu perfil · valtatcg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+</head>
+<body class="app">
+  <header class="topo flex items--center justify--content--between px--6 bg--surface border--bottom">
+    <a href="/colecao/" class="flex items--center gap--2">
+      <span class="marca--ponto bg--primary"></span>
+      <span class="weight--bold tracking--tight">valtatcg</span>
+    </a>
+    <nav class="flex items--center gap--5 topo--links">
+      <a href="/colecao/" class="nao--encolhe text--muted">Coleção</a>
+      <a href="/buscar/" class="nao--encolhe text--muted">Buscar cartas</a>
+      <a href="/assinatura/" class="nao--encolhe text--muted">Assinatura</a>
+      <a href="/perfil/" class="nao--encolhe weight--semibold">Perfil</a>
+      <a href="/admin/" class="nao--encolhe text--muted hidden" id="link-admin">Admin</a>
+    </nav>
+    <button class="botao botao--secundario botao--pequeno nao--encolhe" id="btn-sair">Sair</button>
+  </header>
+  <div class="hidden" id="aviso-assinatura"></div>
+
+  <main class="conteudo conteudo--estreito flex flex--col gap--5">
+    <h1 class="text--xl weight--bold">Meu perfil</h1>
+
+    <section class="cartao p--5 flex flex--col gap--3">
+      <h2 class="text--md weight--semibold">Meus dados</h2>
+      <form class="flex flex--col gap--3" id="form-perfil">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Nome</span>
+          <input class="campo" type="text" name="nome" required>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">E-mail</span>
+          <input class="campo" type="email" name="email" required>
+        </label>
+        <span class="text--xs text--muted" id="criado-em"></span>
+        <p class="hidden" id="aviso-perfil"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-salvar-perfil">Salvar</button>
+      </form>
+    </section>
+
+    <section class="cartao p--5 flex flex--col gap--3">
+      <h2 class="text--md weight--semibold">Trocar senha</h2>
+      <form class="flex flex--col gap--3" id="form-senha">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Senha atual</span>
+          <input class="campo" type="password" name="senhaAtual" autocomplete="current-password" required>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Senha nova</span>
+          <input class="campo" type="password" name="senhaNova" autocomplete="new-password" required minlength="8">
+        </label>
+        <p class="text--xs text--muted">Pelo menos 8 caracteres, com letra e número.</p>
+        <p class="hidden" id="aviso-senha"></p>
+        <button class="botao botao--secundario w--full" type="submit" id="btn-trocar-senha">Trocar senha</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="../assets/js/perfil.js"></script>
+</body>
+</html>
