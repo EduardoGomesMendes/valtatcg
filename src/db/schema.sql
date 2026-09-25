@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email TEXT NOT NULL UNIQUE,
   senha_hash TEXT NOT NULL,
   senha_salt TEXT NOT NULL,
+  admin INTEGER NOT NULL DEFAULT 0,
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

@@ -1,4 +1,6 @@
-import { api, avisar, el } from './api.js';
+import { api, avisar, el, mostrarNavAdminSeAplicavel } from './api.js';
+
+mostrarNavAdminSeAplicavel();
 
 const $detalhe = document.getElementById('detalhe');
 const $aviso = document.getElementById('aviso');

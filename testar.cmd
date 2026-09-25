@@ -14,4 +14,7 @@ echo.
 echo  --- precos ---
 node testes/precos.teste.js
 echo.
+echo  --- admin ---
+node testes/admin.teste.js
+echo.
 pause

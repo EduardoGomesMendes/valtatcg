@@ -12,10 +12,11 @@
     "dev": "node --watch src/index.js",
     "db:reset": "node src/db/reset.js",
     "db:seed": "node src/db/seed.js",
-    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js",
+    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js && node testes/admin.teste.js",
     "test:acesso": "node testes/acesso.teste.js",
     "test:colecao": "node testes/colecao.teste.js",
-    "test:precos": "node testes/precos.teste.js"
+    "test:precos": "node testes/precos.teste.js",
+    "test:admin": "node testes/admin.teste.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

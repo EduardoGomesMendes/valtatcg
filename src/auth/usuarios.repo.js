@@ -160,3 +160,42 @@ export function encerrarSessao(token) {
   if (!token) return;
   db.prepare('DELETE FROM sessoes WHERE token_hash = ?').run(hashDoToken(token));
 }
+
+/* ------------------------------------------------------------------ */
+/* Administração                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Lista todos os usuários com a quantidade de cartas na coleção de cada um. */
+export function listarTodos() {
+  return db.prepare(`
+    SELECT u.id, u.nome, u.email, u.admin, u.criado_em,
+           COUNT(ci.id) AS itens_na_colecao
+    FROM usuarios u
+    LEFT JOIN colecao_item ci ON ci.usuario_id = u.id
+    GROUP BY u.id
+    ORDER BY u.criado_em DESC
+  `).all();
+}
+
+export function contarAdmins() {
+  return db.prepare('SELECT COUNT(*) AS n FROM usuarios WHERE admin = 1').get().n;
+}
+
+export function definirAdmin(id, valor) {
+  const alvo = buscarPorId(id);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (!valor && alvo.admin && contarAdmins() <= 1) {
+    throw new Error('este é o único administrador — promova outra conta antes de tirar o acesso desta');
+  }
+  db.prepare('UPDATE usuarios SET admin = ? WHERE id = ?').run(valor ? 1 : 0, Number(id));
+  return semSegredos(buscarPorId(id));
+}
+
+export function excluirComoAdmin(id) {
+  const alvo = buscarPorId(id);
+  if (!alvo) return;
+  if (alvo.admin && contarAdmins() <= 1) {
+    throw new Error('este é o único administrador — promova outra conta antes de excluir esta');
+  }
+  db.prepare('DELETE FROM usuarios WHERE id = ?').run(Number(id));
+}

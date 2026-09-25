@@ -78,3 +78,13 @@ export function dataBr(iso) {
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
+
+/** Mostra o link "Admin" do menu para quem tem acesso — chamado por toda página logada. */
+export async function mostrarNavAdminSeAplicavel() {
+  try {
+    const estado = await api('/estado');
+    if (estado.usuario?.admin) document.getElementById('link-admin')?.classList.remove('hidden');
+  } catch {
+    // silencioso: se a sessão for inválida, o próximo api() da página já redireciona.
+  }
+}

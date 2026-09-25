@@ -30,6 +30,18 @@ try {
 
 db.exec(fs.readFileSync(path.join(aqui, 'schema.sql'), 'utf8'));
 
+/*
+  Migração pontual: `admin` nasceu depois do schema original já estar em
+  produção, então CREATE TABLE IF NOT EXISTS não adiciona a coluna sozinho.
+  Uma checagem de coluna + ALTER TABLE resolve sem precisar de um framework
+  de migração inteiro para uma coluna só.
+*/
+const colunasUsuarios = db.prepare("PRAGMA table_info(usuarios)").all().map((c) => c.name);
+if (!colunasUsuarios.includes('admin')) {
+  db.exec('ALTER TABLE usuarios ADD COLUMN admin INTEGER NOT NULL DEFAULT 0');
+  log.info('coluna "admin" adicionada em usuarios');
+}
+
 log.info(`banco pronto em ${caminhoBanco}`);
 
 /** Roda várias escritas como uma transação única. */

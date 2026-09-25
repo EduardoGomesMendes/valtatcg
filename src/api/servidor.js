@@ -6,6 +6,7 @@ import { identificar, exigirLogin } from './autenticacao.js';
 import { rotasAcesso } from './routes/acesso.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
+import { rotasAdmin } from './routes/admin.rotas.js';
 
 const log = criarLog('api');
 
@@ -50,6 +51,7 @@ export function criarServidor() {
   app.use('/api', exigirLogin);
   app.use('/api', rotasCartas());
   app.use('/api', rotasColecao());
+  app.use('/api', rotasAdmin());
 
   app.use('/api', (req, res) => res.status(404).json({ erro: 'rota não encontrada' }));
 

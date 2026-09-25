@@ -322,6 +322,22 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 }
 
 /* ==========================================================================
+   Selos (badges)
+   ========================================================================== */
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.selo--sucesso { background-color: var(--color-primary-light); color: var(--color-primary); }
+
+/* ==========================================================================
    Cartas de coleção / resultados de busca
    ========================================================================== */
 

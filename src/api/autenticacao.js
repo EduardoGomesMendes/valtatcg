@@ -51,6 +51,12 @@ export function exigirLogin(req, res, next) {
   next();
 }
 
+/** Usar sempre depois de exigirLogin — bloqueia quem não é administrador. */
+export function exigirAdmin(req, res, next) {
+  if (!req.usuario?.admin) return res.status(403).json({ erro: 'só administradores têm acesso' });
+  next();
+}
+
 /**
  * Freio contra força bruta no login: conta as tentativas falhas por
  * IP + e-mail. Em memória — reinicia junto com o processo, suficiente para
