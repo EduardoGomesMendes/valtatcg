@@ -92,6 +92,27 @@ export function criar({ nome, email, senha }) {
   return semSegredos(buscarPorId(info.lastInsertRowid));
 }
 
+/**
+ * Define uma senha nova para a conta, sem exigir a antiga.
+ *
+ * Existe para o admin resolver "esqueci minha senha" na mão — o valtatcg
+ * ainda não tem um fluxo de recuperação por e-mail, então isto é o caminho
+ * até lá existir (ver src/db/definir-senha.js).
+ */
+export function definirSenha(usuarioId, novaSenha) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+
+  const problema = validarSenha(novaSenha);
+  if (problema) throw new Error(problema);
+
+  const { hash, salt } = gerarHash(novaSenha);
+  db.prepare('UPDATE usuarios SET senha_hash = ?, senha_salt = ? WHERE id = ?')
+    .run(hash, salt, Number(usuarioId));
+
+  return semSegredos(buscarPorId(usuarioId));
+}
+
 /* ------------------------------------------------------------------ */
 /* Autenticação e sessões                                              */
 /* ------------------------------------------------------------------ */
