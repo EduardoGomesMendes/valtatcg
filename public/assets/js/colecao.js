@@ -1,6 +1,6 @@
-import { api, avisar, el, limpar, dolar, mostrarNavAdminSeAplicavel } from './api.js';
+import { api, avisar, el, limpar, dolar, prepararCabecalho } from './api.js';
 
-mostrarNavAdminSeAplicavel();
+prepararCabecalho();
 
 const $valorAtual = document.getElementById('valor-atual');
 const $valorCusto = document.getElementById('valor-custo');

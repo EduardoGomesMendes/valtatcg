@@ -37,4 +37,29 @@ export const config = {
     // Vazio funciona (limite de requisições menor). Cadastro em pokemontcg.io.
     chave: process.env.POKEMONTCG_API_KEY || '',
   },
+
+  assinatura: {
+    // Dias de uso grátis desde o cadastro, antes de exigir pagamento.
+    diasDeTeste: num(process.env.DIAS_DE_TESTE, 7),
+    // Plano único — sem isto o valtatcg não teria como cobrar ninguém.
+    precoMensal: num(process.env.PRECO_MENSAL, 9.97),
+  },
+
+  pagamento: {
+    provedor: (process.env.PAGAMENTO_PROVIDER || 'asaas').toLowerCase(),
+    chave: process.env.ASAAS_API_KEY || '',
+    /*
+      sandbox é o padrão de propósito: enquanto ninguém trocar isto de forma
+      consciente, nenhum cliente real é cobrado. Sandbox e produção têm contas
+      e chaves separadas — a chave de um não funciona no outro.
+    */
+    ambiente: (process.env.ASAAS_AMBIENTE || 'sandbox').toLowerCase() === 'producao' ? 'producao' : 'sandbox',
+    /*
+      Segredo combinado com o Asaas, enviado por ele no header
+      `asaas-access-token` de cada notificação. NUNCA use a chave da API aqui:
+      o token do webhook viaja para dentro do nosso servidor a cada evento, e
+      quem o roubar não pode ganhar acesso à conta do Asaas junto.
+    */
+    tokenWebhook: process.env.ASAAS_WEBHOOK_TOKEN || '',
+  },
 };

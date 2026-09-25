@@ -5,6 +5,14 @@ CREATE TABLE IF NOT EXISTS usuarios (
   senha_hash TEXT NOT NULL,
   senha_salt TEXT NOT NULL,
   admin INTEGER NOT NULL DEFAULT 0,
+  -- teste | ativa | vencida | cancelada (ver src/assinaturas/assinaturas.repo.js)
+  assinatura_status TEXT NOT NULL DEFAULT 'teste',
+  teste_termina_em TEXT,
+  assinatura_expira_em TEXT,
+  documento TEXT,
+  email_cobranca TEXT,
+  asaas_cliente_id TEXT,
+  asaas_assinatura_id TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -61,3 +69,35 @@ CREATE TABLE IF NOT EXISTS preco_historico (
 
 CREATE INDEX IF NOT EXISTS idx_colecao_item_usuario ON colecao_item(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_preco_historico_carta ON preco_historico(carta_id, data);
+
+-- Histórico legível da assinatura de cada usuário (início de teste, ativação,
+-- cancelamento) — é o que a tela de admin mostra para explicar o estado atual.
+CREATE TABLE IF NOT EXISTS assinatura_eventos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  tipo TEXT NOT NULL,   -- teste | ativacao | cancelamento | cobranca
+  descricao TEXT NOT NULL,
+  valor REAL,
+  ator TEXT NOT NULL DEFAULT 'sistema',
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_assinatura_eventos_usuario ON assinatura_eventos(usuario_id, id DESC);
+
+-- Notificações cruas do gateway de pagamento, para auditoria e para o
+-- webhook nunca aplicar o mesmo evento duas vezes (INSERT OR IGNORE + UNIQUE).
+CREATE TABLE IF NOT EXISTS pagamento_eventos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  provedor TEXT NOT NULL DEFAULT 'asaas',
+  evento TEXT NOT NULL,          -- PAYMENT_RECEIVED, PAYMENT_OVERDUE, ...
+  acao TEXT NOT NULL,            -- pagou | atrasou | estornou
+  referencia TEXT NOT NULL,      -- id da cobrança no gateway
+  -- Sem FOREIGN KEY de propósito: é registro financeiro. O evento pode não
+  -- casar com usuário nenhum, e apagar um usuário não pode apagar a prova
+  -- de que ele pagou.
+  usuario_id INTEGER,
+  valor REAL,
+  corpo TEXT NOT NULL,           -- JSON cru, para auditoria e reprocessamento
+  recebido_em TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (provedor, acao, referencia)
+);

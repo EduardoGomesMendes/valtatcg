@@ -27,6 +27,12 @@ export async function api(caminho, opcoes = {}) {
       window.location.href = `/entrar/?destino=${destino}`;
       throw new Error('não autenticado');
     }
+    // Assinatura vencida: em vez de um erro seco, diz o que fazer. Não
+    // redireciona sozinho para não jogar fora o que a pessoa estava fazendo.
+    if (resposta.status === 402) {
+      const onde = window.location.pathname.startsWith('/assinatura/') ? '' : ' Abra "Assinatura" no menu para regularizar.';
+      throw new Error(`${corpo?.erro ?? 'Assinatura inativa.'}${onde}`);
+    }
     const erro = new Error(corpo?.erro || `erro ${resposta.status}`);
     erro.status = resposta.status;
     erro.corpo = corpo;
@@ -79,12 +85,43 @@ export function dataBr(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-/** Mostra o link "Admin" do menu para quem tem acesso — chamado por toda página logada. */
-export async function mostrarNavAdminSeAplicavel() {
+/**
+ * Prepara o cabeçalho de toda página logada: mostra o link "Admin" para quem
+ * tem acesso, e o aviso de teste/assinatura para quem não é admin (o admin
+ * não paga a própria assinatura — ver exigirAssinatura no servidor).
+ */
+export async function prepararCabecalho() {
+  let estado;
   try {
-    const estado = await api('/estado');
-    if (estado.usuario?.admin) document.getElementById('link-admin')?.classList.remove('hidden');
+    estado = await api('/estado');
   } catch {
-    // silencioso: se a sessão for inválida, o próximo api() da página já redireciona.
+    return; // sessão inválida: o próximo api() da página já redireciona.
   }
+
+  if (estado.usuario?.admin) {
+    document.getElementById('link-admin')?.classList.remove('hidden');
+    return;
+  }
+
+  const $aviso = document.getElementById('aviso-assinatura');
+  if (!$aviso) return;
+
+  try {
+    const situacao = await api('/assinatura');
+    if (situacao.bloqueado) {
+      mostrarAvisoAssinatura($aviso, situacao.motivo ?? 'Assinatura inativa.', 'aviso--bloqueio');
+    } else if (situacao.status === 'teste' && situacao.avisar) {
+      mostrarAvisoAssinatura($aviso, `Período de teste — ${situacao.diasRestantes} dia(s) restante(s).`, 'aviso--atencao');
+    }
+  } catch {
+    // se a checagem falhar, só não mostra o aviso — não é motivo para travar a página.
+  }
+}
+
+function mostrarAvisoAssinatura(elemento, mensagem, classeTom) {
+  elemento.textContent = `${mensagem} `;
+  const link = el('a', 'weight--semibold', 'Abrir assinatura');
+  link.href = '/assinatura/';
+  elemento.append(link);
+  elemento.className = `aviso--assinatura ${classeTom}`;
 }

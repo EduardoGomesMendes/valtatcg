@@ -31,16 +31,37 @@ try {
 db.exec(fs.readFileSync(path.join(aqui, 'schema.sql'), 'utf8'));
 
 /*
-  Migração pontual: `admin` nasceu depois do schema original já estar em
-  produção, então CREATE TABLE IF NOT EXISTS não adiciona a coluna sozinho.
-  Uma checagem de coluna + ALTER TABLE resolve sem precisar de um framework
-  de migração inteiro para uma coluna só.
+  Migração pontual: colunas que nasceram depois do schema original já estar
+  em produção, então CREATE TABLE IF NOT EXISTS não as adiciona sozinho. Uma
+  checagem de coluna + ALTER TABLE resolve sem precisar de um framework de
+  migração inteiro para meia dúzia de colunas.
 */
-const colunasUsuarios = db.prepare("PRAGMA table_info(usuarios)").all().map((c) => c.name);
-if (!colunasUsuarios.includes('admin')) {
-  db.exec('ALTER TABLE usuarios ADD COLUMN admin INTEGER NOT NULL DEFAULT 0');
-  log.info('coluna "admin" adicionada em usuarios');
+function adicionarColunaSeFaltando(tabela, coluna, definicao) {
+  const colunas = db.prepare(`PRAGMA table_info(${tabela})`).all().map((c) => c.name);
+  if (colunas.includes(coluna)) return;
+  db.exec(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${definicao}`);
+  log.info(`coluna "${coluna}" adicionada em ${tabela}`);
 }
+
+adicionarColunaSeFaltando('usuarios', 'admin', 'INTEGER NOT NULL DEFAULT 0');
+adicionarColunaSeFaltando('usuarios', 'assinatura_status', "TEXT NOT NULL DEFAULT 'teste'");
+adicionarColunaSeFaltando('usuarios', 'teste_termina_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'assinatura_expira_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'documento', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'email_cobranca', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'asaas_cliente_id', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'asaas_assinatura_id', 'TEXT');
+
+/*
+  Contas que já existiam antes desta coluna nascem com assinatura_status =
+  'teste' (o DEFAULT), mas sem teste_termina_em — sem isto, o cálculo de dias
+  restantes trataria como teste já vencido e bloquearia todo mundo que já
+  estava cadastrado, do nada, no dia em que este código subiu.
+*/
+db.prepare(
+  `UPDATE usuarios SET teste_termina_em = datetime('now', ?)
+    WHERE assinatura_status = 'teste' AND teste_termina_em IS NULL`,
+).run(`+${config.assinatura.diasDeTeste} days`);
 
 log.info(`banco pronto em ${caminhoBanco}`);
 

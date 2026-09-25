@@ -2,11 +2,13 @@ import express from 'express';
 import path from 'node:path';
 import { config } from '../config.js';
 import { criarLog } from '../logger.js';
-import { identificar, exigirLogin } from './autenticacao.js';
+import { identificar, exigirLogin, exigirAssinatura } from './autenticacao.js';
 import { rotasAcesso } from './routes/acesso.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
 import { rotasAdmin } from './routes/admin.rotas.js';
+import { rotasAssinatura } from './routes/assinatura.rotas.js';
+import { rotasPagamento } from './routes/pagamento.rotas.js';
 
 const log = criarLog('api');
 
@@ -46,9 +48,20 @@ export function criarServidor() {
 
   // --- Rotas públicas ---
   app.use('/api', rotasAcesso());
+  // O gateway avisa que alguém pagou; ele não tem sessão aqui. Quem
+  // autentica é o token no header, conferido dentro da própria rota.
+  app.use('/api', rotasPagamento());
 
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);
+
+  // Assinatura antes do bloqueio: estas rotas precisam responder justamente
+  // quando a conta está vencida (ex.: para a pessoa conseguir pagar).
+  app.use('/api', rotasAssinatura());
+
+  // Daqui para baixo, escrita exige assinatura em dia (leitura sempre passa).
+  app.use('/api', exigirAssinatura);
+
   app.use('/api', rotasCartas());
   app.use('/api', rotasColecao());
   app.use('/api', rotasAdmin());

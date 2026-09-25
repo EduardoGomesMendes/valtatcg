@@ -225,6 +225,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   padding: var(--space-6) var(--space-6) var(--space-10);
 }
 
+/* Telas de formulário curto (assinatura) leem melhor estreitas. */
+.conteudo--estreito { max-width: 560px; }
+
 /* Telas sem cabeçalho (login). */
 .tela--centro { min-height: 100vh; }
 .caixa--estreita { width: 100%; max-width: 380px; }
@@ -336,6 +339,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 }
 
 .selo--sucesso { background-color: var(--color-primary-light); color: var(--color-primary); }
+.selo--neutro { background-color: var(--color-surface-alt); color: var(--color-text-muted); }
 
 /* ==========================================================================
    Cartas de coleção / resultados de busca
@@ -372,6 +376,28 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
 }
+
+/* ==========================================================================
+   Assinatura — faixa fixa abaixo do cabeçalho
+   ========================================================================== */
+
+.aviso--assinatura {
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.aviso--atencao {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.aviso--bloqueio {
+  background-color: var(--color-danger);
+  color: var(--color-text-invert);
+}
+
+.aviso--bloqueio a { text-decoration: underline; }
 
 /* ==========================================================================
    Responsivo — mobile-first por exceção

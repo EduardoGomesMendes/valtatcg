@@ -1,6 +1,6 @@
-import { api, avisar, el, limpar, mostrarNavAdminSeAplicavel } from './api.js';
+import { api, avisar, el, limpar, prepararCabecalho } from './api.js';
 
-mostrarNavAdminSeAplicavel();
+prepararCabecalho();
 
 const $form = document.getElementById('form-busca');
 const $resultados = document.getElementById('resultados');

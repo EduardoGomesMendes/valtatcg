@@ -24,7 +24,14 @@
 
 .flex { display: flex; }
 .inline--flex { display: inline-flex; }
-.hidden { display: none; }
+/*
+  !important de propósito: esta é a classe que qualquer JS usa para
+  esconder algo, mesmo um elemento cuja própria classe de componente (ex.:
+  .botao, .selo) também define `display`. Sem isto, a ordem de carga das
+  folhas de estilo decide quem vence — e um projeto que carregue project.css
+  depois de global.css veria ".botao.hidden" continuar visível.
+*/
+.hidden { display: none !important; }
 
 /* ==========================================================================
    flex-direction

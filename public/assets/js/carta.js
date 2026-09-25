@@ -1,6 +1,6 @@
-import { api, avisar, el, mostrarNavAdminSeAplicavel } from './api.js';
+import { api, avisar, el, prepararCabecalho } from './api.js';
 
-mostrarNavAdminSeAplicavel();
+prepararCabecalho();
 
 const $detalhe = document.getElementById('detalhe');
 const $aviso = document.getElementById('aviso');

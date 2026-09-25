@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as usuarios from '../../auth/usuarios.repo.js';
+import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -19,6 +20,25 @@ export function rotasAdmin() {
       }
       const usuario = usuarios.definirAdmin(req.params.id, Boolean(req.body?.admin));
       res.json({ usuario });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /**
+   * Libera ou renova manualmente — usado enquanto o gateway não entra, e
+   * como escape para qualquer caso que o automático não cubra.
+   */
+  rotas.post('/admin/usuarios/:id/assinatura', (req, res) => {
+    const dias = Number(req.body?.dias);
+    if (!(dias > 0)) return res.status(400).json({ erro: 'informe quantos dias liberar' });
+    try {
+      const situacao = assinaturas.ativar(req.params.id, {
+        dias,
+        ator: req.usuario.nome,
+        descricao: `Liberado manualmente por ${req.usuario.nome}.`,
+      });
+      res.json(situacao);
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

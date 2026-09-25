@@ -9,6 +9,18 @@ $btnSair.addEventListener('click', async () => {
   window.location.href = '/entrar/';
 });
 
+const ROTULOS_STATUS = {
+  teste: 'Teste', ativa: 'Ativa', vencida: 'Vencida', cancelada: 'Cancelada',
+};
+
+function seloAssinatura(usuario) {
+  const rotulo = ROTULOS_STATUS[usuario.assinatura_status] ?? usuario.assinatura_status;
+  const data = usuario.assinatura_status === 'ativa' ? usuario.assinatura_expira_em : usuario.teste_termina_em;
+  const texto = data ? `${rotulo} · até ${dataBr(data)}` : rotulo;
+  const tom = usuario.assinatura_status === 'ativa' ? 'selo--sucesso' : 'selo--neutro';
+  return el('span', `selo ${tom}`, texto);
+}
+
 function linhaUsuario(usuario) {
   const linha = el('article', 'cartao p--4 flex items--center justify--content--between gap--4', '');
 
@@ -16,6 +28,7 @@ function linhaUsuario(usuario) {
   const nomeELinha = el('div', 'flex items--center gap--2', '');
   nomeELinha.append(el('span', 'weight--semibold text--truncate', usuario.nome));
   if (usuario.admin) nomeELinha.append(el('span', 'selo selo--sucesso', 'Admin'));
+  nomeELinha.append(seloAssinatura(usuario));
   info.append(nomeELinha);
   info.append(el('span', 'text--sm text--muted text--truncate', usuario.email));
   info.append(el(
@@ -43,6 +56,25 @@ function linhaUsuario(usuario) {
     }
   });
   acoes.append(btnAdmin);
+
+  const btnLiberar = el('button', 'botao botao--secundario botao--pequeno', 'Liberar dias');
+  btnLiberar.type = 'button';
+  btnLiberar.addEventListener('click', async () => {
+    const dias = Number(prompt(`Quantos dias liberar para "${usuario.nome}"?`, '30'));
+    if (!(dias > 0)) return;
+    btnLiberar.disabled = true;
+    try {
+      await api(`/admin/usuarios/${usuario.id}/assinatura`, {
+        method: 'POST',
+        body: JSON.stringify({ dias }),
+      });
+      carregar();
+    } catch (erro) {
+      avisar($aviso, erro.message);
+      btnLiberar.disabled = false;
+    }
+  });
+  acoes.append(btnLiberar);
 
   const btnExcluir = el('button', 'botao botao--perigo botao--pequeno', 'Excluir');
   btnExcluir.type = 'button';

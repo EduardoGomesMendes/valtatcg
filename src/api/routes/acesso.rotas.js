@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as usuarios from '../../auth/usuarios.repo.js';
+import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import {
   gravarCookieSessao, apagarCookieSessao,
   registrarFalhaDeLogin, loginBloqueado, limparFalhas,
@@ -15,6 +16,7 @@ export function rotasAcesso() {
   rotas.post('/registrar', (req, res) => {
     try {
       const usuario = usuarios.criar(req.body ?? {});
+      assinaturas.iniciarTeste(usuario.id);
       const token = usuarios.abrirSessao(usuario.id);
       gravarCookieSessao(res, token);
       res.status(201).json({ usuario });

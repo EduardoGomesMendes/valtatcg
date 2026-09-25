@@ -17,4 +17,7 @@ echo.
 echo  --- admin ---
 node testes/admin.teste.js
 echo.
+echo  --- assinaturas ---
+node testes/assinaturas.teste.js
+echo.
 pause

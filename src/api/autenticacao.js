@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { usuarioDaSessao } from '../auth/usuarios.repo.js';
+import { estadoDoUsuario } from '../assinaturas/assinaturas.repo.js';
 
 export const NOME_COOKIE = 'valtatcg_sessao';
 
@@ -54,6 +55,34 @@ export function exigirLogin(req, res, next) {
 /** Usar sempre depois de exigirLogin — bloqueia quem não é administrador. */
 export function exigirAdmin(req, res, next) {
   if (!req.usuario?.admin) return res.status(403).json({ erro: 'só administradores têm acesso' });
+  next();
+}
+
+/**
+ * Assinatura vencida: bloqueia as ESCRITAS, deixa a leitura passar.
+ *
+ * A pessoa continua entrando, vendo a própria coleção e conferindo o preço
+ * das cartas — o que corta é adicionar/editar/remover até regularizar.
+ * Sequestrar o dado para forçar pagamento gera atrito e problema de LGPD;
+ * parar o serviço não.
+ */
+export function exigirAssinatura(req, res, next) {
+  if (req.method === 'GET' || req.method === 'HEAD') return next();
+
+  // Precisam funcionar justamente quando está bloqueado.
+  if (req.path.startsWith('/assinatura') || req.path.startsWith('/sair')) return next();
+
+  // O admin não paga assinatura própria — ele é quem cobra, não quem é cobrado.
+  if (req.usuario.admin) return next();
+
+  const situacao = estadoDoUsuario(req.usuario.id);
+  if (situacao.bloqueado) {
+    return res.status(402).json({
+      erro: situacao.motivo ?? 'assinatura inativa',
+      bloqueado: true,
+      assinatura: situacao,
+    });
+  }
   next();
 }
 

@@ -169,6 +169,7 @@ export function encerrarSessao(token) {
 export function listarTodos() {
   return db.prepare(`
     SELECT u.id, u.nome, u.email, u.admin, u.criado_em,
+           u.assinatura_status, u.teste_termina_em, u.assinatura_expira_em,
            COUNT(ci.id) AS itens_na_colecao
     FROM usuarios u
     LEFT JOIN colecao_item ci ON ci.usuario_id = u.id
