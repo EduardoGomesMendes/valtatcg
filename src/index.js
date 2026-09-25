@@ -3,6 +3,7 @@ import { criarLog } from './logger.js';
 import { criarServidor } from './api/servidor.js';
 import './db/index.js'; // cria/abre o banco antes de qualquer coisa
 import { iniciarJobDePrecos } from './portfolio/precos.job.js';
+import { pagamento } from './pagamento/index.js';
 
 const log = criarLog('sistema');
 
@@ -59,6 +60,13 @@ async function abrirPorta(app) {
 async function iniciar() {
   console.log('');
   log.info('valtatcg iniciando...');
+
+  /*
+    Decide o gateway agora, no boot, e não na primeira cobrança: quem acabou
+    de mexer na chave precisa ver o resultado no log imediatamente, não
+    descobrir num evento de webhook.
+  */
+  pagamento();
 
   const app = criarServidor();
   const servidor = await abrirPorta(app);
