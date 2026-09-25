@@ -1,0 +1,183 @@
+/*
+  global.css
+  CSS agnóstico e reutilizável (ver .claude/skills/arquitetura-pastas/SKILL.md).
+  Contém apenas classes utilitárias de Flexbox — sem cores, sem marca, sem conteúdo
+  específico de projeto. Deve poder ser copiado para outro projeto sem alteração.
+
+  Nomenclatura: separador "--" entre palavras no nome das classes
+  (ver .claude/agents/rules/nomenclatura-classes.md).
+*/
+
+/* ==========================================================================
+   Reset mínimo agnóstico (apoio ao Flexbox)
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Display
+   ========================================================================== */
+
+.flex { display: flex; }
+.inline--flex { display: inline-flex; }
+.hidden { display: none; }
+
+/* ==========================================================================
+   flex-direction
+   ========================================================================== */
+
+.flex--row { flex-direction: row; }
+.flex--row--reverse { flex-direction: row-reverse; }
+.flex--col { flex-direction: column; }
+.flex--col--reverse { flex-direction: column-reverse; }
+
+/* ==========================================================================
+   flex-wrap
+   ========================================================================== */
+
+.flex--wrap { flex-wrap: wrap; }
+.flex--nowrap { flex-wrap: nowrap; }
+.flex--wrap--reverse { flex-wrap: wrap-reverse; }
+
+/* ==========================================================================
+   justify-content
+   ========================================================================== */
+
+.justify--content--start { justify-content: flex-start; }
+.justify--content--end { justify-content: flex-end; }
+.justify--content--center { justify-content: center; }
+.justify--content--between { justify-content: space-between; }
+.justify--content--around { justify-content: space-around; }
+.justify--content--evenly { justify-content: space-evenly; }
+
+/* ==========================================================================
+   align-items
+   ========================================================================== */
+
+.items--start { align-items: flex-start; }
+.items--end { align-items: flex-end; }
+.items--center { align-items: center; }
+.items--baseline { align-items: baseline; }
+.items--stretch { align-items: stretch; }
+
+/* ==========================================================================
+   align-content
+   ========================================================================== */
+
+.content--start { align-content: flex-start; }
+.content--end { align-content: flex-end; }
+.content--center { align-content: center; }
+.content--between { align-content: space-between; }
+.content--around { align-content: space-around; }
+.content--evenly { align-content: space-evenly; }
+.content--stretch { align-content: stretch; }
+
+/* ==========================================================================
+   align-self
+   ========================================================================== */
+
+.self--auto { align-self: auto; }
+.self--start { align-self: flex-start; }
+.self--end { align-self: flex-end; }
+.self--center { align-self: center; }
+.self--baseline { align-self: baseline; }
+.self--stretch { align-self: stretch; }
+
+/* ==========================================================================
+   flex (shorthand grow/shrink/basis)
+   ========================================================================== */
+
+.flex--1 { flex: 1 1 0%; }
+.flex--auto { flex: 1 1 auto; }
+.flex--initial { flex: 0 1 auto; }
+.flex--none { flex: none; }
+
+/* ==========================================================================
+   flex-grow / flex-shrink
+   ========================================================================== */
+
+.grow--0 { flex-grow: 0; }
+.grow--1 { flex-grow: 1; }
+
+.shrink--0 { flex-shrink: 0; }
+.shrink--1 { flex-shrink: 1; }
+
+/* ==========================================================================
+   flex-basis
+   ========================================================================== */
+
+.basis--auto { flex-basis: auto; }
+.basis--0 { flex-basis: 0%; }
+.basis--full { flex-basis: 100%; }
+.basis--1--2 { flex-basis: 50%; }
+.basis--1--3 { flex-basis: 33.3333%; }
+.basis--2--3 { flex-basis: 66.6667%; }
+.basis--1--4 { flex-basis: 25%; }
+.basis--3--4 { flex-basis: 75%; }
+
+/* ==========================================================================
+   order
+   ========================================================================== */
+
+.order--first { order: -9999; }
+.order--last { order: 9999; }
+.order--none { order: 0; }
+.order--1 { order: 1; }
+.order--2 { order: 2; }
+.order--3 { order: 3; }
+.order--4 { order: 4; }
+.order--5 { order: 5; }
+.order--6 { order: 6; }
+
+/* ==========================================================================
+   gap / row-gap / column-gap
+   Escala consistente em incrementos de 4px.
+   ========================================================================== */
+
+.gap--0 { gap: 0; }
+.gap--1 { gap: 4px; }
+.gap--2 { gap: 8px; }
+.gap--3 { gap: 12px; }
+.gap--4 { gap: 16px; }
+.gap--5 { gap: 20px; }
+.gap--6 { gap: 24px; }
+.gap--8 { gap: 32px; }
+.gap--10 { gap: 40px; }
+.gap--12 { gap: 48px; }
+
+.row--gap--0 { row-gap: 0; }
+.row--gap--1 { row-gap: 4px; }
+.row--gap--2 { row-gap: 8px; }
+.row--gap--3 { row-gap: 12px; }
+.row--gap--4 { row-gap: 16px; }
+.row--gap--5 { row-gap: 20px; }
+.row--gap--6 { row-gap: 24px; }
+.row--gap--8 { row-gap: 32px; }
+.row--gap--10 { row-gap: 40px; }
+.row--gap--12 { row-gap: 48px; }
+
+.column--gap--0 { column-gap: 0; }
+.column--gap--1 { column-gap: 4px; }
+.column--gap--2 { column-gap: 8px; }
+.column--gap--3 { column-gap: 12px; }
+.column--gap--4 { column-gap: 16px; }
+.column--gap--5 { column-gap: 20px; }
+.column--gap--6 { column-gap: 24px; }
+.column--gap--8 { column-gap: 32px; }
+.column--gap--10 { column-gap: 40px; }
+.column--gap--12 { column-gap: 48px; }
+
+/* ==========================================================================
+   Utilitários de apoio ao Flexbox
+   Evitam bugs comuns de overflow/truncamento em itens flex.
+   ========================================================================== */
+
+.min-w--0 { min-width: 0; }
+.min-h--0 { min-height: 0; }
+
+.w--full { width: 100%; }
+.h--full { height: 100%; }

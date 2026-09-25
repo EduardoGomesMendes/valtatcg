@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · valtatcg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+</head>
+<body>
+  <main class="tela--centro flex flex--col items--center justify--content--center p--6 gap--6">
+
+    <section class="flex flex--col items--center gap--2">
+      <span class="marca--ponto marca--grande bg--primary"></span>
+      <h1 class="text--xl weight--bold tracking--tight">valtatcg</h1>
+      <p class="text--sm text--muted">Rastreie o valor da sua coleção de cartas.</p>
+    </section>
+
+    <section class="cartao p--6 flex flex--col gap--4 caixa--estreita">
+      <div class="flex gap--2" id="abas">
+        <button class="botao botao--primario flex--1" type="button" id="aba-entrar" aria-pressed="true">Entrar</button>
+        <button class="botao botao--secundario flex--1" type="button" id="aba-registrar" aria-pressed="false">Criar conta</button>
+      </div>
+
+      <form class="flex flex--col gap--3" id="form-entrar">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">E-mail</span>
+          <input class="campo" type="email" name="email" autocomplete="username" required autofocus>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Senha</span>
+          <input class="campo" type="password" name="senha" autocomplete="current-password" required>
+        </label>
+        <p class="hidden" id="aviso-entrar"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-entrar">Entrar</button>
+      </form>
+
+      <form class="hidden flex flex--col gap--3" id="form-registrar">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Nome</span>
+          <input class="campo" type="text" name="nome" autocomplete="name" required>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">E-mail</span>
+          <input class="campo" type="email" name="email" autocomplete="username" required>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Senha</span>
+          <input class="campo" type="password" name="senha" autocomplete="new-password" required minlength="8">
+        </label>
+        <p class="text--xs text--muted">Pelo menos 8 caracteres, com letra e número.</p>
+        <p class="hidden" id="aviso-registrar"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-registrar">Criar conta</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="../assets/js/entrar.js"></script>
+</body>
+</html>

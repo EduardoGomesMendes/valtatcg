@@ -1,0 +1,366 @@
+/*
+  project.css
+  CSS específico deste projeto (valtatcg).
+  - Tokens (cor, tipografia, espaçamento, radius, sombra) ficam só aqui, em :root.
+  - Nenhuma cor literal fora do :root.
+  - Nomes de classe com "--" entre palavras.
+  - Layout 100% Flexbox — nenhum display:grid.
+*/
+
+/* ==========================================================================
+   Tokens
+   ========================================================================== */
+
+:root {
+  /* --- Marca: fundo escuro + verde-água --- */
+  --color-primary: #2fe3a6;
+  --color-primary-dark: #22b784;
+  --color-primary-light: #143329;
+
+  /* --- Neutras (tema escuro) --- */
+  --color-bg: #0b120f;
+  --color-surface: #121b17;
+  --color-surface-alt: #1a2620;
+  --color-border: #223129;
+  --color-text: #eaf3ee;
+  --color-text-muted: #8fa79c;
+  --color-text-invert: #06110c;
+
+  /* --- Feedback --- */
+  --color-success: #3ddc84;
+  --color-warning: #e2b93b;
+  --color-danger: #f2555a;
+  --color-info: #4ea1f2;
+
+  /* --- Tipografia --- */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-md: 18px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 32px;
+
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.3;
+  --line-height-normal: 1.5;
+  --tracking-tight: -0.02em;
+
+  /* --- Espaçamento (complementa a escala de gap do global.css) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* --- Arredondamento --- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* --- Sombra --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.44);
+
+  --largura-max: 1200px;
+  --altura-topo: 64px;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, figure { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+
+/* ==========================================================================
+   Cor — texto
+   ========================================================================== */
+
+.text--default { color: var(--color-text); }
+.text--muted { color: var(--color-text-muted); }
+.text--invert { color: var(--color-text-invert); }
+.text--primary { color: var(--color-primary); }
+.text--success { color: var(--color-success); }
+.text--warning { color: var(--color-warning); }
+.text--danger { color: var(--color-danger); }
+
+/* ==========================================================================
+   Cor — fundo
+   ========================================================================== */
+
+.bg--surface { background-color: var(--color-surface); }
+.bg--surface--alt { background-color: var(--color-surface-alt); }
+.bg--primary { background-color: var(--color-primary); }
+.bg--primary--light { background-color: var(--color-primary-light); }
+.bg--page { background-color: var(--color-bg); }
+
+/* ==========================================================================
+   Cor — borda
+   ========================================================================== */
+
+.border--default { border: 1px solid var(--color-border); }
+.border--none { border: none; }
+.border--top { border-top: 1px solid var(--color-border); }
+.border--bottom { border-bottom: 1px solid var(--color-border); }
+.border--right { border-right: 1px solid var(--color-border); }
+
+/* ==========================================================================
+   Tipografia utilitária
+   ========================================================================== */
+
+.text--xs { font-size: var(--font-size-xs); }
+.text--sm { font-size: var(--font-size-sm); }
+.text--base { font-size: var(--font-size-base); }
+.text--md { font-size: var(--font-size-md); }
+.text--lg { font-size: var(--font-size-lg); }
+.text--xl { font-size: var(--font-size-xl); }
+.text--2xl { font-size: var(--font-size-2xl); }
+
+.weight--regular { font-weight: var(--font-weight-regular); }
+.weight--medium { font-weight: var(--font-weight-medium); }
+.weight--semibold { font-weight: var(--font-weight-semibold); }
+.weight--bold { font-weight: var(--font-weight-bold); }
+
+.leading--tight { line-height: var(--line-height-tight); }
+.leading--snug { line-height: var(--line-height-snug); }
+.tracking--tight { letter-spacing: var(--tracking-tight); }
+
+.text--center { text-align: center; }
+.text--right { text-align: right; }
+.text--truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Espaçamento
+   ========================================================================== */
+
+.p--0 { padding: 0; }
+.p--3 { padding: var(--space-3); }
+.p--4 { padding: var(--space-4); }
+.p--5 { padding: var(--space-5); }
+.p--6 { padding: var(--space-6); }
+
+.px--4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+.px--6 { padding-left: var(--space-6); padding-right: var(--space-6); }
+.py--2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.py--3 { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+
+.mt--2 { margin-top: var(--space-2); }
+.mt--4 { margin-top: var(--space-4); }
+.mb--2 { margin-bottom: var(--space-2); }
+
+/* ==========================================================================
+   Forma e elevação
+   ========================================================================== */
+
+.radius--xs { border-radius: var(--radius-xs); }
+.radius--sm { border-radius: var(--radius-sm); }
+.radius--md { border-radius: var(--radius-md); }
+.radius--lg { border-radius: var(--radius-lg); }
+.radius--full { border-radius: var(--radius-full); }
+
+.shadow--sm { box-shadow: var(--shadow-sm); }
+.shadow--md { box-shadow: var(--shadow-md); }
+.shadow--lg { box-shadow: var(--shadow-lg); }
+
+.overflow--auto { overflow: auto; }
+.overflow--hidden { overflow: hidden; }
+
+/* ==========================================================================
+   Estrutura da aplicação
+   ========================================================================== */
+
+.app { min-height: 100vh; }
+
+.topo {
+  height: var(--altura-topo);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: var(--space-5);
+}
+
+.topo--links {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.topo--links::-webkit-scrollbar { display: none; }
+
+.nao--encolhe { flex-shrink: 0; white-space: nowrap; }
+
+.conteudo {
+  max-width: var(--largura-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+/* Telas sem cabeçalho (login). */
+.tela--centro { min-height: 100vh; }
+.caixa--estreita { width: 100%; max-width: 380px; }
+
+.marca--ponto {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex: none;
+}
+
+.marca--grande { width: 48px; height: 48px; }
+
+/* ==========================================================================
+   Botões
+   ========================================================================== */
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.botao--primario {
+  background-color: var(--color-primary);
+  color: var(--color-text-invert);
+}
+.botao--primario:hover { background-color: var(--color-primary-dark); }
+
+.botao--secundario {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.botao--secundario:hover { background-color: var(--color-surface-alt); }
+
+.botao--perigo {
+  background-color: var(--color-surface);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.botao--perigo:hover { background-color: var(--color-danger); color: var(--color-text-invert); }
+
+.botao--pequeno { min-height: 32px; padding: 0 var(--space-3); font-size: var(--font-size-xs); }
+.botao:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ==========================================================================
+   Campos de formulário
+   ========================================================================== */
+
+.campo {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+.campo:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+.campo--busca { border-radius: var(--radius-full); padding-left: var(--space-4); }
+.campo--curto { width: auto; min-width: 100px; }
+
+.rotulo {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Cartões e blocos
+   ========================================================================== */
+
+.cartao {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.metrica {
+  min-width: 150px;
+  padding: var(--space-4);
+}
+
+/* ==========================================================================
+   Cartas de coleção / resultados de busca
+   ========================================================================== */
+
+.imagem--carta {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+  display: block;
+}
+
+.grafico--caixa {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.grafico--caixa canvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+
+/* ==========================================================================
+   Aviso / faixa de alerta
+   ========================================================================== */
+
+.faixa {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+/* ==========================================================================
+   Responsivo — mobile-first por exceção
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .conteudo { padding: var(--space-4) var(--space-4) var(--space-8); }
+}

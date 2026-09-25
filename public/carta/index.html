@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carta · valtatcg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+</head>
+<body class="app">
+  <header class="topo flex items--center justify--content--between px--6 bg--surface border--bottom">
+    <a href="/colecao/" class="flex items--center gap--2">
+      <span class="marca--ponto bg--primary"></span>
+      <span class="weight--bold tracking--tight">valtatcg</span>
+    </a>
+    <nav class="flex items--center gap--5 topo--links">
+      <a href="/colecao/" class="nao--encolhe text--muted">Coleção</a>
+      <a href="/buscar/" class="nao--encolhe text--muted">Buscar cartas</a>
+    </nav>
+    <button class="botao botao--secundario botao--pequeno nao--encolhe" id="btn-sair">Sair</button>
+  </header>
+
+  <main class="conteudo flex flex--col gap--5">
+    <p class="hidden" id="aviso"></p>
+
+    <section class="flex flex--wrap gap--6" id="detalhe"></section>
+
+    <section class="cartao p--5 flex flex--col gap--3">
+      <h2 class="text--md weight--semibold">Histórico de preço</h2>
+      <p class="text--xs text--muted">Registrado a partir do dia em que a carta entrou em alguma coleção — a pokemontcg.io não fornece preço retroativo.</p>
+      <div class="grafico--caixa">
+        <canvas id="grafico" width="900" height="220"></canvas>
+      </div>
+      <p class="hidden" id="aviso-grafico"></p>
+    </section>
+  </main>
+
+  <script type="module" src="../assets/js/carta.js"></script>
+</body>
+</html>

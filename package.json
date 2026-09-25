@@ -1,0 +1,24 @@
+{
+  "name": "valtatcg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Rastreador de portfólio de cartas colecionáveis (v1: Pokémon)",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "db:reset": "node src/db/reset.js",
+    "db:seed": "node src/db/seed.js",
+    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js",
+    "test:acesso": "node testes/acesso.teste.js",
+    "test:colecao": "node testes/colecao.teste.js",
+    "test:precos": "node testes/precos.teste.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

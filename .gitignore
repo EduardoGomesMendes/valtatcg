@@ -1,0 +1,26 @@
+# ---------------------------------------------------------------
+#  NUNCA versionar: dados de usuário e segredos
+# ---------------------------------------------------------------
+
+# Banco (coleções, usuários)
+data/
+*.db
+*.db-wal
+*.db-shm
+backup-*.db
+
+# Chaves de API e configuração da máquina
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------
+#  Ruído
+# ---------------------------------------------------------------
+node_modules/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
