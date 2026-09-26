@@ -380,6 +380,26 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   flex: none;
 }
 
+/* Botão redondo do cabeçalho — link para /perfil/, foto ou iniciais. */
+.avatar-botao {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  transition: border-color 0.18s ease;
+}
+.avatar-botao:hover, .avatar-botao--ativo { border-color: var(--color-primary); }
+.avatar-botao img { width: 100%; height: 100%; object-fit: cover; }
+
 .camera-video {
   width: 100%;
   max-width: 320px;

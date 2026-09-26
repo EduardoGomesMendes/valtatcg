@@ -1,4 +1,4 @@
-import { api, avisar, dataBr, prepararCabecalho } from './api.js';
+import { api, avisar, dataBr, prepararCabecalho, carregarAvatarEm } from './api.js';
 
 const $avatarImagem = document.getElementById('avatar-imagem');
 const $avatarPlaceholder = document.getElementById('avatar-placeholder');
@@ -28,27 +28,16 @@ $btnSair.addEventListener('click', async () => {
   window.location.href = '/entrar/';
 });
 
-function iniciais(nome) {
-  const partes = String(nome ?? '?').trim().split(/\s+/);
-  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes.at(-1)[0] : '')).toUpperCase();
-}
-
 /** Carrega a foto atual (se houver) — 404 é esperado para quem nunca enviou uma. */
 async function carregarAvatar(nomeParaIniciais) {
-  $avatarPlaceholder.textContent = iniciais(nomeParaIniciais);
-  try {
-    const resposta = await fetch('/api/perfil/avatar', { credentials: 'same-origin' });
-    if (!resposta.ok) throw new Error('sem foto');
-    const blob = await resposta.blob();
-    $avatarImagem.src = URL.createObjectURL(blob);
-    $avatarImagem.classList.remove('hidden');
-    $avatarPlaceholder.classList.add('hidden');
-    $btnRemoverAvatar.classList.remove('hidden');
-  } catch {
-    $avatarImagem.classList.add('hidden');
-    $avatarPlaceholder.classList.remove('hidden');
-    $btnRemoverAvatar.classList.add('hidden');
-  }
+  await carregarAvatarEm($avatarImagem, $avatarPlaceholder, nomeParaIniciais);
+  $btnRemoverAvatar.classList.toggle('hidden', $avatarImagem.classList.contains('hidden'));
+  // O botão redondo do cabeçalho mostra a mesma foto — atualiza junto.
+  carregarAvatarEm(
+    document.getElementById('avatar-topo-imagem'),
+    document.getElementById('avatar-topo-placeholder'),
+    nomeParaIniciais,
+  );
 }
 
 async function carregar() {

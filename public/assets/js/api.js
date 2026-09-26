@@ -86,9 +86,34 @@ export function dataBr(iso) {
 }
 
 /**
- * Prepara o cabeçalho de toda página logada: mostra o link "Admin" para quem
- * tem acesso, e o aviso de teste/assinatura para quem não é admin (o admin
- * não paga a própria assinatura — ver exigirAssinatura no servidor).
+ * Carrega a foto de perfil (própria conta) num par imagem+iniciais — usado
+ * tanto no botão redondo do cabeçalho quanto no card grande da tela de
+ * perfil. 404 (sem foto enviada) é esperado, não é erro de verdade.
+ */
+export async function carregarAvatarEm(imgEl, placeholderEl, nome) {
+  if (placeholderEl) {
+    const partes = String(nome ?? '?').trim().split(/\s+/);
+    placeholderEl.textContent = ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes.at(-1)[0] : '')).toUpperCase();
+  }
+  if (!imgEl) return;
+  try {
+    const resposta = await fetch('/api/perfil/avatar', { credentials: 'same-origin' });
+    if (!resposta.ok) throw new Error('sem foto');
+    const blob = await resposta.blob();
+    imgEl.src = URL.createObjectURL(blob);
+    imgEl.classList.remove('hidden');
+    placeholderEl?.classList.add('hidden');
+  } catch {
+    imgEl.classList.add('hidden');
+    placeholderEl?.classList.remove('hidden');
+  }
+}
+
+/**
+ * Prepara o cabeçalho de toda página logada: a foto/iniciais no botão
+ * redondo, o link "Admin" para quem tem acesso, e o aviso de teste/
+ * assinatura para quem não é admin (o admin não paga a própria assinatura —
+ * ver exigirAssinatura no servidor).
  */
 export async function prepararCabecalho() {
   let estado;
@@ -97,6 +122,12 @@ export async function prepararCabecalho() {
   } catch {
     return; // sessão inválida: o próximo api() da página já redireciona.
   }
+
+  carregarAvatarEm(
+    document.getElementById('avatar-topo-imagem'),
+    document.getElementById('avatar-topo-placeholder'),
+    estado.usuario?.nome,
+  );
 
   if (estado.usuario?.admin) {
     document.getElementById('link-admin')?.classList.remove('hidden');
