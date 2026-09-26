@@ -16,8 +16,8 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- admin ---');
 
-const dono = usuarios.criar({ nome: 'Dono', email: 'dono@teste.local', senha: 'Senha1234' });
-const convidado = usuarios.criar({ nome: 'Convidado', email: 'convidado@teste.local', senha: 'Senha1234' });
+const dono = usuarios.criar({ nome: 'Dono', email: 'dono@teste.local', usuario: 'dono', senha: 'Senha1234' });
+const convidado = usuarios.criar({ nome: 'Convidado', email: 'convidado@teste.local', usuario: 'convidado', senha: 'Senha1234' });
 
 ok('conta nova não nasce admin', dono.admin === 0);
 

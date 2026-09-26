@@ -20,6 +20,7 @@ async function carregar() {
   try {
     const { usuario } = await api('/perfil');
     $formPerfil.nome.value = usuario.nome;
+    $formPerfil.usuario.value = usuario.usuario ?? '';
     $formPerfil.email.value = usuario.email;
     $criadoEm.textContent = `Conta criada em ${dataBr(usuario.criado_em)}`;
   } catch (erro) {
@@ -34,6 +35,9 @@ $formPerfil.addEventListener('submit', async (ev) => {
   $btnSalvarPerfil.textContent = 'Salvando…';
 
   const dados = Object.fromEntries(new FormData($formPerfil).entries());
+  // Quem ainda não tem usuário cadastrado pode deixar o campo em branco sem
+  // que isso vire uma tentativa de salvar um nome de usuário vazio.
+  if (!dados.usuario) delete dados.usuario;
   try {
     await api('/perfil', { method: 'PATCH', body: JSON.stringify(dados) });
     avisar($avisoPerfil, 'Dados atualizados.', 'sucesso');

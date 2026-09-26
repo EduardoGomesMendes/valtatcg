@@ -27,8 +27,8 @@
 
       <form class="flex flex--col gap--3" id="form-entrar">
         <label class="flex flex--col gap--1">
-          <span class="rotulo">E-mail</span>
-          <input class="campo" type="email" name="email" autocomplete="username" required autofocus>
+          <span class="rotulo">E-mail ou usuário</span>
+          <input class="campo" type="text" name="identificador" autocomplete="username" required autofocus>
         </label>
         <label class="flex flex--col gap--1">
           <span class="rotulo">Senha</span>
@@ -44,8 +44,13 @@
           <input class="campo" type="text" name="nome" autocomplete="name" required>
         </label>
         <label class="flex flex--col gap--1">
+          <span class="rotulo">Nome de usuário</span>
+          <input class="campo" type="text" name="usuario" autocomplete="username" pattern="[a-zA-Z0-9_.]{3,20}" required>
+          <span class="text--xs text--muted">3 a 20 caracteres, sem espaço — letras, números, "_" ou "."</span>
+        </label>
+        <label class="flex flex--col gap--1">
           <span class="rotulo">E-mail</span>
-          <input class="campo" type="email" name="email" autocomplete="username" required>
+          <input class="campo" type="email" name="email" autocomplete="email" required>
         </label>
         <label class="flex flex--col gap--1">
           <span class="rotulo">Senha</span>

@@ -26,17 +26,17 @@ export function rotasAcesso() {
   });
 
   rotas.post('/entrar', (req, res) => {
-    const { email, senha } = req.body ?? {};
-    const chave = `${req.ip}:${String(email ?? '').toLowerCase()}`;
+    const { identificador, senha } = req.body ?? {};
+    const chave = `${req.ip}:${String(identificador ?? '').toLowerCase()}`;
 
     if (loginBloqueado(chave)) {
       return res.status(429).json({ erro: 'muitas tentativas — aguarde alguns minutos e tente de novo' });
     }
 
-    const usuario = usuarios.autenticar(email, senha);
+    const usuario = usuarios.autenticar(identificador, senha);
     if (!usuario) {
       registrarFalhaDeLogin(chave);
-      return res.status(401).json({ erro: 'e-mail ou senha incorretos' });
+      return res.status(401).json({ erro: 'usuário/e-mail ou senha incorretos' });
     }
 
     limparFalhas(chave);

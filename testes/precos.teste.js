@@ -33,7 +33,7 @@ ok(
   extrairPrecoMercado({ tcgplayer: { prices: { holofoil: { low: 1 } } } }) === null,
 );
 
-const usuario = criar({ nome: 'Carla', email: 'carla@teste.local', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Carla', email: 'carla@teste.local', usuario: 'carla', senha: 'Senha1234' });
 const carta = salvar({
   id: 'teste-preco-1',
   name: 'Carta de Preço',

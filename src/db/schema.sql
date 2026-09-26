@@ -2,6 +2,10 @@ CREATE TABLE IF NOT EXISTS usuarios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
+  -- Sem NOT NULL: contas de antes deste campo existir ficam com usuario NULL
+  -- (múltiplos NULL não conflitam com UNIQUE no SQLite) e continuam
+  -- entrando só pelo e-mail, até decidirem cadastrar um.
+  usuario TEXT,
   senha_hash TEXT NOT NULL,
   senha_salt TEXT NOT NULL,
   admin INTEGER NOT NULL DEFAULT 0,
@@ -69,6 +73,11 @@ CREATE TABLE IF NOT EXISTS preco_historico (
 
 CREATE INDEX IF NOT EXISTS idx_colecao_item_usuario ON colecao_item(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_preco_historico_carta ON preco_historico(carta_id, data);
+
+-- O índice único de usuarios.usuario é criado em src/db/index.js, depois da
+-- migração que adiciona a coluna — criá-lo aqui quebraria um banco já em
+-- produção, onde CREATE TABLE IF NOT EXISTS não adiciona coluna nenhuma e a
+-- coluna "usuario" ainda não existiria na hora deste arquivo rodar.
 
 -- Histórico legível da assinatura de cada usuário (início de teste, ativação,
 -- cancelamento) — é o que a tela de admin mostra para explicar o estado atual.

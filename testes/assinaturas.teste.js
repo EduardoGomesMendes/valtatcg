@@ -19,7 +19,7 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- assinaturas ---');
 
-const usuario = criar({ nome: 'Dan', email: 'dan@teste.local', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Dan', email: 'dan@teste.local', usuario: 'dan', senha: 'Senha1234' });
 
 // Conta recém-criada, sem iniciarTeste() chamado ainda: nasce com o DEFAULT
 // da coluna ('teste') mas sem data — o resto do sistema não deveria travar.

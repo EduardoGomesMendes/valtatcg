@@ -38,6 +38,11 @@
           <input class="campo" type="text" name="nome" required>
         </label>
         <label class="flex flex--col gap--1">
+          <span class="rotulo">Nome de usuário</span>
+          <input class="campo" type="text" name="usuario" pattern="[a-zA-Z0-9_.]{3,20}" placeholder="ainda não cadastrado">
+          <span class="text--xs text--muted">3 a 20 caracteres, sem espaço — letras, números, "_" ou "."</span>
+        </label>
+        <label class="flex flex--col gap--1">
           <span class="rotulo">E-mail</span>
           <input class="campo" type="email" name="email" required>
         </label>

@@ -51,6 +51,17 @@ adicionarColunaSeFaltando('usuarios', 'documento', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'email_cobranca', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'asaas_cliente_id', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'asaas_assinatura_id', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'usuario', 'TEXT');
+
+/*
+  Índice único depois da coluna existir — não pode ir no schema.sql porque,
+  num banco já em produção, CREATE TABLE IF NOT EXISTS não adiciona coluna
+  nenhuma, e criar o índice antes da migração acima quebraria o boot.
+  Sem diferenciar maiúsculas/minúsculas: "Hugo" e "hugo" seriam o mesmo login,
+  confuso senão. COLLATE NOCASE no índice, e não na coluna, para não mudar
+  como o nome é guardado/exibido — só como é comparado.
+*/
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario_nocase ON usuarios(usuario COLLATE NOCASE)');
 
 /*
   Contas que já existiam antes desta coluna nascem com assinatura_status =

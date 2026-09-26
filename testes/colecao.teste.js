@@ -18,7 +18,7 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- coleção ---');
 
-const usuario = criar({ nome: 'Bruno', email: 'bruno@teste.local', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Bruno', email: 'bruno@teste.local', usuario: 'bruno', senha: 'Senha1234' });
 
 // Carta falsa no formato da API, só para popular o cache local (evita rede no teste).
 const CARTA_API = {

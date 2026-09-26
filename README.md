@@ -20,4 +20,4 @@ Requer Node.js 22.5 ou mais recente (usa `node:sqlite`, embutido — sem instala
 
 ## Dados de teste
 
-`npm run db:seed` cria um usuário de teste: `demo@valtatcg.local` / `Demo1234`.
+`npm run db:seed` cria um usuário de teste: `demo@valtatcg.local` (ou usuário `demo`) / `Demo1234`.

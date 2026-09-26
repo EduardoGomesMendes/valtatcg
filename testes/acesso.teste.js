@@ -19,13 +19,13 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- acesso ---');
 
-const usuario = criar({ nome: 'Ana', email: 'ana@teste.local', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Ana', email: 'ana@teste.local', usuario: 'ana', senha: 'Senha1234' });
 ok('criar usuário retorna sem hash/salt', !usuario.senha_hash && !usuario.senha_salt);
 ok('email fica normalizado', usuario.email === 'ana@teste.local');
 
 let erro = null;
 try {
-  criar({ nome: 'Outra', email: 'ANA@teste.local', senha: 'Senha1234' });
+  criar({ nome: 'Outra', email: 'ANA@teste.local', usuario: 'outra', senha: 'Senha1234' });
 } catch (e) {
   erro = e;
 }
@@ -33,15 +33,34 @@ ok('recusa e-mail duplicado (case-insensitive)', erro?.message.includes('já est
 
 erro = null;
 try {
-  criar({ nome: 'Fraca', email: 'fraca@teste.local', senha: '123' });
+  criar({ nome: 'Outra2', email: 'outra2@teste.local', usuario: 'ANA', senha: 'Senha1234' });
+} catch (e) {
+  erro = e;
+}
+ok('recusa nome de usuário duplicado (case-insensitive)', erro?.message.includes('já está em uso'));
+
+erro = null;
+try {
+  criar({ nome: 'Fraca', email: 'fraca@teste.local', usuario: 'fraca', senha: '123' });
 } catch (e) {
   erro = e;
 }
 ok('recusa senha fraca', Boolean(erro));
 
+erro = null;
+try {
+  criar({ nome: 'Sem usuário', email: 'semusuario@teste.local', usuario: 'ab', senha: 'Senha1234' });
+} catch (e) {
+  erro = e;
+}
+ok('recusa nome de usuário curto demais', Boolean(erro));
+
 ok('autenticar com senha certa funciona', Boolean(autenticar('ana@teste.local', 'Senha1234')));
 ok('autenticar com senha errada falha', autenticar('ana@teste.local', 'errada123') === null);
 ok('autenticar e-mail inexistente falha', autenticar('ninguem@teste.local', 'Senha1234') === null);
+ok('autenticar pelo nome de usuário funciona', Boolean(autenticar('ana', 'Senha1234')));
+ok('autenticar pelo nome de usuário é case-insensitive', Boolean(autenticar('ANA', 'Senha1234')));
+ok('autenticar usuário inexistente falha', autenticar('ninguem', 'Senha1234') === null);
 
 const token = abrirSessao(usuario.id);
 const sessao = usuarioDaSessao(token);
@@ -55,7 +74,7 @@ ok('token inválido não resolve', usuarioDaSessao('token-que-nao-existe') === n
 const perfilAtualizado = atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local' });
 ok('atualizarPerfil muda nome e e-mail', perfilAtualizado.nome === 'Ana Paula' && perfilAtualizado.email === 'ana2@teste.local');
 
-const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', senha: 'Senha1234' });
+const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', usuario: 'bia', senha: 'Senha1234' });
 erro = null;
 try {
   atualizarPerfil(usuario.id, { email: 'bia@teste.local' });

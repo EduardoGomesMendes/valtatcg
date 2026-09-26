@@ -49,6 +49,27 @@ export function emailValido(email) {
   return EMAIL.test(normalizarEmail(email));
 }
 
+/* ------------------------------------------------------------------ */
+/* Nome de usuário                                                     */
+/* ------------------------------------------------------------------ */
+
+// Letras, números, "_" e ".", de 3 a 20 caracteres — sem espaço, de propósito:
+// tem que dar para digitar rápido numa tela de login, como o e-mail.
+const USUARIO = /^[a-zA-Z0-9_.]{3,20}$/;
+
+export function normalizarUsuario(bruto) {
+  return String(bruto ?? '').trim();
+}
+
+export function usuarioValido(usuario) {
+  return USUARIO.test(normalizarUsuario(usuario));
+}
+
+export function buscarPorUsuario(usuario) {
+  return db.prepare('SELECT * FROM usuarios WHERE usuario = ? COLLATE NOCASE')
+    .get(normalizarUsuario(usuario)) ?? null;
+}
+
 /** Remove hash e salt antes de qualquer coisa sair para a API. */
 export function semSegredos(usuario) {
   if (!usuario) return null;
@@ -73,21 +94,26 @@ export function buscarPorEmail(email) {
 /* Escrita                                                             */
 /* ------------------------------------------------------------------ */
 
-export function criar({ nome, email, senha }) {
+export function criar({ nome, email, usuario, senha }) {
   const emailLimpo = normalizarEmail(email);
+  const usuarioLimpo = normalizarUsuario(usuario);
 
   if (!String(nome ?? '').trim()) throw new Error('nome é obrigatório');
   if (!emailValido(emailLimpo)) throw new Error('informe um e-mail válido');
+  if (!usuarioValido(usuarioLimpo)) {
+    throw new Error('nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."');
+  }
 
   const problema = validarSenha(senha);
   if (problema) throw new Error(problema);
 
   if (buscarPorEmail(emailLimpo)) throw new Error('este e-mail já está cadastrado');
+  if (buscarPorUsuario(usuarioLimpo)) throw new Error('este nome de usuário já está em uso');
 
   const { hash, salt } = gerarHash(senha);
   const info = db.prepare(
-    'INSERT INTO usuarios (nome, email, senha_hash, senha_salt) VALUES (?, ?, ?, ?)',
-  ).run(String(nome).trim(), emailLimpo, hash, salt);
+    'INSERT INTO usuarios (nome, email, usuario, senha_hash, senha_salt) VALUES (?, ?, ?, ?, ?)',
+  ).run(String(nome).trim(), emailLimpo, usuarioLimpo, hash, salt);
 
   return semSegredos(buscarPorId(info.lastInsertRowid));
 }
@@ -123,7 +149,7 @@ export function trocarSenha(usuarioId, novaSenha, senhaAtual) {
   return definirSenha(usuarioId, novaSenha);
 }
 
-export function atualizarPerfil(usuarioId, { nome, email } = {}) {
+export function atualizarPerfil(usuarioId, { nome, email, usuario } = {}) {
   const alvo = buscarPorId(usuarioId);
   if (!alvo) throw new Error('usuário não encontrado');
 
@@ -142,6 +168,17 @@ export function atualizarPerfil(usuarioId, { nome, email } = {}) {
     const jaUsado = buscarPorEmail(novo);
     if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este e-mail já está cadastrado');
     sets.push('email = ?');
+    valores.push(novo);
+  }
+
+  if (usuario !== undefined) {
+    const novo = normalizarUsuario(usuario);
+    if (!usuarioValido(novo)) {
+      throw new Error('nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."');
+    }
+    const jaUsado = buscarPorUsuario(novo);
+    if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este nome de usuário já está em uso');
+    sets.push('usuario = ?');
     valores.push(novo);
   }
 
@@ -168,9 +205,15 @@ function hashDoToken(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-/** Confere e-mail e senha. Retorna o usuário (sem segredos) ou null. */
-export function autenticar(email, senha) {
-  const usuario = buscarPorEmail(email);
+/**
+ * Confere identificador (e-mail OU nome de usuário) + senha.
+ * Retorna o usuário (sem segredos) ou null.
+ */
+export function autenticar(identificador, senha) {
+  const bruto = String(identificador ?? '').trim();
+  // "_" e "." (permitidos no usuário) nunca aparecem sozinhos num e-mail sem
+  // "@" — então "tem @" basta para decidir qual busca usar, sem ambiguidade.
+  const usuario = bruto.includes('@') ? buscarPorEmail(bruto) : buscarPorUsuario(bruto);
   if (!usuario) return null;
   if (!conferirSenha(senha ?? '', usuario.senha_hash, usuario.senha_salt)) return null;
   return semSegredos(usuario);
@@ -227,7 +270,7 @@ export function encerrarSessao(token) {
 /** Lista todos os usuários com a quantidade de cartas na coleção de cada um. */
 export function listarTodos() {
   return db.prepare(`
-    SELECT u.id, u.nome, u.email, u.admin, u.criado_em,
+    SELECT u.id, u.nome, u.email, u.usuario, u.admin, u.criado_em,
            u.assinatura_status, u.teste_termina_em, u.assinatura_expira_em,
            COUNT(ci.id) AS itens_na_colecao
     FROM usuarios u

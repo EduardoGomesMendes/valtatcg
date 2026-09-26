@@ -30,7 +30,8 @@ function linhaUsuario(usuario) {
   if (usuario.admin) nomeELinha.append(el('span', 'selo selo--sucesso', 'Admin'));
   nomeELinha.append(seloAssinatura(usuario));
   info.append(nomeELinha);
-  info.append(el('span', 'text--sm text--muted text--truncate', usuario.email));
+  const contato = usuario.usuario ? `@${usuario.usuario} · ${usuario.email}` : usuario.email;
+  info.append(el('span', 'text--sm text--muted text--truncate', contato));
   info.append(el(
     'span',
     'text--xs text--muted',
