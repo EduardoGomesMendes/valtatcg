@@ -467,6 +467,49 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 .aviso--bloqueio a { text-decoration: underline; }
 
 /* ==========================================================================
+   Menu da conta (clique no avatar do cabeçalho)
+   ========================================================================== */
+
+.menu--grupo { position: relative; }
+
+.menu--lista {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 180px;
+  padding: var(--space-2);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.menu--item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.menu--item:hover { background-color: var(--color-surface-alt); }
+
+.menu--item--desabilitado {
+  color: var(--color-text-muted);
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ==========================================================================
    Rodapé
    ========================================================================== */
 

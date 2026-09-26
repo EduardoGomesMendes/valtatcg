@@ -109,13 +109,47 @@ export async function carregarAvatarEm(imgEl, placeholderEl, nome) {
   }
 }
 
+/** Abre/fecha o menu da conta ao clicar no avatar — fecha clicando fora ou com Esc. */
+function inicializarMenuAvatar() {
+  const $grupo = document.getElementById('menu-perfil');
+  const $botao = document.getElementById('btn-avatar-menu');
+  const $lista = document.getElementById('menu-avatar-lista');
+  if (!$grupo || !$botao || !$lista) return;
+
+  const fechar = () => {
+    $lista.classList.add('hidden');
+    $botao.setAttribute('aria-expanded', 'false');
+  };
+
+  $botao.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const estaFechado = $lista.classList.contains('hidden');
+    if (estaFechado) {
+      $lista.classList.remove('hidden');
+      $botao.setAttribute('aria-expanded', 'true');
+    } else {
+      fechar();
+    }
+  });
+
+  document.addEventListener('click', (ev) => {
+    if (!$grupo.contains(ev.target)) fechar();
+  });
+
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') fechar();
+  });
+}
+
 /**
- * Prepara o cabeçalho de toda página logada: a foto/iniciais no botão
- * redondo, o link "Admin" para quem tem acesso, e o aviso de teste/
- * assinatura para quem não é admin (o admin não paga a própria assinatura —
- * ver exigirAssinatura no servidor).
+ * Prepara o cabeçalho de toda página logada: o menu do avatar (foto/
+ * iniciais + editar perfil/configurações/sair), o link "Admin" para quem
+ * tem acesso, e o aviso de teste/assinatura para quem não é admin (o admin
+ * não paga a própria assinatura — ver exigirAssinatura no servidor).
  */
 export async function prepararCabecalho() {
+  inicializarMenuAvatar();
+
   let estado;
   try {
     estado = await api('/estado');

@@ -22,12 +22,16 @@
       <a href="/assinatura/" class="nao--encolhe text--muted">Assinatura</a>
       <a href="/admin/" class="nao--encolhe text--muted hidden" id="link-admin">Admin</a>
     </nav>
-    <div class="flex items--center gap--3 nao--encolhe">
-      <a href="/perfil/" class="avatar-botao" title="Meu perfil">
+    <div class="menu--grupo nao--encolhe" id="menu-perfil">
+      <button type="button" class="avatar-botao" id="btn-avatar-menu" aria-haspopup="true" aria-expanded="false" title="Menu da conta">
         <img class="hidden" id="avatar-topo-imagem" alt="">
         <span id="avatar-topo-placeholder">?</span>
-      </a>
-      <button class="botao botao--secundario botao--pequeno" id="btn-sair">Sair</button>
+      </button>
+      <div class="menu--lista hidden" id="menu-avatar-lista">
+        <a href="/perfil/" class="menu--item">Editar perfil</a>
+        <span class="menu--item menu--item--desabilitado">Configurações</span>
+        <button type="button" class="menu--item" id="btn-sair">Sair</button>
+      </div>
     </div>
   </header>
   <div class="hidden" id="aviso-assinatura"></div>
