@@ -447,6 +447,17 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 .aviso--bloqueio a { text-decoration: underline; }
 
 /* ==========================================================================
+   Rodapé
+   ========================================================================== */
+
+.rodape {
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.rodape a:hover { color: var(--color-primary); }
+
+/* ==========================================================================
    Responsivo — mobile-first por exceção
    ========================================================================== */
 
