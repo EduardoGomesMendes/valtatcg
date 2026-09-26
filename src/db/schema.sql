@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email_cobranca TEXT,
   asaas_cliente_id TEXT,
   asaas_assinatura_id TEXT,
+  -- O arquivo em si fica em data/avatares/<id> (fora do banco, fora do Git);
+  -- estas colunas só dizem se existe e com qual Content-Type servi-lo.
+  avatar_mime TEXT,
+  avatar_atualizado_em TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

@@ -52,6 +52,8 @@ adicionarColunaSeFaltando('usuarios', 'email_cobranca', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'asaas_cliente_id', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'asaas_assinatura_id', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'usuario', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'avatar_mime', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'avatar_atualizado_em', 'TEXT');
 
 /*
   Índice único depois da coluna existir — não pode ir no schema.sql porque,

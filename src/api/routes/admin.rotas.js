@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import fs from 'node:fs';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
+import { caminhoAvatar } from '../../auth/avatar.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -11,6 +13,17 @@ export function rotasAdmin() {
 
   rotas.get('/admin/usuarios', (req, res) => {
     res.json({ usuarios: usuarios.listarTodos() });
+  });
+
+  rotas.get('/admin/usuarios/:id/avatar', (req, res) => {
+    const alvo = usuarios.buscarPorId(req.params.id);
+    if (!alvo?.avatar_mime) return res.status(404).end();
+    fs.readFile(caminhoAvatar(alvo.id), (erro, buffer) => {
+      if (erro) return res.status(404).end();
+      res.setHeader('Content-Type', alvo.avatar_mime);
+      res.setHeader('Cache-Control', 'private, max-age=300');
+      res.send(buffer);
+    });
   });
 
   rotas.patch('/admin/usuarios/:id/admin', (req, res) => {

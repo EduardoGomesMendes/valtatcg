@@ -19,6 +19,16 @@ export function criarServidor() {
 
   app.disable('x-powered-by');
   app.set('trust proxy', true);
+
+  /*
+    Limite maior só para o upload de avatar: uma foto de até 3MB vira ~4MB em
+    base64 dentro do JSON. Montado ANTES do parser geral e só neste caminho —
+    o express.json() do caminho certo consome o corpo e marca req._body, então
+    o parser geral (256kb) que vem depois só repassa sem tentar de novo.
+    Subir o limite geral para todo mundo aceitar corpo grande à toa era o
+    jeito errado de resolver isto.
+  */
+  app.use('/api/perfil/avatar', express.json({ limit: '5mb' }));
   app.use(express.json({ limit: '256kb' }));
 
   app.use((req, res, next) => {

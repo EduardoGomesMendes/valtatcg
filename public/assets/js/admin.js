@@ -24,6 +24,16 @@ function seloAssinatura(usuario) {
 function linhaUsuario(usuario) {
   const linha = el('article', 'cartao p--4 flex items--center justify--content--between gap--4', '');
 
+  const contatoEFoto = el('div', 'flex items--center gap--3 min-w--0', '');
+
+  const avatar = document.createElement('img');
+  avatar.className = 'avatar-pequeno';
+  avatar.alt = '';
+  avatar.src = `/api/admin/usuarios/${usuario.id}/avatar`;
+  // Sem foto enviada, a rota devolve 404 — some a imagem em vez de mostrar o ícone quebrado.
+  avatar.addEventListener('error', () => avatar.remove());
+  contatoEFoto.append(avatar);
+
   const info = el('div', 'flex flex--col gap--1 min-w--0', '');
   const nomeELinha = el('div', 'flex items--center gap--2', '');
   nomeELinha.append(el('span', 'weight--semibold text--truncate', usuario.nome));
@@ -37,7 +47,8 @@ function linhaUsuario(usuario) {
     'text--xs text--muted',
     `Desde ${dataBr(usuario.criado_em)} · ${usuario.itens_na_colecao} carta(s) na coleção`,
   ));
-  linha.append(info);
+  contatoEFoto.append(info);
+  linha.append(contatoEFoto);
 
   const acoes = el('div', 'flex gap--2 nao--encolhe', '');
 

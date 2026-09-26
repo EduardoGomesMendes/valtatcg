@@ -342,6 +342,53 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 .selo--neutro { background-color: var(--color-surface-alt); color: var(--color-text-muted); }
 
 /* ==========================================================================
+   Foto de perfil
+   ========================================================================== */
+
+.avatar-foto {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  flex: none;
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  flex: none;
+}
+
+.avatar-pequeno {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  flex: none;
+}
+
+.camera-video {
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-md);
+  background-color: #000;
+  transform: scaleX(-1); /* efeito espelho, como toda câmera frontal */
+}
+
+/* ==========================================================================
    Cartas de coleção / resultados de busca
    ========================================================================== */
 

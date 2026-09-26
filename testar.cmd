@@ -20,4 +20,7 @@ echo.
 echo  --- assinaturas ---
 node testes/assinaturas.teste.js
 echo.
+echo  --- avatar ---
+node testes/avatar.teste.js
+echo.
 pause
