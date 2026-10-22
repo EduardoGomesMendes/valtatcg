@@ -405,7 +405,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   width: 100%;
   max-width: 320px;
   border-radius: var(--radius-md);
-  background-color: #000;
+  background-color: var(--color-bg);
   transform: scaleX(-1); /* efeito espelho, como toda câmera frontal */
 }
 
