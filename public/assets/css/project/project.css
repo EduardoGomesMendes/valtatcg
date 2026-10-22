@@ -13,18 +13,18 @@
 
 :root {
   /* --- Marca: fundo escuro + verde-água --- */
-  --color-primary: #2fe3a6;
-  --color-primary-dark: #22b784;
-  --color-primary-light: #143329;
+  --color-primary: #4ade80;
+  --color-primary-dark: #16a34a;
+  --color-primary-light: #12301f;
 
   /* --- Neutras (tema escuro) --- */
-  --color-bg: #0b120f;
+  --color-bg: #0b0f0d;
   --color-surface: #121b17;
   --color-surface-alt: #1a2620;
   --color-border: #223129;
   --color-text: #eaf3ee;
   --color-text-muted: #8fa79c;
-  --color-text-invert: #06110c;
+  --color-text-invert: #0b0f0d;
 
   /* --- Feedback --- */
   --color-success: #3ddc84;
@@ -33,7 +33,8 @@
   --color-info: #4ea1f2;
 
   /* --- Tipografia --- */
-  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-display: 'Sora', 'Outfit', sans-serif;
+  --font-family-base: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -526,4 +527,114 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 
 @media (max-width: 900px) {
   .conteudo { padding: var(--space-4) var(--space-4) var(--space-8); }
+}
+
+/* ==========================================================================
+   Marca (logo ValtaTCG)
+   ========================================================================== */
+
+.fonte--display { font-family: var(--font-family-display); font-weight: var(--font-weight-bold); }
+
+.marca--texto {
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+}
+.marca--tcg { font-weight: var(--font-weight-regular); color: var(--color-primary); }
+.marca--simbolo { width: 32px; height: 32px; flex: none; display: block; }
+.marca--simbolo--grande { width: 64px; height: 64px; }
+
+/* ==========================================================================
+   Home (página pública)
+   ========================================================================== */
+
+.home--topo {
+  max-width: var(--largura-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6);
+  gap: var(--space-4);
+}
+
+.home--hero {
+  position: relative;
+  overflow: hidden;
+  max-width: var(--largura-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+  gap: var(--space-8);
+}
+
+.home--hero-texto { flex: 1 1 420px; min-width: 0; gap: var(--space-5); }
+
+.home--titulo {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  font-size: 64px;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text);
+}
+.home--titulo span { color: var(--color-primary); }
+
+.home--subtitulo {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
+  color: var(--color-text-muted);
+  max-width: 560px;
+}
+
+.home--selos { gap: var(--space-3); }
+.home--selo {
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.home--arte { flex: 1 1 280px; min-width: 0; align-items: center; justify-content: center; }
+.home--arte img { width: 100%; max-width: 340px; height: auto; }
+
+.home--secao {
+  max-width: var(--largura-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  gap: var(--space-6);
+}
+
+.home--secao h2 {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+.home--passo { flex: 1 1 260px; min-width: 0; padding: var(--space-5); gap: var(--space-2); }
+.home--passo-numero {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: var(--color-text-invert);
+  font-weight: var(--font-weight-bold);
+  align-items: center;
+  justify-content: center;
+}
+
+.home--preco { align-items: center; text-align: center; padding: var(--space-8) var(--space-6); gap: var(--space-3); }
+.home--preco-valor {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-3xl);
+  color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .home--titulo { font-size: 44px; }
+  .home--hero { padding: var(--space-6) var(--space-4); }
+  .home--topo, .home--secao { padding-left: var(--space-4); padding-right: var(--space-4); }
 }
