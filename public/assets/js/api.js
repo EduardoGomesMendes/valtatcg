@@ -179,7 +179,7 @@ export async function prepararCabecalho() {
 
   // Avisos de segurança vêm antes dos de assinatura: sem eles a conta nem funciona direito.
   const u = estado.usuario;
-  if (u?.responsavel_status === 'pendente') {
+  if (estado.exigeResponsavel && u?.responsavel_status === 'pendente') {
     mostrarAvisoAssinatura($aviso, 'Falta o seu responsável confirmar o cadastro. Enquanto isso você só consegue olhar.', 'aviso--bloqueio', 'Ver detalhes', '/perfil/');
     return;
   }

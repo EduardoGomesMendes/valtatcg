@@ -1,4 +1,5 @@
 import { db } from '../db/index.js';
+import { faixaEtaria } from './idade.js';
 
 export const MOTIVOS = Object.freeze({
   golpe: 'Golpe ou tentativa de fraude',
@@ -45,13 +46,13 @@ function descreverAlvo(tipo, id) {
   if (tipo === 'loja') return db.prepare('SELECT nome, status FROM lojas WHERE id = ?').get(id) ?? null;
   if (tipo === 'usuario') return db.prepare('SELECT nome, email, suspenso FROM usuarios WHERE id = ?').get(id) ?? null;
   if (tipo === 'topico') {
-    return db.prepare('SELECT t.titulo AS nome, t.oculto, t.autor_id AS autorId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM forum_topicos t JOIN usuarios u ON u.id = t.autor_id WHERE t.id = ?').get(id) ?? null;
+    return db.prepare('SELECT t.titulo AS nome, t.oculto, t.autor_id AS autorId, u.nome AS autorNome, u.nascimento AS autorNascimento, u.suspenso AS autorSuspenso FROM forum_topicos t JOIN usuarios u ON u.id = t.autor_id WHERE t.id = ?').get(id) ?? null;
   }
   if (tipo === 'resposta') {
-    const r = db.prepare('SELECT substr(r.corpo, 1, 160) AS nome, r.oculto, r.autor_id AS autorId, r.topico_id AS topicoId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM forum_respostas r JOIN usuarios u ON u.id = r.autor_id WHERE r.id = ?').get(id);
+    const r = db.prepare('SELECT substr(r.corpo, 1, 160) AS nome, r.oculto, r.autor_id AS autorId, r.topico_id AS topicoId, u.nome AS autorNome, u.nascimento AS autorNascimento, u.suspenso AS autorSuspenso FROM forum_respostas r JOIN usuarios u ON u.id = r.autor_id WHERE r.id = ?').get(id);
     return r ?? null;
   }
-  return db.prepare('SELECT e.titulo AS nome, e.status, e.criado_por AS autorId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM eventos e JOIN usuarios u ON u.id = e.criado_por WHERE e.id = ?').get(id) ?? null;
+  return db.prepare('SELECT e.titulo AS nome, e.status, e.criado_por AS autorId, u.nome AS autorNome, u.nascimento AS autorNascimento, u.suspenso AS autorSuspenso FROM eventos e JOIN usuarios u ON u.id = e.criado_por WHERE e.id = ?').get(id) ?? null;
 }
 
 export function listar(status = 'aberta') {
@@ -62,7 +63,13 @@ export function listar(status = 'aberta') {
   ).all(status, status);
 
   return linhas.map((d) => {
-    return { ...d, motivo_rotulo: MOTIVOS[d.motivo] ?? d.motivo, alvo: descreverAlvo(d.alvo_tipo, d.alvo_id) };
+    const alvo = descreverAlvo(d.alvo_tipo, d.alvo_id);
+    // Idade do autor só para o admin priorizar (assédio envolvendo menor); a data em si não sai daqui.
+    if (alvo && 'autorNascimento' in alvo) {
+      alvo.autorFaixa = faixaEtaria(alvo.autorNascimento);
+      delete alvo.autorNascimento;
+    }
+    return { ...d, motivo_rotulo: MOTIVOS[d.motivo] ?? d.motivo, alvo };
   });
 }
 

@@ -18,6 +18,7 @@ let categorias = [];
 let categoria = new URLSearchParams(window.location.search).get('categoria') ?? '';
 let pagina = 1;
 let admin = false;
+let permissao = { ok: true };
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   await api('/sair', { method: 'POST' }).catch(() => {});
@@ -108,7 +109,13 @@ async function iniciar() {
   try {
     const estado = await api('/estado');
     admin = Boolean(estado.usuario?.admin);
-    ({ categorias } = await api('/forum/categorias'));
+    ({ categorias, permissao } = await api('/forum/categorias'));
+    if (!permissao.ok) {
+      // Quem não pode escrever só lê: em vez do botão, a razão.
+      $btnNovo.classList.add('hidden');
+      const motivo = permissao.motivo.charAt(0).toUpperCase() + permissao.motivo.slice(1);
+      avisar(document.getElementById('aviso-escrever'), `${motivo}.`, 'info');
+    }
     montarAbas();
     await carregar();
   } catch (erro) {

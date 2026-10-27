@@ -36,7 +36,7 @@ export function rotasComunidade() {
   /* ---------------- fórum ---------------- */
 
   rotas.get('/forum/categorias', (req, res) => {
-    res.json({ categorias: forum.categoriasComContagem() });
+    res.json({ categorias: forum.categoriasComContagem(), permissao: forum.podeEscrever(req.usuario) });
   });
 
   rotas.get('/forum/topicos', (req, res) => {

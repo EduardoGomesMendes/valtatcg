@@ -26,7 +26,8 @@ function nomeDoAlvo(d) {
   const tipo = ROTULO_ALVO[d.alvo_tipo] ?? d.alvo_tipo;
   if (!d.alvo) return `${tipo} #${d.alvo_id} (não existe mais)`;
   const base = `${tipo}: ${d.alvo.nome}${d.alvo.email ? ` (${d.alvo.email})` : ''}`;
-  return d.alvo.autorNome ? `${base} — por ${d.alvo.autorNome}` : base;
+  const menor = d.alvo.autorFaixa === 'menor' ? ' [MENOR DE IDADE]' : '';
+  return d.alvo.autorNome ? `${base} — por ${d.alvo.autorNome}${menor}` : base;
 }
 
 /** Botões que agem sobre o conteúdo denunciado (fórum e eventos), além dos de resolver/descartar. */

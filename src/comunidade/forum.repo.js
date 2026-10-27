@@ -1,4 +1,6 @@
 import { db } from '../db/index.js';
+import { config } from '../config.js';
+import { faixaEtaria } from '../seguranca/idade.js';
 import { validarTexto, nomePublico } from './texto.js';
 
 /*
@@ -20,6 +22,25 @@ const TOPICOS_POR_HORA = 3;
 const RESPOSTAS_POR_HORA = 20;
 
 const categoriaValida = (c) => Object.hasOwn(CATEGORIAS, c);
+
+/**
+ * Quem pode ESCREVER (ler é sempre liberado a quem tem conta). É aqui que a data de nascimento vira regra:
+ * sem data, não dá para saber o que vale para a pessoa; menor escreve ou não conforme config.forum.menoresEscrevem.
+ */
+export function podeEscrever(usuario) {
+  if (usuario.admin) return { ok: true, motivo: null };
+  const faixa = faixaEtaria(usuario.nascimento);
+  if (faixa === 'desconhecida') return { ok: false, motivo: 'informe sua data de nascimento no perfil para participar do fórum' };
+  if (faixa === 'menor' && !config.forum.menoresEscrevem) {
+    return { ok: false, motivo: 'por segurança, o fórum é só para leitura para menores de 18 anos' };
+  }
+  return { ok: true, motivo: null };
+}
+
+function exigirPoderEscrever(usuario) {
+  const permissao = podeEscrever(usuario);
+  if (!permissao.ok) throw new Error(permissao.motivo);
+}
 
 /* ------------------------------------------------------------------ */
 /* Leitura                                                             */
@@ -67,7 +88,7 @@ export function listarTopicos({ categoria = '', pagina = 1 } = {}) {
 export function obterTopico(id, { pagina = 1, usuario } = {}) {
   const admin = Boolean(usuario?.admin);
   const t = db.prepare(
-    `SELECT t.*, u.usuario, u.nome FROM forum_topicos t JOIN usuarios u ON u.id = t.autor_id WHERE t.id = ?`,
+    `SELECT t.*, u.usuario, u.nome, u.nascimento FROM forum_topicos t JOIN usuarios u ON u.id = t.autor_id WHERE t.id = ?`,
   ).get(Number(id));
   if (!t || (t.oculto && !admin)) return null;
 
@@ -75,7 +96,7 @@ export function obterTopico(id, { pagina = 1, usuario } = {}) {
   const filtro = admin ? '' : 'AND r.oculto = 0';
   const total = db.prepare(`SELECT COUNT(*) AS n FROM forum_respostas r WHERE r.topico_id = ? ${filtro}`).get(t.id).n;
   const respostas = db.prepare(
-    `SELECT r.id, r.corpo, r.oculto, r.criado_em, r.autor_id, u.usuario, u.nome
+    `SELECT r.id, r.corpo, r.oculto, r.criado_em, r.autor_id, u.usuario, u.nome, u.nascimento
        FROM forum_respostas r JOIN usuarios u ON u.id = r.autor_id
       WHERE r.topico_id = ? ${filtro} ORDER BY r.id LIMIT ? OFFSET ?`,
   ).all(t.id, RESPOSTAS_POR_PAGINA, (p - 1) * RESPOSTAS_POR_PAGINA);
@@ -93,7 +114,7 @@ export function obterTopico(id, { pagina = 1, usuario } = {}) {
     criadoEm: t.criado_em,
     autor: nomePublico(t),
     meu: dono(t.autor_id),
-    ...(admin ? { autorId: t.autor_id } : {}),
+    ...(admin ? { autorId: t.autor_id, autorFaixa: faixaEtaria(t.nascimento) } : {}),
     respostas: respostas.map((r) => ({
       id: r.id,
       corpo: r.corpo,
@@ -101,7 +122,7 @@ export function obterTopico(id, { pagina = 1, usuario } = {}) {
       criadoEm: r.criado_em,
       autor: nomePublico(r),
       meu: dono(r.autor_id),
-      ...(admin ? { autorId: r.autor_id } : {}),
+      ...(admin ? { autorId: r.autor_id, autorFaixa: faixaEtaria(r.nascimento) } : {}),
     })),
     totalRespostas: total,
     pagina: p,
@@ -121,6 +142,7 @@ function conferirLimite(tabela, usuario, limite, mensagem) {
 }
 
 export function criarTopico(usuario, { categoria, titulo, corpo }) {
+  exigirPoderEscrever(usuario);
   if (!categoriaValida(categoria)) throw new Error('escolha uma categoria');
   if (CATEGORIAS[categoria].soAdmin && !usuario.admin) throw new Error('só a equipe publica nesta categoria');
   const t = validarTexto(titulo, { campo: 'título', min: 5, max: 120 });
@@ -134,6 +156,7 @@ export function criarTopico(usuario, { categoria, titulo, corpo }) {
 }
 
 export function responder(usuario, topicoId, corpo) {
+  exigirPoderEscrever(usuario);
   const t = db.prepare('SELECT id, fechado, oculto FROM forum_topicos WHERE id = ?').get(Number(topicoId));
   if (!t || t.oculto) throw new Error('tópico não encontrado');
   if (t.fechado) throw new Error('este tópico está fechado para novas respostas');

@@ -71,6 +71,8 @@ function idadeEm(textoData) {
   return fez ? idade : idade - 1;
 }
 
+let exigeResponsavelNoServidor = false;
+
 function mostrarIdade(usuario) {
   $formNascimento.classList.add('hidden');
   $blocoStatusResp.classList.add('hidden');
@@ -88,6 +90,7 @@ function mostrarIdade(usuario) {
   }
 
   $idadeResumo.textContent = `Nascimento: ${dataDeNascimento(usuario.nascimento)} · conta de menor de 18 anos. Menores não vendem, não compram, não dão lances e não trocam mensagens.`;
+  if (!exigeResponsavelNoServidor) return;
   $blocoStatusResp.classList.remove('hidden');
   const confirmado = usuario.responsavel_status === 'confirmado';
   const quem = `${usuario.responsavel_nome} (${usuario.responsavel_email})`;
@@ -99,7 +102,7 @@ function mostrarIdade(usuario) {
 
 $inputNascimento.addEventListener('input', () => {
   const idade = idadeEm($inputNascimento.value);
-  const menor = idade !== null && idade < 18;
+  const menor = exigeResponsavelNoServidor && idade !== null && idade < 18;
   $blocoRespForm.classList.toggle('hidden', !menor);
   camposRespForm.forEach((campo) => { campo.required = menor; });
 });
@@ -137,7 +140,8 @@ $btnReenviar.addEventListener('click', async () => {
 
 async function carregar() {
   try {
-    const { usuario } = await api('/perfil');
+    const { usuario, exigeResponsavel } = await api('/perfil');
+    exigeResponsavelNoServidor = Boolean(exigeResponsavel);
     $formPerfil.nome.value = usuario.nome;
     $formPerfil.usuario.value = usuario.usuario ?? '';
     $formPerfil.email.value = usuario.email;

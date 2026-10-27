@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { config } from '../../config.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { pagamento } from '../../pagamento/index.js';
 import { ErroDePagamento } from '../../pagamento/provedor.js';
@@ -68,7 +69,7 @@ export function rotasAssinatura() {
    */
   rotas.post('/assinatura/assinar', async (req, res) => {
     // Menor só contrata depois que o responsável confirmar — o CPF da cobrança deve ser o dele.
-    if (req.usuario.responsavel_status === 'pendente') {
+    if (config.responsavel.obrigatorio && req.usuario.responsavel_status === 'pendente') {
       return res.status(403).json({ erro: 'peça ao seu responsável para confirmar o cadastro antes de assinar' });
     }
     const plano = assinaturas.plano();

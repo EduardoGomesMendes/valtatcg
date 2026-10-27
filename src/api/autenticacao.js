@@ -65,7 +65,7 @@ export function exigirAdmin(req, res, next) {
 export function exigirResponsavel(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
   if (req.usuario.admin) return next();
-  if (req.usuario.responsavel_status === 'pendente') {
+  if (config.responsavel.obrigatorio && req.usuario.responsavel_status === 'pendente') {
     return res.status(403).json({
       erro: 'seu responsável ainda não confirmou o cadastro — peça para ele abrir o link que enviamos por e-mail',
       aguardandoResponsavel: true,

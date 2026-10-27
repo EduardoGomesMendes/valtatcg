@@ -23,6 +23,9 @@ const id = Number(params.get('id'));
 let pagina = Number(params.get('pagina')) || 1;
 let admin = false;
 let podeDenunciar = false;
+let podeEscrever = true;
+
+const SELO_MENOR = 'Menor de idade';
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   await api('/sair', { method: 'POST' }).catch(() => {});
@@ -85,6 +88,7 @@ function cartaoResposta(r) {
   const cartao = el('article', 'cartao p--4 flex flex--col gap--2', '');
   const topo = el('div', 'flex items--center gap--2 flex--wrap', '');
   topo.append(el('span', 'weight--semibold text--sm', r.autor));
+  if (admin && r.autorFaixa === 'menor') topo.append(el('span', 'selo selo--neutro', SELO_MENOR));
   topo.append(el('span', 'text--xs text--muted', dataBr(r.criadoEm)));
   if (r.oculto) topo.append(el('span', 'selo selo--perigo', 'Oculta'));
   cartao.append(topo);
@@ -110,6 +114,7 @@ async function carregar() {
     if (topico.fixado) $selos.append(el('span', 'selo selo--neutro', 'Fixado'));
     if (topico.fechado) $selos.append(el('span', 'selo selo--neutro', 'Fechado'));
     if (topico.oculto) $selos.append(el('span', 'selo selo--perigo', 'Oculto'));
+    if (admin && topico.autorFaixa === 'menor') $selos.append(el('span', 'selo selo--neutro', `Autor: ${SELO_MENOR.toLowerCase()}`));
 
     $titulo.textContent = topico.titulo;
     $meta.textContent = `por ${topico.autor} · ${dataBr(topico.criadoEm)}`;
@@ -129,7 +134,7 @@ async function carregar() {
     $anterior.disabled = topico.pagina <= 1;
     $proxima.disabled = topico.pagina >= totalPaginas;
 
-    $cartaoResponder.classList.toggle('hidden', topico.fechado || topico.oculto);
+    $cartaoResponder.classList.toggle('hidden', topico.fechado || topico.oculto || !podeEscrever);
   } catch (erro) {
     $cartaoTopico.classList.add('hidden');
     avisar($aviso, erro.status === 404 ? 'Este tópico não existe ou foi removido.' : erro.message);
@@ -163,6 +168,7 @@ async function iniciar() {
     const estado = await api('/estado');
     admin = Boolean(estado.usuario?.admin);
     podeDenunciar = (await carregarMotivos()).length > 0;
+    podeEscrever = (await api('/forum/categorias')).permissao.ok;
   } catch {
     // sem o estado, a página segue só com leitura.
   }

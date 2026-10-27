@@ -35,4 +35,7 @@ echo.
 echo  --- eventos ---
 node testes/eventos.teste.js
 echo.
+echo  --- cadastro ---
+node testes/cadastro.teste.js
+echo.
 pause

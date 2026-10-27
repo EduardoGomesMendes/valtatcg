@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { config } from '../../config.js';
 import fs from 'node:fs';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import { salvarAvatar, removerAvatar, caminhoAvatar } from '../../auth/avatar.js';
@@ -18,7 +19,10 @@ export function rotasPerfil() {
   const rotas = Router();
 
   rotas.get('/perfil', (req, res) => {
-    res.json({ usuario: { ...req.usuario, faixa: faixaEtaria(req.usuario.nascimento) } });
+    res.json({
+      usuario: { ...req.usuario, faixa: faixaEtaria(req.usuario.nascimento) },
+      exigeResponsavel: config.responsavel.obrigatorio,
+    });
   });
 
   rotas.patch('/perfil', (req, res) => {

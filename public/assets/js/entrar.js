@@ -43,10 +43,14 @@ function idadeEm(textoData) {
   return idade;
 }
 
+// Só pedimos o responsável quando o servidor exige (RESPONSAVEL_OBRIGATORIO). Por padrão, só a data de nascimento.
+let exigeResponsavel = false;
+api('/estado').then((e) => { exigeResponsavel = Boolean(e.exigeResponsavel); }).catch(() => {});
+
 $nascimento.max = new Date().toISOString().slice(0, 10);
 $nascimento.addEventListener('input', () => {
   const idade = idadeEm($nascimento.value);
-  const menor = idade !== null && idade < 18;
+  const menor = exigeResponsavel && idade !== null && idade < 18;
   $blocoResponsavel.classList.toggle('hidden', !menor);
   camposResponsavel.forEach((campo) => { campo.required = menor; });
 });

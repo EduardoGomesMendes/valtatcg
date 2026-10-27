@@ -123,8 +123,8 @@ export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, r
     throw new Error('é preciso aceitar os Termos de Uso e a Política de Privacidade');
   }
 
-  const ehMenor = faixaEtaria(nascimento) === 'menor';
-  const responsavel = ehMenor ? conferirResponsavel({ responsavelNome, responsavelEmail }, emailLimpo) : null;
+  const exigeResponsavel = config.responsavel.obrigatorio && faixaEtaria(nascimento) === 'menor';
+  const responsavel = exigeResponsavel ? conferirResponsavel({ responsavelNome, responsavelEmail }, emailLimpo) : null;
 
   const problema = validarSenha(senha);
   if (problema) throw new Error(problema);
@@ -157,8 +157,8 @@ export function informarNascimento(usuarioId, { nascimento, responsavelNome, res
   if (!nascimentoValido(nascimento)) throw new Error('informe uma data de nascimento válida');
   if (!idadeMinimaAtingida(nascimento)) throw new Error(`o ValtaTCG é para maiores de ${config.idade.minima} anos`);
 
-  const ehMenor = faixaEtaria(nascimento) === 'menor';
-  const responsavel = ehMenor ? conferirResponsavel({ responsavelNome, responsavelEmail }, alvo.email) : null;
+  const exigeResponsavel = config.responsavel.obrigatorio && faixaEtaria(nascimento) === 'menor';
+  const responsavel = exigeResponsavel ? conferirResponsavel({ responsavelNome, responsavelEmail }, alvo.email) : null;
 
   db.prepare(
     'UPDATE usuarios SET nascimento = ?, responsavel_nome = ?, responsavel_email = ?, responsavel_status = ? WHERE id = ?',

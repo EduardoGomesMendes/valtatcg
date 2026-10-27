@@ -5,6 +5,8 @@ import path from 'node:path';
 const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'valtatcg-teste-'));
 process.env.DATA_DIR = pastaTemp;
 process.env.EMAIL_MODO = 'memoria';
+// Este teste cobre o fluxo do responsável, que por padrão está desligado (cadastro aberto).
+process.env.RESPONSAVEL_OBRIGATORIO = 'sim';
 process.env.URL_PUBLICA = 'https://exemplo.teste';
 
 const { db } = await import('../src/db/index.js');

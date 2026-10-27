@@ -46,6 +46,10 @@ export const config = {
   },
 
   responsavel: {
+    // false (padrão): o cadastro NÃO pede responsável e nada bloqueia menor de 18. A data de nascimento
+    // continua obrigatória e é ela que controla o fórum. Ligue (RESPONSAVEL_OBRIGATORIO=sim) quando a
+    // segurança for configurada: aí menor só grava com o responsável confirmado, como na fase 0.
+    obrigatorio: bool(process.env.RESPONSAVEL_OBRIGATORIO, false),
     // Validade do link que o responsável recebe por e-mail.
     validadeHoras: num(process.env.RESPONSAVEL_VALIDADE_HORAS, 168),
     // Limite de reenvios por conta por dia (o e-mail é de um terceiro: não pode virar spam).
@@ -64,6 +68,12 @@ export const config = {
     remetente: process.env.EMAIL_REMETENTE || '',
     // smtp (padrão quando há SMTP_HOST) | console (só escreve no log) | memoria (testes) | desligado
     modo: (process.env.EMAIL_MODO || (process.env.SMTP_HOST ? 'smtp' : 'desligado')).toLowerCase(),
+  },
+
+  forum: {
+    // Menores de 18 (13 a 17) podem escrever no fórum? Com "nao", só leem. Quem não informou a data de
+    // nascimento nunca escreve: sem a data não dá para saber a regra que vale.
+    menoresEscrevem: bool(process.env.FORUM_MENORES_ESCREVEM, true),
   },
 
   lojas: {
