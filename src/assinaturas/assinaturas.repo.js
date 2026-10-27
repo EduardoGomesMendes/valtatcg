@@ -188,16 +188,17 @@ export function usuarioPorAssinaturaExterna(assinaturaId) {
  * até receber 200, e ainda manda PAYMENT_CONFIRMED e PAYMENT_RECEIVED para a
  * mesma cobrança — dois eventos, um pagamento só.
  */
-export function registrarWebhook({ provedor = 'asaas', evento, acao, referencia, usuarioId = null, valor = null, corpo }) {
+export function registrarWebhook({ provedor = 'asaas', evento, acao, referencia, usuarioId = null, lojaId = null, valor = null, corpo }) {
   const info = db.prepare(
-    `INSERT OR IGNORE INTO pagamento_eventos (provedor, evento, acao, referencia, usuario_id, valor, corpo)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT OR IGNORE INTO pagamento_eventos (provedor, evento, acao, referencia, usuario_id, loja_id, valor, corpo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     provedor,
     String(evento),
     String(acao),
     String(referencia),
     usuarioId === null ? null : Number(usuarioId),
+    lojaId === null ? null : Number(lojaId),
     valor,
     typeof corpo === 'string' ? corpo : JSON.stringify(corpo),
   );

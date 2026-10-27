@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
+import * as lojas from '../../lojas/lojas.repo.js';
 import { pagamento } from '../../pagamento/index.js';
 import { criarLog } from '../../logger.js';
 
@@ -56,7 +57,12 @@ export function rotasPagamento() {
 
     // O externalReference é o caminho normal; a assinatura é o plano B para
     // cobranças criadas fora daqui (avulsa gerada no painel do Asaas).
-    const candidata = aviso.usuarioId ?? assinaturas.usuarioPorAssinaturaExterna(aviso.assinaturaExterna);
+    // Mensalidade de loja ("loja:ID") ou assinatura de usuário ("usuario:ID").
+    const candidataLoja = aviso.lojaId
+      ?? (aviso.usuarioId ? null : lojas.lojaPorAssinaturaExterna(aviso.assinaturaExterna));
+    const lojaId = candidataLoja && lojas.obterPorId(candidataLoja) ? candidataLoja : null;
+
+    const candidata = lojaId ? null : aviso.usuarioId ?? assinaturas.usuarioPorAssinaturaExterna(aviso.assinaturaExterna);
 
     /*
       Conferir que o usuário EXISTE, e não só que a referência tem o formato
@@ -74,6 +80,7 @@ export function rotasPagamento() {
         acao: aviso.acao,
         referencia: aviso.referencia,
         usuarioId,
+        lojaId,
         valor: aviso.valor,
         corpo: req.body,
       });
@@ -86,6 +93,15 @@ export function rotasPagamento() {
     if (!inedito) {
       log.debug(`notificação repetida (${aviso.acao}/${aviso.referencia}) — nada a fazer`);
       return res.status(200).json({ ok: true, repetido: true });
+    }
+
+    if (lojaId) {
+      try {
+        aplicarLoja(aviso, lojaId);
+      } catch (erro) {
+        log.error(`falha ao aplicar ${aviso.evento} na loja ${lojaId}: ${erro.stack || erro.message}`);
+      }
+      return res.status(200).json({ ok: true });
     }
 
     if (!usuarioId) {
@@ -108,6 +124,28 @@ export function rotasPagamento() {
   });
 
   return rotas;
+}
+
+/** Mesma regra das assinaturas de usuário, só que a mensalidade da loja libera/derruba a vitrine. */
+function aplicarLoja(aviso, lojaId) {
+  if (aviso.acao === 'pagou') {
+    if (assinaturas.jaAconteceu({ acao: 'estornou', referencia: aviso.referencia })) {
+      log.warn(`loja ${lojaId}: "${aviso.evento}" chegou depois do estorno da cobrança ${aviso.referencia} — NÃO reativada`);
+      return;
+    }
+    lojas.ativarAssinatura(lojaId, DIAS_POR_PAGAMENTO);
+    log.info(`loja ${lojaId} pagou ${aviso.valor ?? '?'} — mensalidade liberada`);
+    return;
+  }
+  if (aviso.acao === 'atrasou') {
+    // Igual ao usuário: o vencimento não bloqueia na hora, quem bloqueia é a data de expiração.
+    log.info(`loja ${lojaId}: cobrança ${aviso.referencia} venceu sem pagamento`);
+    return;
+  }
+  if (aviso.acao === 'estornou') {
+    lojas.cancelarAssinatura(lojaId, { imediato: true });
+    log.warn(`loja ${lojaId}: ${aviso.descricao} — mensalidade suspensa`);
+  }
 }
 
 function aplicar(aviso, usuarioId) {

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lojas de cartas · ValtaTCG</title>
+  <meta name="description" content="Encontre lojas de cartas colecionáveis perto de você, em todo o Brasil.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body class="app">
+  <header class="home--topo flex items--center justify--content--between">
+    <a href="/" class="flex items--center gap--2">
+      <img class="marca--simbolo" src="/assets/img/logo-simbolo.svg" alt="" width="32" height="32">
+      <span class="marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></span>
+    </a>
+    <nav class="flex items--center gap--3">
+      <a href="/lojas/" class="nao--encolhe weight--semibold">Lojas</a>
+      <a href="/entrar/" class="botao botao--secundario botao--pequeno" id="topo-entrar">Entrar</a>
+      <a href="/colecao/" class="botao botao--primario botao--pequeno hidden" id="topo-colecao">Minha coleção</a>
+    </nav>
+  </header>
+
+  <main class="conteudo flex flex--col gap--5">
+    <div class="flex flex--col gap--1">
+      <h1 class="text--xl weight--bold">Lojas de cartas</h1>
+      <p class="text--sm text--muted">Lojas físicas e online que vendem cartas colecionáveis, por estado e cidade.</p>
+    </div>
+
+    <form class="flex flex--wrap gap--2 items--center" id="form-busca">
+      <select class="campo campo--curto" id="filtro-uf" aria-label="Estado">
+        <option value="">Todo o Brasil</option>
+      </select>
+      <input class="campo campo--curto" type="search" id="filtro-cidade" placeholder="Cidade" maxlength="60" autocomplete="off">
+      <input class="campo" type="search" id="filtro-q" placeholder="Nome da loja ou produto" maxlength="60" autocomplete="off">
+      <button class="botao botao--primario" type="submit">Buscar</button>
+    </form>
+
+    <p class="hidden" id="aviso"></p>
+    <span class="text--xs text--muted" id="contagem"></span>
+
+    <div class="flex flex--wrap gap--4" id="lista-lojas"></div>
+
+    <div class="flex items--center gap--3 hidden" id="paginacao">
+      <button class="botao botao--secundario botao--pequeno" type="button" id="btn-anterior">Anterior</button>
+      <span class="text--sm text--muted" id="pagina-texto"></span>
+      <button class="botao botao--secundario botao--pequeno" type="button" id="btn-proxima">Próxima</button>
+    </div>
+
+    <section class="cartao p--5 flex flex--col gap--2">
+      <h2 class="text--md weight--semibold">Tem uma loja?</h2>
+      <p class="text--sm text--muted">Cadastre seu CNPJ, apareça para colecionadores da sua região e receba contatos direto no WhatsApp.</p>
+      <a href="/minha-loja/" class="botao botao--secundario nao--encolhe">Cadastrar minha loja</a>
+    </section>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/lojas.js"></script>
+</body>
+</html>

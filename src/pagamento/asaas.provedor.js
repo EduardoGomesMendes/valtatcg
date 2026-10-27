@@ -100,14 +100,14 @@ export class ProvedorAsaas extends ProvedorPagamento {
   /* Cliente                                                           */
   /* ---------------------------------------------------------------- */
 
-  async garantirCliente({ nome, documento, email, usuarioId, clienteExistente = null }) {
+  async garantirCliente({ nome, documento, email, usuarioId, referencia = null, clienteExistente = null }) {
     const corpo = {
       name: nome,
       cpfCnpj: apenasDigitos(documento),
       email: email || undefined,
-      // Amarra o cliente do Asaas ao usuário daqui: se um dia for preciso
+      // Amarra o cliente do Asaas ao usuário (ou à loja) daqui: se um dia for preciso
       // conferir no painel do Asaas de quem é a cobrança, o número está lá.
-      externalReference: String(usuarioId),
+      externalReference: referencia ?? String(usuarioId),
       notificationDisabled: false,
     };
 
@@ -132,7 +132,9 @@ export class ProvedorAsaas extends ProvedorPagamento {
   /* Assinatura                                                        */
   /* ---------------------------------------------------------------- */
 
-  async criarAssinatura({ clienteId, preco, usuarioId, assinaturaExistente = null }) {
+  async criarAssinatura({
+    clienteId, preco, usuarioId, referencia = null, descricao = null, assinaturaExistente = null,
+  }) {
     // Reabrir não pode deixar duas recorrências ativas cobrando a mesma pessoa.
     if (assinaturaExistente) {
       await this.cancelarAssinatura(assinaturaExistente).catch((erro) => {
@@ -150,9 +152,9 @@ export class ProvedorAsaas extends ProvedorPagamento {
         value: preco,
         nextDueDate: hoje(),
         cycle: 'MONTHLY',
-        description: 'valtatcg — assinatura mensal',
-        // É por aqui que o webhook descobre de quem é o pagamento.
-        externalReference: `usuario:${usuarioId}`,
+        description: descricao ?? 'valtatcg — assinatura mensal',
+        // É por aqui que o webhook descobre de quem é o pagamento: "usuario:ID" ou "loja:ID".
+        externalReference: referencia ?? `usuario:${usuarioId}`,
       },
     });
 
@@ -234,14 +236,15 @@ export class ProvedorAsaas extends ProvedorPagamento {
     const acao = EVENTOS[evento] ?? 'ignorar';
 
     const referencia = cobranca?.externalReference ?? corpo?.subscription?.externalReference ?? null;
-    const partes = /^usuario:(\d+)$/.exec(String(referencia ?? ''));
+    const partes = /^(usuario|loja):(\d+)$/.exec(String(referencia ?? ''));
 
     return {
       acao,
       evento,
       referencia: cobranca?.id ?? null,
       assinaturaExterna: cobranca?.subscription ?? null,
-      usuarioId: partes ? Number(partes[1]) : null,
+      usuarioId: partes?.[1] === 'usuario' ? Number(partes[2]) : null,
+      lojaId: partes?.[1] === 'loja' ? Number(partes[2]) : null,
       valor: typeof cobranca?.value === 'number' ? cobranca.value : null,
       descricao: descreverEvento(evento, cobranca),
     };

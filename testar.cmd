@@ -26,4 +26,7 @@ echo.
 echo  --- seguranca ---
 node testes/seguranca.teste.js
 echo.
+echo  --- lojas ---
+node testes/lojas.teste.js
+echo.
 pause

@@ -12,6 +12,7 @@ import { rotasPagamento } from './routes/pagamento.rotas.js';
 import { rotasPerfil } from './routes/perfil.rotas.js';
 import { rotasResponsavel } from './routes/responsavel.rotas.js';
 import { rotasDenuncias } from './routes/denuncias.rotas.js';
+import { rotasLojasPublicas, rotasMinhaLoja } from './routes/lojas.rotas.js';
 
 const log = criarLog('api');
 
@@ -66,6 +67,8 @@ export function criarServidor() {
   app.use('/api', rotasPagamento());
   // O responsável que confirma o cadastro de um menor não tem conta: vale o token do link.
   app.use('/api', rotasResponsavel());
+  // Diretório de lojas: quem ainda não tem conta também procura loja perto de casa.
+  app.use('/api', rotasLojasPublicas());
 
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);
@@ -75,6 +78,8 @@ export function criarServidor() {
   app.use('/api', rotasAssinatura());
   app.use('/api', rotasPerfil());
   app.use('/api', rotasDenuncias());
+  // A loja tem mensalidade própria: não depende de o plano pessoal estar em dia.
+  app.use('/api', rotasMinhaLoja());
 
   // Menor sem responsável confirmado só lê; depois vem o bloqueio por assinatura vencida.
   app.use('/api', exigirResponsavel);

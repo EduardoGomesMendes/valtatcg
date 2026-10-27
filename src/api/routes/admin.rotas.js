@@ -4,6 +4,7 @@ import * as usuarios from '../../auth/usuarios.repo.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { caminhoAvatar } from '../../auth/avatar.js';
 import * as denuncias from '../../seguranca/denuncias.repo.js';
+import * as lojas from '../../lojas/lojas.repo.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -81,6 +82,29 @@ export function rotasAdmin() {
 
   rotas.post('/admin/usuarios/:id/reativar', (req, res) => {
     res.json({ usuario: usuarios.reativar(req.params.id) });
+  });
+
+  rotas.get('/admin/lojas', (req, res) => {
+    res.json({ lojas: lojas.listarParaAdmin(String(req.query.status ?? 'pendente')) });
+  });
+
+  rotas.post('/admin/lojas/:id/status', (req, res) => {
+    try {
+      res.json({ loja: lojas.mudarStatus(req.params.id, req.body?.status, req.body?.motivo) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /** Libera dias de mensalidade na mão — escape para teste, cortesia ou gateway fora do ar. */
+  rotas.post('/admin/lojas/:id/assinatura', (req, res) => {
+    const dias = Number(req.body?.dias);
+    if (!(dias > 0)) return res.status(400).json({ erro: 'informe quantos dias liberar' });
+    try {
+      res.json({ loja: lojas.ativarAssinatura(req.params.id, dias) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
   });
 
   rotas.get('/admin/denuncias', (req, res) => {
