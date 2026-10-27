@@ -29,4 +29,10 @@ echo.
 echo  --- lojas ---
 node testes/lojas.teste.js
 echo.
+echo  --- forum ---
+node testes/forum.teste.js
+echo.
+echo  --- eventos ---
+node testes/eventos.teste.js
+echo.
 pause

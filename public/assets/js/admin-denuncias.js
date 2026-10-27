@@ -20,10 +20,59 @@ async function resolver(id, status) {
   }
 }
 
+const ROTULO_ALVO = { loja: 'Loja', usuario: 'Usuário', topico: 'Tópico do fórum', resposta: 'Resposta no fórum', evento: 'Evento' };
+
 function nomeDoAlvo(d) {
-  if (!d.alvo) return `${d.alvo_tipo} #${d.alvo_id} (não existe mais)`;
-  const tipo = d.alvo_tipo === 'loja' ? 'Loja' : 'Usuário';
-  return `${tipo}: ${d.alvo.nome}${d.alvo.email ? ` (${d.alvo.email})` : ''}`;
+  const tipo = ROTULO_ALVO[d.alvo_tipo] ?? d.alvo_tipo;
+  if (!d.alvo) return `${tipo} #${d.alvo_id} (não existe mais)`;
+  const base = `${tipo}: ${d.alvo.nome}${d.alvo.email ? ` (${d.alvo.email})` : ''}`;
+  return d.alvo.autorNome ? `${base} — por ${d.alvo.autorNome}` : base;
+}
+
+/** Botões que agem sobre o conteúdo denunciado (fórum e eventos), além dos de resolver/descartar. */
+function acoesDoConteudo(d) {
+  const lista = [];
+  const botao = (rotulo, classes, aoClicar) => {
+    const b = el('button', `botao ${classes} botao--pequeno`, rotulo);
+    b.type = 'button';
+    b.addEventListener('click', aoClicar);
+    return b;
+  };
+  const executar = async (promessa) => {
+    try {
+      await promessa();
+      carregar();
+    } catch (erro) {
+      avisar($aviso, erro.message);
+    }
+  };
+  const a = d.alvo;
+  if (!a) return lista;
+
+  if (d.alvo_tipo === 'topico' || d.alvo_tipo === 'resposta') {
+    const rota = d.alvo_tipo === 'topico' ? 'topicos' : 'respostas';
+    const idTopico = d.alvo_tipo === 'topico' ? d.alvo_id : a.topicoId;
+    const ver = el('a', 'botao botao--secundario botao--pequeno', 'Abrir no fórum');
+    ver.href = `/forum/topico/?id=${idTopico}`;
+    ver.target = '_blank';
+    ver.rel = 'noopener';
+    lista.push(ver);
+    if (!a.oculto) {
+      lista.push(botao('Ocultar conteúdo', 'botao--perigo', () => executar(() => api(`/admin/forum/${rota}/${d.alvo_id}/moderar`, { method: 'POST', body: JSON.stringify({ acao: 'ocultar' }) }))));
+    }
+  }
+  if (d.alvo_tipo === 'evento') {
+    lista.push(botao('Apagar evento', 'botao--perigo', () => {
+      if (confirm(`Apagar o evento "${a.nome}"?`)) executar(() => api(`/admin/eventos/${d.alvo_id}`, { method: 'DELETE' }));
+    }));
+  }
+  if (a.autorId && !a.autorSuspenso) {
+    lista.push(botao('Suspender autor', 'botao--perigo', () => {
+      if (!confirm(`Suspender a conta de "${a.autorNome}"? Ela é desconectada na hora.`)) return;
+      executar(() => api(`/admin/usuarios/${a.autorId}/suspender`, { method: 'POST', body: JSON.stringify({ motivo: `Denúncia #${d.id}: ${d.motivo_rotulo}` }) }));
+    }));
+  }
+  return lista;
 }
 
 function cartaoDenuncia(d) {
@@ -73,6 +122,7 @@ function cartaoDenuncia(d) {
     acoes.append(btnSusp);
   }
 
+  acoesDoConteudo(d).forEach((b) => acoes.append(b));
   cartao.append(acoes);
   return cartao;
 }

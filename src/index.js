@@ -4,6 +4,7 @@ import { criarServidor } from './api/servidor.js';
 import './db/index.js'; // cria/abre o banco antes de qualquer coisa
 import { iniciarJobDePrecos } from './portfolio/precos.job.js';
 import { pagamento } from './pagamento/index.js';
+import { apagarPassados } from './comunidade/eventos.repo.js';
 
 const log = criarLog('sistema');
 
@@ -73,6 +74,18 @@ async function iniciar() {
   if (!servidor) return; // a porta não subiu; a mensagem já foi explicada
 
   const pararJobDePrecos = iniciarJobDePrecos();
+
+  // Evento que já aconteceu é apagado: no boot e a cada 6 horas.
+  const limparEventos = () => {
+    try {
+      const n = apagarPassados();
+      if (n) log.info(`eventos passados apagados: ${n}`);
+    } catch (erro) {
+      log.error(`falha ao apagar eventos passados: ${erro.message}`);
+    }
+  };
+  limparEventos();
+  setInterval(limparEventos, 6 * 60 * 60 * 1000).unref();
 
   const encerrar = (sinal) => {
     log.info(`recebido ${sinal}, encerrando...`);

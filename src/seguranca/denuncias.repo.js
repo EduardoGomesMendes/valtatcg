@@ -8,12 +8,12 @@ export const MOTIVOS = Object.freeze({
   outro: 'Outro motivo',
 });
 
-const TIPOS = ['loja', 'usuario'];
+const TIPOS = ['loja', 'usuario', 'topico', 'resposta', 'evento'];
+const TABELAS = { loja: 'lojas', usuario: 'usuarios', topico: 'forum_topicos', resposta: 'forum_respostas', evento: 'eventos' };
 const LIMITE_POR_DIA = 10;
 
 function alvoExiste(tipo, id) {
-  const tabela = tipo === 'loja' ? 'lojas' : 'usuarios';
-  return Boolean(db.prepare(`SELECT 1 FROM ${tabela} WHERE id = ?`).get(Number(id)));
+  return Boolean(db.prepare(`SELECT 1 FROM ${TABELAS[tipo]} WHERE id = ?`).get(Number(id)));
 }
 
 /** Repetir a mesma denúncia em aberto não cria outra: devolve a que já existe. */
@@ -40,6 +40,20 @@ export function criar({ autorId, alvoTipo, alvoId, motivo, detalhe = '' }) {
   return { id: Number(info.lastInsertRowid), repetida: false };
 }
 
+/** O que o admin precisa ver para decidir: o conteúdo denunciado e quem o escreveu (para suspender a conta, se for o caso). */
+function descreverAlvo(tipo, id) {
+  if (tipo === 'loja') return db.prepare('SELECT nome, status FROM lojas WHERE id = ?').get(id) ?? null;
+  if (tipo === 'usuario') return db.prepare('SELECT nome, email, suspenso FROM usuarios WHERE id = ?').get(id) ?? null;
+  if (tipo === 'topico') {
+    return db.prepare('SELECT t.titulo AS nome, t.oculto, t.autor_id AS autorId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM forum_topicos t JOIN usuarios u ON u.id = t.autor_id WHERE t.id = ?').get(id) ?? null;
+  }
+  if (tipo === 'resposta') {
+    const r = db.prepare('SELECT substr(r.corpo, 1, 160) AS nome, r.oculto, r.autor_id AS autorId, r.topico_id AS topicoId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM forum_respostas r JOIN usuarios u ON u.id = r.autor_id WHERE r.id = ?').get(id);
+    return r ?? null;
+  }
+  return db.prepare('SELECT e.titulo AS nome, e.status, e.criado_por AS autorId, u.nome AS autorNome, u.suspenso AS autorSuspenso FROM eventos e JOIN usuarios u ON u.id = e.criado_por WHERE e.id = ?').get(id) ?? null;
+}
+
 export function listar(status = 'aberta') {
   const linhas = db.prepare(
     `SELECT d.*, a.nome AS autor_nome, a.email AS autor_email
@@ -48,10 +62,7 @@ export function listar(status = 'aberta') {
   ).all(status, status);
 
   return linhas.map((d) => {
-    const alvo = d.alvo_tipo === 'loja'
-      ? db.prepare('SELECT nome, status FROM lojas WHERE id = ?').get(d.alvo_id)
-      : db.prepare('SELECT nome, email, suspenso FROM usuarios WHERE id = ?').get(d.alvo_id);
-    return { ...d, motivo_rotulo: MOTIVOS[d.motivo] ?? d.motivo, alvo: alvo ?? null };
+    return { ...d, motivo_rotulo: MOTIVOS[d.motivo] ?? d.motivo, alvo: descreverAlvo(d.alvo_tipo, d.alvo_id) };
   });
 }
 

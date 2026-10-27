@@ -169,3 +169,55 @@ CREATE TABLE IF NOT EXISTS lojas (
 );
 
 CREATE INDEX IF NOT EXISTS idx_lojas_busca ON lojas(status, uf, cidade_busca);
+
+-- Fórum: só texto. As categorias são fixas no código (src/comunidade/forum.repo.js).
+-- Apagar a conta apaga os tópicos e respostas da pessoa (cascata): dado pessoal não fica sem dono.
+CREATE TABLE IF NOT EXISTS forum_topicos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  categoria TEXT NOT NULL,
+  autor_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL,
+  corpo TEXT NOT NULL,
+  fixado INTEGER NOT NULL DEFAULT 0,
+  fechado INTEGER NOT NULL DEFAULT 0,
+  oculto INTEGER NOT NULL DEFAULT 0,
+  respostas INTEGER NOT NULL DEFAULT 0,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  atividade_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_topicos ON forum_topicos(categoria, oculto, fixado DESC, atividade_em DESC);
+
+CREATE TABLE IF NOT EXISTS forum_respostas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  topico_id INTEGER NOT NULL REFERENCES forum_topicos(id) ON DELETE CASCADE,
+  autor_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  corpo TEXT NOT NULL,
+  oculto INTEGER NOT NULL DEFAULT 0,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_respostas ON forum_respostas(topico_id, id);
+
+-- Eventos do Brasil inteiro. A data é só o dia (sem fuso): evento passado é apagado pela limpeza diária.
+CREATE TABLE IF NOT EXISTS eventos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  criado_por INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  loja_id INTEGER REFERENCES lojas(id) ON DELETE SET NULL,
+  titulo TEXT NOT NULL,
+  tipo TEXT NOT NULL,                  -- torneio | encontro | lancamento | feira | outro
+  uf TEXT NOT NULL,
+  cidade TEXT NOT NULL,
+  cidade_busca TEXT NOT NULL,
+  local TEXT,
+  descricao TEXT,
+  data_inicio TEXT NOT NULL,           -- AAAA-MM-DD
+  data_fim TEXT NOT NULL,              -- AAAA-MM-DD (igual ao início quando é de um dia só)
+  hora TEXT,                           -- HH:MM, opcional
+  link TEXT,
+  status TEXT NOT NULL DEFAULT 'pendente',   -- pendente | aprovado | recusado
+  motivo_status TEXT,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_eventos_busca ON eventos(status, data_fim, uf);

@@ -5,6 +5,8 @@ import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { caminhoAvatar } from '../../auth/avatar.js';
 import * as denuncias from '../../seguranca/denuncias.repo.js';
 import * as lojas from '../../lojas/lojas.repo.js';
+import * as forum from '../../comunidade/forum.repo.js';
+import * as eventos from '../../comunidade/eventos.repo.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -102,6 +104,48 @@ export function rotasAdmin() {
     if (!(dias > 0)) return res.status(400).json({ erro: 'informe quantos dias liberar' });
     try {
       res.json({ loja: lojas.ativarAssinatura(req.params.id, dias) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /* Eventos: aprovação e remoção. */
+  rotas.get('/admin/eventos', (req, res) => {
+    res.json({ eventos: eventos.listarParaAdmin(String(req.query.status ?? 'pendente')) });
+  });
+
+  rotas.post('/admin/eventos/:id/decidir', (req, res) => {
+    try {
+      eventos.decidir(req.params.id, req.body?.status, req.body?.motivo);
+      res.json({ ok: true });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.delete('/admin/eventos/:id', (req, res) => {
+    try {
+      eventos.removerComoAdmin(req.params.id);
+      res.status(204).end();
+    } catch (erro) {
+      res.status(404).json({ erro: erro.message });
+    }
+  });
+
+  /* Fórum: ocultar, fixar e fechar. Ocultar não apaga — a prova fica e dá para desfazer. */
+  rotas.post('/admin/forum/topicos/:id/moderar', (req, res) => {
+    try {
+      forum.moderarTopico(req.params.id, String(req.body?.acao ?? ''));
+      res.json({ ok: true });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.post('/admin/forum/respostas/:id/moderar', (req, res) => {
+    try {
+      forum.moderarResposta(req.params.id, String(req.body?.acao ?? ''));
+      res.json({ ok: true });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

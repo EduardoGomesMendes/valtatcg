@@ -646,3 +646,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 
 /* Diretório de lojas: cartões que quebram de linha em vez de esticar */
 .loja--cartao { flex: 1 1 260px; max-width: 380px; }
+
+
+/* Fórum: texto escrito pelas pessoas, sempre como texto puro */
+.corpo--texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+.forum--linha { color: inherit; text-decoration: none; }
+.forum--linha:hover { background-color: var(--color-surface-alt); }

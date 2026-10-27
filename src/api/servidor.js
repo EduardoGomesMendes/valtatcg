@@ -13,6 +13,7 @@ import { rotasPerfil } from './routes/perfil.rotas.js';
 import { rotasResponsavel } from './routes/responsavel.rotas.js';
 import { rotasDenuncias } from './routes/denuncias.rotas.js';
 import { rotasLojasPublicas, rotasMinhaLoja } from './routes/lojas.rotas.js';
+import { rotasEventosPublicos, rotasComunidade } from './routes/comunidade.rotas.js';
 
 const log = criarLog('api');
 
@@ -69,6 +70,8 @@ export function criarServidor() {
   app.use('/api', rotasResponsavel());
   // Diretório de lojas: quem ainda não tem conta também procura loja perto de casa.
   app.use('/api', rotasLojasPublicas());
+  // Agenda de eventos: qualquer visitante vê.
+  app.use('/api', rotasEventosPublicos());
 
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);
@@ -83,6 +86,9 @@ export function criarServidor() {
 
   // Menor sem responsável confirmado só lê; depois vem o bloqueio por assinatura vencida.
   app.use('/api', exigirResponsavel);
+
+  // Fórum e eventos: livres para quem tem conta, mesmo com a assinatura da coleção vencida.
+  app.use('/api', rotasComunidade());
 
   // Daqui para baixo, escrita exige assinatura em dia (leitura sempre passa).
   app.use('/api', exigirAssinatura);

@@ -85,6 +85,12 @@ export function dataBr(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+/** Data sem hora (AAAA-MM-DD → DD/MM/AAAA). Não passa por Date: o fuso do Brasil deslocaria um dia. */
+export function dataSimples(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ''));
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+}
+
 /**
  * Carrega a foto de perfil (própria conta) num par imagem+iniciais — usado
  * tanto no botão redondo do cabeçalho quanto no card grande da tela de

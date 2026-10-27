@@ -1,4 +1,5 @@
 import { api, avisar, el, limpar } from './api.js';
+import { carregarMotivos, denunciar } from './denunciar.js';
 
 const $form = document.getElementById('form-busca');
 const $uf = document.getElementById('filtro-uf');
@@ -14,7 +15,6 @@ const $proxima = document.getElementById('btn-proxima');
 
 let pagina = 1;
 let logado = false;
-let motivos = [];
 
 /* Os links só nascem de dado já validado no servidor, mas são montados de novo aqui:
    o número vira dígitos, o @ vira caminho — nada do cadastro entra como URL pronta sem filtro. */
@@ -43,24 +43,6 @@ function botaoLink(rotulo, href) {
   return a;
 }
 
-async function denunciar(loja) {
-  const lista = motivos.map((m, i) => `${i + 1} - ${m.rotulo}`).join('\n');
-  const escolha = prompt(`Por que denunciar "${loja.nome}"?\n\n${lista}\n\nDigite o número:`);
-  if (escolha === null) return;
-  const motivo = motivos[Number(escolha) - 1];
-  if (!motivo) {
-    avisar($aviso, 'Escolha um número da lista.');
-    return;
-  }
-  const detalhe = prompt('Quer explicar melhor? (opcional)', '') ?? '';
-  try {
-    await api('/denuncias', { method: 'POST', body: JSON.stringify({ alvoTipo: 'loja', alvoId: loja.id, motivo: motivo.chave, detalhe }) });
-    avisar($aviso, 'Denúncia enviada. Obrigado — nossa equipe vai analisar.', 'sucesso');
-  } catch (erro) {
-    avisar($aviso, erro.message);
-  }
-}
-
 function cartaoLoja(loja) {
   const cartao = el('article', 'cartao p--4 flex flex--col gap--2 loja--cartao', '');
   cartao.append(el('h2', 'text--md weight--semibold', loja.nome));
@@ -75,10 +57,10 @@ function cartaoLoja(loja) {
   ].filter(Boolean).forEach((b) => acoes.append(b));
   cartao.append(acoes);
 
-  if (logado && motivos.length) {
+  if (logado) {
     const btn = el('button', 'botao botao--pequeno text--muted', 'Denunciar');
     btn.type = 'button';
-    btn.addEventListener('click', () => denunciar(loja));
+    btn.addEventListener('click', () => denunciar({ alvoTipo: 'loja', alvoId: loja.id, nome: loja.nome, $aviso }));
     cartao.append(btn);
   }
   return cartao;
@@ -110,11 +92,9 @@ async function iniciar() {
   try {
     const estado = await fetch('/api/estado', { credentials: 'same-origin' }).then((r) => r.json());
     if (estado.autenticado) {
-      logado = true;
       document.getElementById('topo-entrar').classList.add('hidden');
       document.getElementById('topo-colecao').classList.remove('hidden');
-      const { motivos: porChave } = await api('/denuncias/motivos').catch(() => ({ motivos: {} }));
-      motivos = Object.entries(porChave).map(([chave, rotulo]) => ({ chave, rotulo }));
+      logado = (await carregarMotivos()).length > 0;
     }
   } catch {
     // sem sessão, o diretório continua público.

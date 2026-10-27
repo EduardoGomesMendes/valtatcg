@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meus eventos · ValtaTCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body class="app">
+  <header class="topo flex items--center justify--content--between px--6 bg--surface border--bottom">
+    <a href="/colecao/" class="flex items--center gap--2">
+      <img class="marca--simbolo" src="/assets/img/logo-simbolo.svg" alt="" width="32" height="32">
+      <span class="marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></span>
+    </a>
+    <nav class="flex items--center gap--5 topo--links">
+      <a href="/colecao/" class="nao--encolhe text--muted">Coleção</a>
+      <a href="/buscar/" class="nao--encolhe text--muted">Buscar cartas</a>
+      <a href="/lojas/" class="nao--encolhe text--muted">Lojas</a>
+      <a href="/eventos/" class="nao--encolhe weight--semibold">Eventos</a>
+      <a href="/forum/" class="nao--encolhe text--muted">Fórum</a>
+      <a href="/assinatura/" class="nao--encolhe text--muted">Assinatura</a>
+      <a href="/admin/" class="nao--encolhe text--muted hidden" id="link-admin">Admin</a>
+    </nav>
+    <div class="menu--grupo nao--encolhe" id="menu-perfil">
+      <button type="button" class="avatar-botao" id="btn-avatar-menu" aria-haspopup="true" aria-expanded="false" title="Menu da conta">
+        <img class="hidden" id="avatar-topo-imagem" alt="">
+        <span id="avatar-topo-placeholder">?</span>
+      </button>
+      <div class="menu--lista hidden" id="menu-avatar-lista">
+        <a href="/perfil/" class="menu--item">Editar perfil</a>
+        <a href="/minha-loja/" class="menu--item">Minha loja</a>
+        <a href="/meus-eventos/" class="menu--item">Meus eventos</a>
+        <span class="menu--item menu--item--desabilitado">Configurações</span>
+        <button type="button" class="menu--item" id="btn-sair">Sair</button>
+      </div>
+    </div>
+  </header>
+  <div class="hidden" id="aviso-assinatura"></div>
+
+  <main class="conteudo conteudo--estreito flex flex--col gap--5">
+    <h1 class="text--xl weight--bold">Meus eventos</h1>
+
+    <section class="cartao p--5 flex flex--col gap--2 hidden" id="cartao-bloqueio">
+      <h2 class="text--md weight--semibold">Divulgação indisponível</h2>
+      <p class="text--sm" id="texto-bloqueio"></p>
+      <a href="/perfil/" class="botao botao--secundario nao--encolhe">Abrir meu perfil</a>
+    </section>
+
+    <section class="cartao p--5 flex flex--col gap--3 hidden" id="cartao-form">
+      <h2 class="text--md weight--semibold">Divulgar um evento</h2>
+      <form class="flex flex--col gap--3" id="form-evento">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Nome do evento</span>
+          <input class="campo" type="text" name="titulo" required minlength="5" maxlength="100" autocomplete="off">
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Tipo</span>
+          <select class="campo" name="tipo" id="campo-tipo" required></select>
+        </label>
+        <div class="flex flex--wrap gap--3">
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">Estado</span>
+            <select class="campo" name="uf" id="campo-uf" required>
+              <option value="">Escolha</option>
+            </select>
+          </label>
+          <label class="flex flex--col gap--1 flex--1">
+            <span class="rotulo">Cidade</span>
+            <input class="campo" type="text" name="cidade" required maxlength="60">
+          </label>
+        </div>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Local (endereço)</span>
+          <input class="campo" type="text" name="local" maxlength="150" placeholder="Nome do espaço, rua e número">
+        </label>
+        <div class="flex flex--wrap gap--3">
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">Data</span>
+            <input class="campo" type="date" name="dataInicio" id="campo-data-inicio" required>
+          </label>
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">Até (se durar mais de um dia)</span>
+            <input class="campo" type="date" name="dataFim" id="campo-data-fim">
+          </label>
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">Horário</span>
+            <input class="campo" type="time" name="hora">
+          </label>
+        </div>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Descrição</span>
+          <textarea class="campo" name="descricao" rows="4" maxlength="1000" placeholder="Como funciona, quem pode participar, premiação…"></textarea>
+          <span class="text--xs text--muted">Sem links, e-mails ou telefones aqui — use o campo de link abaixo.</span>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Link para mais informações (site ou Instagram)</span>
+          <input class="campo" type="text" name="link" maxlength="200" placeholder="meusite.com.br" autocomplete="off">
+        </label>
+        <p class="hidden" id="aviso-evento"></p>
+        <button class="botao botao--primario w--full" type="submit">Divulgar evento</button>
+      </form>
+    </section>
+
+    <section class="flex flex--col gap--3">
+      <h2 class="text--md weight--semibold">Eventos que você cadastrou</h2>
+      <p class="hidden" id="aviso-lista"></p>
+      <div class="flex flex--col gap--3" id="lista-meus"></div>
+    </section>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/meus-eventos.js"></script>
+</body>
+</html>
