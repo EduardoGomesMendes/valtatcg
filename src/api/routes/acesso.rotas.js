@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
+import { enviarConfirmacaoResponsavel } from '../../seguranca/responsavel.js';
+import { faixaEtaria } from '../../seguranca/idade.js';
 import {
   gravarCookieSessao, apagarCookieSessao,
   registrarFalhaDeLogin, loginBloqueado, limparFalhas,
@@ -10,16 +12,22 @@ export function rotasAcesso() {
   const rotas = Router();
 
   rotas.get('/estado', (req, res) => {
-    res.json({ autenticado: Boolean(req.usuario), usuario: req.usuario });
+    res.json({
+      autenticado: Boolean(req.usuario),
+      usuario: req.usuario ? { ...req.usuario, faixa: faixaEtaria(req.usuario.nascimento) } : null,
+    });
   });
 
-  rotas.post('/registrar', (req, res) => {
+  rotas.post('/registrar', async (req, res) => {
     try {
       const usuario = usuarios.criar(req.body ?? {});
       assinaturas.iniciarTeste(usuario.id);
+      const responsavel = usuario.responsavel_status === 'pendente'
+        ? await enviarConfirmacaoResponsavel(usuario.id)
+        : null;
       const token = usuarios.abrirSessao(usuario.id);
       gravarCookieSessao(res, token);
-      res.status(201).json({ usuario });
+      res.status(201).json({ usuario, responsavel });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }
@@ -37,6 +45,10 @@ export function rotasAcesso() {
     if (!usuario) {
       registrarFalhaDeLogin(chave);
       return res.status(401).json({ erro: 'usuário/e-mail ou senha incorretos' });
+    }
+
+    if (usuario.suspenso) {
+      return res.status(403).json({ erro: 'esta conta está suspensa — fale com o suporte' });
     }
 
     limparFalhas(chave);

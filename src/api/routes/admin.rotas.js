@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { caminhoAvatar } from '../../auth/avatar.js';
+import * as denuncias from '../../seguranca/denuncias.repo.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -52,6 +53,49 @@ export function rotasAdmin() {
         descricao: `Liberado manualmente por ${req.usuario.nome}.`,
       });
       res.json(situacao);
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /** Escape enquanto o e-mail não está configurado, ou quando o responsável não consegue abrir o link. */
+  rotas.post('/admin/usuarios/:id/responsavel/confirmar', (req, res) => {
+    try {
+      res.json({ usuario: usuarios.confirmarResponsavelManual(req.params.id) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.post('/admin/usuarios/:id/suspender', (req, res) => {
+    try {
+      if (Number(req.params.id) === req.usuario.id) {
+        return res.status(400).json({ erro: 'não dá para suspender a própria conta' });
+      }
+      const motivo = String(req.body?.motivo ?? '').trim().slice(0, 300) || null;
+      res.json({ usuario: usuarios.suspender(req.params.id, motivo) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.post('/admin/usuarios/:id/reativar', (req, res) => {
+    res.json({ usuario: usuarios.reativar(req.params.id) });
+  });
+
+  rotas.get('/admin/denuncias', (req, res) => {
+    const status = ['aberta', 'resolvida', 'descartada', 'todas'].includes(req.query.status) ? req.query.status : 'aberta';
+    res.json({ denuncias: denuncias.listar(status) });
+  });
+
+  rotas.post('/admin/denuncias/:id/resolver', (req, res) => {
+    try {
+      denuncias.resolver(req.params.id, {
+        adminId: req.usuario.id,
+        status: req.body?.status,
+        nota: req.body?.nota,
+      });
+      res.json({ ok: true });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

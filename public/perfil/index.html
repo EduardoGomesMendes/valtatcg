@@ -89,6 +89,38 @@
       </form>
     </section>
 
+    <section class="cartao p--5 flex flex--col gap--3" id="cartao-idade">
+      <h2 class="text--md weight--semibold">Idade e responsável</h2>
+      <p class="text--sm text--muted" id="idade-resumo"></p>
+
+      <form class="hidden flex flex--col gap--3" id="form-nascimento">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Data de nascimento</span>
+          <input class="campo" type="date" name="nascimento" id="perfil-nascimento" required>
+          <span class="text--xs text--muted">Depois de salva, só o suporte consegue corrigir.</span>
+        </label>
+        <div class="hidden flex flex--col gap--3" id="perfil-bloco-responsavel">
+          <p class="faixa text--sm">Menores de 18 anos precisam da autorização de um responsável.</p>
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">Nome do responsável</span>
+            <input class="campo" type="text" name="responsavelNome" id="perfil-resp-nome" autocomplete="off">
+          </label>
+          <label class="flex flex--col gap--1">
+            <span class="rotulo">E-mail do responsável</span>
+            <input class="campo" type="email" name="responsavelEmail" id="perfil-resp-email" autocomplete="off">
+          </label>
+        </div>
+        <p class="hidden" id="aviso-nascimento"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-salvar-nascimento">Salvar data de nascimento</button>
+      </form>
+
+      <div class="hidden flex flex--col gap--2" id="bloco-status-responsavel">
+        <span class="text--sm" id="responsavel-linha"></span>
+        <button class="hidden botao botao--secundario botao--pequeno" type="button" id="btn-reenviar-responsavel">Reenviar e-mail ao responsável</button>
+        <p class="hidden" id="aviso-responsavel"></p>
+      </div>
+    </section>
+
     <section class="cartao p--5 flex flex--col gap--3">
       <h2 class="text--md weight--semibold">Trocar senha</h2>
       <form class="flex flex--col gap--3" id="form-senha">

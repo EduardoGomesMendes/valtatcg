@@ -59,6 +59,22 @@ export function exigirAdmin(req, res, next) {
 }
 
 /**
+ * Menor de 18 sem o responsável confirmado só enxerga: não grava nada.
+ * Leitura e perfil continuam abertos para a pessoa conseguir corrigir o e-mail do responsável.
+ */
+export function exigirResponsavel(req, res, next) {
+  if (req.method === 'GET' || req.method === 'HEAD') return next();
+  if (req.usuario.admin) return next();
+  if (req.usuario.responsavel_status === 'pendente') {
+    return res.status(403).json({
+      erro: 'seu responsável ainda não confirmou o cadastro — peça para ele abrir o link que enviamos por e-mail',
+      aguardandoResponsavel: true,
+    });
+  }
+  next();
+}
+
+/**
  * Assinatura vencida: bloqueia as ESCRITAS, deixa a leitura passar.
  *
  * A pessoa continua entrando, vendo a própria coleção e conferindo o preço

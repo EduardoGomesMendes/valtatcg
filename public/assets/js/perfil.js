@@ -40,6 +40,101 @@ async function carregarAvatar(nomeParaIniciais) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Idade e responsável                                                 */
+/* ------------------------------------------------------------------ */
+
+const $idadeResumo = document.getElementById('idade-resumo');
+const $formNascimento = document.getElementById('form-nascimento');
+const $avisoNascimento = document.getElementById('aviso-nascimento');
+const $blocoStatusResp = document.getElementById('bloco-status-responsavel');
+const $respLinha = document.getElementById('responsavel-linha');
+const $btnReenviar = document.getElementById('btn-reenviar-responsavel');
+const $avisoResp = document.getElementById('aviso-responsavel');
+const $inputNascimento = document.getElementById('perfil-nascimento');
+const $blocoRespForm = document.getElementById('perfil-bloco-responsavel');
+const camposRespForm = [document.getElementById('perfil-resp-nome'), document.getElementById('perfil-resp-email')];
+
+function dataDeNascimento(iso) {
+  const [ano, mes, dia] = String(iso).split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+/** Só para a tela decidir se pede o responsável — quem valida de verdade é o servidor. */
+function idadeEm(textoData) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(textoData);
+  if (!m) return null;
+  const hoje = new Date();
+  const idade = hoje.getFullYear() - Number(m[1]);
+  const fez = hoje.getMonth() + 1 > Number(m[2])
+    || (hoje.getMonth() + 1 === Number(m[2]) && hoje.getDate() >= Number(m[3]));
+  return fez ? idade : idade - 1;
+}
+
+function mostrarIdade(usuario) {
+  $formNascimento.classList.add('hidden');
+  $blocoStatusResp.classList.add('hidden');
+
+  if (usuario.faixa === 'desconhecida') {
+    $idadeResumo.textContent = 'Sua conta é anterior à exigência de data de nascimento. Informe a sua para seguir usando o ValtaTCG.';
+    $inputNascimento.max = new Date().toISOString().slice(0, 10);
+    $formNascimento.classList.remove('hidden');
+    return;
+  }
+
+  if (usuario.faixa === 'adulto') {
+    $idadeResumo.textContent = `Nascimento: ${dataDeNascimento(usuario.nascimento)} · conta de maior de 18 anos.`;
+    return;
+  }
+
+  $idadeResumo.textContent = `Nascimento: ${dataDeNascimento(usuario.nascimento)} · conta de menor de 18 anos. Menores não vendem, não compram, não dão lances e não trocam mensagens.`;
+  $blocoStatusResp.classList.remove('hidden');
+  const confirmado = usuario.responsavel_status === 'confirmado';
+  const quem = `${usuario.responsavel_nome} (${usuario.responsavel_email})`;
+  $respLinha.textContent = confirmado
+    ? `Responsável: ${quem} — confirmado.`
+    : `Responsável: ${quem} — aguardando a confirmação por e-mail.`;
+  $btnReenviar.classList.toggle('hidden', confirmado);
+}
+
+$inputNascimento.addEventListener('input', () => {
+  const idade = idadeEm($inputNascimento.value);
+  const menor = idade !== null && idade < 18;
+  $blocoRespForm.classList.toggle('hidden', !menor);
+  camposRespForm.forEach((campo) => { campo.required = menor; });
+});
+
+$formNascimento.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  avisar($avisoNascimento, null);
+  const dados = Object.fromEntries(new FormData($formNascimento).entries());
+  try {
+    await api('/perfil/nascimento', { method: 'PATCH', body: JSON.stringify(dados) });
+    window.location.reload();
+  } catch (erro) {
+    avisar($avisoNascimento, erro.message);
+  }
+});
+
+$btnReenviar.addEventListener('click', async () => {
+  avisar($avisoResp, null);
+  $btnReenviar.disabled = true;
+  try {
+    const r = await api('/perfil/responsavel/reenviar', { method: 'POST' });
+    avisar(
+      $avisoResp,
+      r.enviado
+        ? 'E-mail enviado. Peça para o responsável abrir o link.'
+        : 'Não conseguimos enviar o e-mail agora. Fale com o suporte para confirmar o responsável.',
+      r.enviado ? 'sucesso' : 'erro',
+    );
+  } catch (erro) {
+    avisar($avisoResp, erro.message);
+  } finally {
+    $btnReenviar.disabled = false;
+  }
+});
+
 async function carregar() {
   try {
     const { usuario } = await api('/perfil');
@@ -48,6 +143,7 @@ async function carregar() {
     $formPerfil.email.value = usuario.email;
     $criadoEm.textContent = `Conta criada em ${dataBr(usuario.criado_em)}`;
     carregarAvatar(usuario.nome);
+    mostrarIdade(usuario);
   } catch (erro) {
     avisar($avisoPerfil, erro.message);
   }

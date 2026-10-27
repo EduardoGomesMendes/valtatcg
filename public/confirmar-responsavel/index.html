@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Confirmar responsável · ValtaTCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body>
+  <main class="tela--centro flex flex--col items--center justify--content--center p--6 gap--6">
+    <section class="flex flex--col items--center gap--2">
+      <img class="marca--simbolo marca--simbolo--grande" src="/assets/img/logo-simbolo.svg" alt="" width="64" height="64">
+      <h1 class="text--2xl marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></h1>
+    </section>
+
+    <section class="cartao p--6 flex flex--col gap--4 caixa--estreita">
+      <h2 class="text--lg weight--semibold">Confirmação do responsável</h2>
+      <p class="text--sm text--muted" id="texto">Verificando o link…</p>
+      <p class="hidden" id="aviso"></p>
+      <button class="hidden botao botao--primario w--full" type="button" id="btn-confirmar">Confirmo que sou o responsável</button>
+    </section>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/confirmar-responsavel.js"></script>
+</body>
+</html>

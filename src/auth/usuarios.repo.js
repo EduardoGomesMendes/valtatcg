@@ -1,6 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { config } from '../config.js';
+import { nascimentoValido, faixaEtaria, idadeMinimaAtingida } from '../seguranca/idade.js';
 
 /* ------------------------------------------------------------------ */
 /* Senhas                                                              */
@@ -73,7 +74,7 @@ export function buscarPorUsuario(usuario) {
 /** Remove hash e salt antes de qualquer coisa sair para a API. */
 export function semSegredos(usuario) {
   if (!usuario) return null;
-  const { senha_hash: _h, senha_salt: _s, ...publico } = usuario;
+  const { senha_hash: _h, senha_salt: _s, responsavel_token_hash: _t, ...publico } = usuario;
   return publico;
 }
 
@@ -94,15 +95,36 @@ export function buscarPorEmail(email) {
 /* Escrita                                                             */
 /* ------------------------------------------------------------------ */
 
-export function criar({ nome, email, usuario, senha }) {
+const MSG_USUARIO = 'nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."';
+
+/** Valida o responsável de quem é menor de idade: tem que ser outra pessoa, com e-mail próprio. */
+function conferirResponsavel({ responsavelNome, responsavelEmail }, emailDoMenor) {
+  const nome = String(responsavelNome ?? '').trim();
+  const email = normalizarEmail(responsavelEmail);
+  if (nome.length < 3) throw new Error('informe o nome completo do responsável');
+  if (!emailValido(email)) throw new Error('informe um e-mail válido do responsável');
+  if (email === normalizarEmail(emailDoMenor)) throw new Error('o e-mail do responsável precisa ser diferente do seu');
+  return { nome, email };
+}
+
+export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, responsavelNome, responsavelEmail }) {
   const emailLimpo = normalizarEmail(email);
   const usuarioLimpo = normalizarUsuario(usuario);
 
   if (!String(nome ?? '').trim()) throw new Error('nome é obrigatório');
   if (!emailValido(emailLimpo)) throw new Error('informe um e-mail válido');
-  if (!usuarioValido(usuarioLimpo)) {
-    throw new Error('nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."');
+  if (!usuarioValido(usuarioLimpo)) throw new Error(MSG_USUARIO);
+
+  if (!nascimentoValido(nascimento)) throw new Error('informe sua data de nascimento');
+  if (!idadeMinimaAtingida(nascimento)) {
+    throw new Error(`o ValtaTCG é para maiores de ${config.idade.minima} anos`);
   }
+  if (aceiteTermos !== true && aceiteTermos !== 'on' && aceiteTermos !== 'true') {
+    throw new Error('é preciso aceitar os Termos de Uso e a Política de Privacidade');
+  }
+
+  const ehMenor = faixaEtaria(nascimento) === 'menor';
+  const responsavel = ehMenor ? conferirResponsavel({ responsavelNome, responsavelEmail }, emailLimpo) : null;
 
   const problema = validarSenha(senha);
   if (problema) throw new Error(problema);
@@ -112,10 +134,123 @@ export function criar({ nome, email, usuario, senha }) {
 
   const { hash, salt } = gerarHash(senha);
   const info = db.prepare(
-    'INSERT INTO usuarios (nome, email, usuario, senha_hash, senha_salt) VALUES (?, ?, ?, ?, ?)',
-  ).run(String(nome).trim(), emailLimpo, usuarioLimpo, hash, salt);
+    `INSERT INTO usuarios
+       (nome, email, usuario, senha_hash, senha_salt, nascimento, aceite_termos_em,
+        responsavel_nome, responsavel_email, responsavel_status)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+  ).run(
+    String(nome).trim(), emailLimpo, usuarioLimpo, hash, salt, nascimento,
+    responsavel?.nome ?? null, responsavel?.email ?? null, responsavel ? 'pendente' : null,
+  );
 
   return semSegredos(buscarPorId(info.lastInsertRowid));
+}
+
+/**
+ * Conta de antes do campo de nascimento existir: informa a data uma vez só.
+ * Depois disso, só o admin muda — senão um menor poderia "virar adulto" editando o perfil.
+ */
+export function informarNascimento(usuarioId, { nascimento, responsavelNome, responsavelEmail }) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (alvo.nascimento) throw new Error('a data de nascimento já foi informada — para corrigir, fale com o suporte');
+  if (!nascimentoValido(nascimento)) throw new Error('informe uma data de nascimento válida');
+  if (!idadeMinimaAtingida(nascimento)) throw new Error(`o ValtaTCG é para maiores de ${config.idade.minima} anos`);
+
+  const ehMenor = faixaEtaria(nascimento) === 'menor';
+  const responsavel = ehMenor ? conferirResponsavel({ responsavelNome, responsavelEmail }, alvo.email) : null;
+
+  db.prepare(
+    'UPDATE usuarios SET nascimento = ?, responsavel_nome = ?, responsavel_email = ?, responsavel_status = ? WHERE id = ?',
+  ).run(nascimento, responsavel?.nome ?? null, responsavel?.email ?? null, responsavel ? 'pendente' : null, Number(usuarioId));
+  return semSegredos(buscarPorId(usuarioId));
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsável (menores de 18)                                         */
+/* ------------------------------------------------------------------ */
+
+const hashDoTokenResponsavel = (token) => createHash('sha256').update(token).digest('hex');
+
+/**
+ * Gera um link novo para o responsável (o anterior deixa de valer) e conta o envio.
+ * Quem manda o e-mail é a rota — aqui só o token, que não fica guardado em claro.
+ */
+export function prepararConfirmacaoResponsavel(usuarioId) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (alvo.responsavel_status !== 'pendente') throw new Error('não há confirmação de responsável pendente');
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const enviosHoje = alvo.responsavel_envios_data === hoje ? alvo.responsavel_envios : 0;
+  if (enviosHoje >= config.responsavel.reenviosPorDia) {
+    throw new Error('limite de envios do dia atingido — tente amanhã ou fale com o suporte');
+  }
+
+  const token = randomBytes(32).toString('hex');
+  db.prepare(
+    `UPDATE usuarios SET responsavel_token_hash = ?, responsavel_token_expira_em = datetime('now', ?),
+        responsavel_envios = ?, responsavel_envios_data = ? WHERE id = ?`,
+  ).run(hashDoTokenResponsavel(token), `+${config.responsavel.validadeHoras} hours`, enviosHoje + 1, hoje, Number(usuarioId));
+
+  return { token, responsavelNome: alvo.responsavel_nome, responsavelEmail: alvo.responsavel_email, nomeDoMenor: alvo.nome };
+}
+
+/** Dados mínimos para a tela de confirmação mostrar a quem o responsável está autorizando. */
+export function consultarTokenResponsavel(token) {
+  if (!token) return null;
+  const linha = db.prepare(
+    `SELECT nome, responsavel_nome FROM usuarios
+        WHERE responsavel_token_hash = ? AND responsavel_status = 'pendente'
+          AND responsavel_token_expira_em > datetime('now')`,
+  ).get(hashDoTokenResponsavel(String(token)));
+  return linha ? { nomeDoMenor: linha.nome, responsavelNome: linha.responsavel_nome } : null;
+}
+
+export function confirmarResponsavelPorToken(token) {
+  if (!token) throw new Error('link inválido');
+  const linha = db.prepare(
+    `SELECT id FROM usuarios
+        WHERE responsavel_token_hash = ? AND responsavel_status = 'pendente'
+          AND responsavel_token_expira_em > datetime('now')`,
+  ).get(hashDoTokenResponsavel(String(token)));
+  if (!linha) throw new Error('este link não é mais válido — peça um novo na conta do menor');
+
+  db.prepare(
+    `UPDATE usuarios SET responsavel_status = 'confirmado', responsavel_confirmado_em = datetime('now'),
+        responsavel_token_hash = NULL, responsavel_token_expira_em = NULL WHERE id = ?`,
+  ).run(linha.id);
+  return semSegredos(buscarPorId(linha.id));
+}
+
+/** Escape do admin enquanto o e-mail não estiver configurado, ou quando o responsável não consegue abrir o link. */
+export function confirmarResponsavelManual(usuarioId) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (!alvo.responsavel_status) throw new Error('esta conta não tem responsável a confirmar');
+  db.prepare(
+    `UPDATE usuarios SET responsavel_status = 'confirmado', responsavel_confirmado_em = datetime('now'),
+        responsavel_token_hash = NULL, responsavel_token_expira_em = NULL WHERE id = ?`,
+  ).run(Number(usuarioId));
+  return semSegredos(buscarPorId(usuarioId));
+}
+
+/* ------------------------------------------------------------------ */
+/* Suspensão                                                           */
+/* ------------------------------------------------------------------ */
+
+export function suspender(usuarioId, motivo = null) {
+  const alvo = buscarPorId(usuarioId);
+  if (!alvo) throw new Error('usuário não encontrado');
+  if (alvo.admin) throw new Error('não dá para suspender um administrador');
+  db.prepare('UPDATE usuarios SET suspenso = 1, motivo_suspensao = ? WHERE id = ?').run(motivo, Number(usuarioId));
+  db.prepare('DELETE FROM sessoes WHERE usuario_id = ?').run(Number(usuarioId));
+  return semSegredos(buscarPorId(usuarioId));
+}
+
+export function reativar(usuarioId) {
+  db.prepare('UPDATE usuarios SET suspenso = 0, motivo_suspensao = NULL WHERE id = ?').run(Number(usuarioId));
+  return semSegredos(buscarPorId(usuarioId));
 }
 
 /**
@@ -174,7 +309,7 @@ export function atualizarPerfil(usuarioId, { nome, email, usuario } = {}) {
   if (usuario !== undefined) {
     const novo = normalizarUsuario(usuario);
     if (!usuarioValido(novo)) {
-      throw new Error('nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."');
+      throw new Error(MSG_USUARIO);
     }
     const jaUsado = buscarPorUsuario(novo);
     if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este nome de usuário já está em uso');
@@ -247,7 +382,7 @@ export function usuarioDaSessao(token) {
   }
 
   const usuario = buscarPorId(sessao.usuario_id);
-  if (!usuario) return null;
+  if (!usuario || usuario.suspenso) return null;
 
   db.prepare(
     `UPDATE sessoes SET ultimo_uso = datetime('now')
@@ -271,6 +406,7 @@ export function encerrarSessao(token) {
 export function listarTodos() {
   return db.prepare(`
     SELECT u.id, u.nome, u.email, u.usuario, u.admin, u.criado_em,
+           u.nascimento, u.responsavel_nome, u.responsavel_email, u.responsavel_status, u.suspenso,
            u.assinatura_status, u.teste_termina_em, u.assinatura_expira_em,
            COUNT(ci.id) AS itens_na_colecao
     FROM usuarios u

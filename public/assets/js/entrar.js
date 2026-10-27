@@ -27,6 +27,30 @@ function mostrarAba(aba) {
   $abaRegistrar.className = `botao flex--1 ${ehEntrar ? 'botao--secundario' : 'botao--primario'}`;
 }
 
+const $nascimento = document.getElementById('reg-nascimento');
+const $blocoResponsavel = document.getElementById('bloco-responsavel');
+const camposResponsavel = [document.getElementById('reg-resp-nome'), document.getElementById('reg-resp-email')];
+
+/** Só para a tela decidir se mostra os campos do responsável — quem valida de verdade é o servidor. */
+function idadeEm(textoData) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(textoData);
+  if (!m) return null;
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - Number(m[1]);
+  const fezAniversario = hoje.getMonth() + 1 > Number(m[2])
+    || (hoje.getMonth() + 1 === Number(m[2]) && hoje.getDate() >= Number(m[3]));
+  if (!fezAniversario) idade -= 1;
+  return idade;
+}
+
+$nascimento.max = new Date().toISOString().slice(0, 10);
+$nascimento.addEventListener('input', () => {
+  const idade = idadeEm($nascimento.value);
+  const menor = idade !== null && idade < 18;
+  $blocoResponsavel.classList.toggle('hidden', !menor);
+  camposResponsavel.forEach((campo) => { campo.required = menor; });
+});
+
 $abaEntrar.addEventListener('click', () => mostrarAba('entrar'));
 $abaRegistrar.addEventListener('click', () => mostrarAba('registrar'));
 

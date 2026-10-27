@@ -2,6 +2,8 @@ import { Router } from 'express';
 import fs from 'node:fs';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import { salvarAvatar, removerAvatar, caminhoAvatar } from '../../auth/avatar.js';
+import { enviarConfirmacaoResponsavel } from '../../seguranca/responsavel.js';
+import { faixaEtaria } from '../../seguranca/idade.js';
 
 /**
  * Rotas dos próprios dados da conta logada — sempre disponíveis, mesmo com
@@ -16,7 +18,7 @@ export function rotasPerfil() {
   const rotas = Router();
 
   rotas.get('/perfil', (req, res) => {
-    res.json({ usuario: req.usuario });
+    res.json({ usuario: { ...req.usuario, faixa: faixaEtaria(req.usuario.nascimento) } });
   });
 
   rotas.patch('/perfil', (req, res) => {
@@ -33,6 +35,27 @@ export function rotasPerfil() {
       const { senhaAtual, senhaNova } = req.body ?? {};
       usuarios.trocarSenha(req.usuario.id, senhaNova, senhaAtual);
       res.status(204).end();
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /** Conta antiga informa a data de nascimento (uma vez só). Menor de 18 já dispara o e-mail ao responsável. */
+  rotas.patch('/perfil/nascimento', async (req, res) => {
+    try {
+      const usuario = usuarios.informarNascimento(req.usuario.id, req.body ?? {});
+      const responsavel = usuario.responsavel_status === 'pendente'
+        ? await enviarConfirmacaoResponsavel(usuario.id)
+        : null;
+      res.json({ usuario: { ...usuario, faixa: faixaEtaria(usuario.nascimento) }, responsavel });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.post('/perfil/responsavel/reenviar', async (req, res) => {
+    try {
+      res.json(await enviarConfirmacaoResponsavel(req.usuario.id));
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

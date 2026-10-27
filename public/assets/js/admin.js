@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar, dataBr } from './api.js';
+import { api, avisar, el, limpar, dataBr, prepararCabecalho } from './api.js';
 
 const $lista = document.getElementById('lista-usuarios');
 const $aviso = document.getElementById('aviso');
@@ -39,6 +39,9 @@ function linhaUsuario(usuario) {
   nomeELinha.append(el('span', 'weight--semibold text--truncate', usuario.nome));
   if (usuario.admin) nomeELinha.append(el('span', 'selo selo--sucesso', 'Admin'));
   nomeELinha.append(seloAssinatura(usuario));
+  if (usuario.suspenso) nomeELinha.append(el('span', 'selo selo--perigo', 'Suspenso'));
+  if (usuario.responsavel_status === 'pendente') nomeELinha.append(el('span', 'selo selo--perigo', 'Responsável pendente'));
+  if (usuario.responsavel_status === 'confirmado') nomeELinha.append(el('span', 'selo selo--neutro', 'Menor · responsável ok'));
   info.append(nomeELinha);
   const contato = usuario.usuario ? `@${usuario.usuario} · ${usuario.email}` : usuario.email;
   info.append(el('span', 'text--sm text--muted text--truncate', contato));
@@ -88,6 +91,41 @@ function linhaUsuario(usuario) {
   });
   acoes.append(btnLiberar);
 
+  if (usuario.responsavel_status === 'pendente') {
+    const btnResp = el('button', 'botao botao--secundario botao--pequeno', 'Confirmar responsável');
+    btnResp.type = 'button';
+    btnResp.addEventListener('click', async () => {
+      if (!confirm(`Confirmar manualmente o responsável (${usuario.responsavel_nome}, ${usuario.responsavel_email}) de "${usuario.nome}"? Faça isso só depois de falar com ele.`)) return;
+      try {
+        await api(`/admin/usuarios/${usuario.id}/responsavel/confirmar`, { method: 'POST' });
+        carregar();
+      } catch (erro) {
+        avisar($aviso, erro.message);
+      }
+    });
+    acoes.append(btnResp);
+  }
+
+  if (!usuario.admin) {
+    const btnSusp = el('button', 'botao botao--secundario botao--pequeno', usuario.suspenso ? 'Reativar' : 'Suspender');
+    btnSusp.type = 'button';
+    btnSusp.addEventListener('click', async () => {
+      try {
+        if (usuario.suspenso) {
+          await api(`/admin/usuarios/${usuario.id}/reativar`, { method: 'POST' });
+        } else {
+          const motivo = prompt(`Motivo da suspensão de "${usuario.nome}" (opcional):`, '');
+          if (motivo === null) return;
+          await api(`/admin/usuarios/${usuario.id}/suspender`, { method: 'POST', body: JSON.stringify({ motivo }) });
+        }
+        carregar();
+      } catch (erro) {
+        avisar($aviso, erro.message);
+      }
+    });
+    acoes.append(btnSusp);
+  }
+
   const btnExcluir = el('button', 'botao botao--perigo botao--pequeno', 'Excluir');
   btnExcluir.type = 'button';
   btnExcluir.addEventListener('click', async () => {
@@ -122,4 +160,5 @@ async function carregar() {
   }
 }
 
+prepararCabecalho();
 carregar();

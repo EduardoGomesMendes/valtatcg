@@ -19,13 +19,13 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- acesso ---');
 
-const usuario = criar({ nome: 'Ana', email: 'ana@teste.local', usuario: 'ana', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Ana', email: 'ana@teste.local', usuario: 'ana', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 ok('criar usuário retorna sem hash/salt', !usuario.senha_hash && !usuario.senha_salt);
 ok('email fica normalizado', usuario.email === 'ana@teste.local');
 
 let erro = null;
 try {
-  criar({ nome: 'Outra', email: 'ANA@teste.local', usuario: 'outra', senha: 'Senha1234' });
+  criar({ nome: 'Outra', email: 'ANA@teste.local', usuario: 'outra', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 } catch (e) {
   erro = e;
 }
@@ -33,7 +33,7 @@ ok('recusa e-mail duplicado (case-insensitive)', erro?.message.includes('já est
 
 erro = null;
 try {
-  criar({ nome: 'Outra2', email: 'outra2@teste.local', usuario: 'ANA', senha: 'Senha1234' });
+  criar({ nome: 'Outra2', email: 'outra2@teste.local', usuario: 'ANA', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 } catch (e) {
   erro = e;
 }
@@ -41,7 +41,7 @@ ok('recusa nome de usuário duplicado (case-insensitive)', erro?.message.include
 
 erro = null;
 try {
-  criar({ nome: 'Fraca', email: 'fraca@teste.local', usuario: 'fraca', senha: '123' });
+  criar({ nome: 'Fraca', email: 'fraca@teste.local', usuario: 'fraca', senha: '123', nascimento: '1990-05-10', aceiteTermos: true });
 } catch (e) {
   erro = e;
 }
@@ -49,7 +49,7 @@ ok('recusa senha fraca', Boolean(erro));
 
 erro = null;
 try {
-  criar({ nome: 'Sem usuário', email: 'semusuario@teste.local', usuario: 'ab', senha: 'Senha1234' });
+  criar({ nome: 'Sem usuário', email: 'semusuario@teste.local', usuario: 'ab', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 } catch (e) {
   erro = e;
 }
@@ -74,7 +74,7 @@ ok('token inválido não resolve', usuarioDaSessao('token-que-nao-existe') === n
 const perfilAtualizado = atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local' });
 ok('atualizarPerfil muda nome e e-mail', perfilAtualizado.nome === 'Ana Paula' && perfilAtualizado.email === 'ana2@teste.local');
 
-const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', usuario: 'bia', senha: 'Senha1234' });
+const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', usuario: 'bia', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 erro = null;
 try {
   atualizarPerfil(usuario.id, { email: 'bia@teste.local' });

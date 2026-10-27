@@ -21,6 +21,19 @@ CREATE TABLE IF NOT EXISTS usuarios (
   -- estas colunas só dizem se existe e com qual Content-Type servi-lo.
   avatar_mime TEXT,
   avatar_atualizado_em TEXT,
+  -- Idade e responsável (fase 0). nascimento NULL = conta de antes do campo existir.
+  nascimento TEXT,
+  responsavel_nome TEXT,
+  responsavel_email TEXT,
+  responsavel_status TEXT,            -- NULL (não se aplica) | pendente | confirmado
+  responsavel_token_hash TEXT,
+  responsavel_token_expira_em TEXT,
+  responsavel_confirmado_em TEXT,
+  responsavel_envios INTEGER NOT NULL DEFAULT 0,
+  responsavel_envios_data TEXT,
+  aceite_termos_em TEXT,
+  suspenso INTEGER NOT NULL DEFAULT 0,
+  motivo_suspensao TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -114,3 +127,45 @@ CREATE TABLE IF NOT EXISTS pagamento_eventos (
   recebido_em TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (provedor, acao, referencia)
 );
+
+-- Denúncias de usuários contra lojas (e, nas próximas fases, contra anúncios e pessoas).
+CREATE TABLE IF NOT EXISTS denuncias (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  autor_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  alvo_tipo TEXT NOT NULL,            -- loja | usuario
+  alvo_id INTEGER NOT NULL,
+  motivo TEXT NOT NULL,
+  detalhe TEXT,
+  status TEXT NOT NULL DEFAULT 'aberta',   -- aberta | resolvida | descartada
+  nota_admin TEXT,
+  resolvida_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  resolvida_em TEXT,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_denuncias_status ON denuncias(status, id DESC);
+
+-- Lojas que se anunciam no diretório. Uma por dono (por enquanto).
+CREATE TABLE IF NOT EXISTS lojas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dono_id INTEGER NOT NULL UNIQUE REFERENCES usuarios(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL,
+  cnpj TEXT NOT NULL UNIQUE,
+  descricao TEXT,
+  uf TEXT NOT NULL,
+  cidade TEXT NOT NULL,
+  cidade_busca TEXT NOT NULL,         -- minúscula e sem acento, para a busca por região
+  whatsapp TEXT,
+  instagram TEXT,
+  site TEXT,
+  status TEXT NOT NULL DEFAULT 'pendente',        -- pendente | ativa | recusada | suspensa
+  motivo_status TEXT,
+  assinatura_status TEXT NOT NULL DEFAULT 'inativa',   -- inativa | ativa | cancelada
+  assinatura_expira_em TEXT,
+  asaas_cliente_id TEXT,
+  asaas_assinatura_id TEXT,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_lojas_busca ON lojas(status, uf, cidade_busca);

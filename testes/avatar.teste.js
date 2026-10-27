@@ -17,7 +17,7 @@ function ok(nome, condicao, detalhe = '') {
 
 console.log('\n--- avatar ---');
 
-const usuario = criar({ nome: 'Eva', email: 'eva@teste.local', usuario: 'eva', senha: 'Senha1234' });
+const usuario = criar({ nome: 'Eva', email: 'eva@teste.local', usuario: 'eva', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 
 // PNG 1x1 válido de verdade (não é só um Content-Type rotulado à mão).
 const PNG_1X1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';

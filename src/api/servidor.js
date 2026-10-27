@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { config } from '../config.js';
 import { criarLog } from '../logger.js';
-import { identificar, exigirLogin, exigirAssinatura } from './autenticacao.js';
+import { identificar, exigirLogin, exigirAssinatura, exigirResponsavel } from './autenticacao.js';
 import { rotasAcesso } from './routes/acesso.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
@@ -10,6 +10,8 @@ import { rotasAdmin } from './routes/admin.rotas.js';
 import { rotasAssinatura } from './routes/assinatura.rotas.js';
 import { rotasPagamento } from './routes/pagamento.rotas.js';
 import { rotasPerfil } from './routes/perfil.rotas.js';
+import { rotasResponsavel } from './routes/responsavel.rotas.js';
+import { rotasDenuncias } from './routes/denuncias.rotas.js';
 
 const log = criarLog('api');
 
@@ -62,6 +64,8 @@ export function criarServidor() {
   // O gateway avisa que alguém pagou; ele não tem sessão aqui. Quem
   // autentica é o token no header, conferido dentro da própria rota.
   app.use('/api', rotasPagamento());
+  // O responsável que confirma o cadastro de um menor não tem conta: vale o token do link.
+  app.use('/api', rotasResponsavel());
 
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);
@@ -70,6 +74,10 @@ export function criarServidor() {
   // conta vencida (ex.: para a pessoa conseguir pagar ou trocar a senha).
   app.use('/api', rotasAssinatura());
   app.use('/api', rotasPerfil());
+  app.use('/api', rotasDenuncias());
+
+  // Menor sem responsável confirmado só lê; depois vem o bloqueio por assinatura vencida.
+  app.use('/api', exigirResponsavel);
 
   // Daqui para baixo, escrita exige assinatura em dia (leitura sempre passa).
   app.use('/api', exigirAssinatura);

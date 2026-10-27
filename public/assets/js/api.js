@@ -171,6 +171,17 @@ export async function prepararCabecalho() {
   const $aviso = document.getElementById('aviso-assinatura');
   if (!$aviso) return;
 
+  // Avisos de segurança vêm antes dos de assinatura: sem eles a conta nem funciona direito.
+  const u = estado.usuario;
+  if (u?.responsavel_status === 'pendente') {
+    mostrarAvisoAssinatura($aviso, 'Falta o seu responsável confirmar o cadastro. Enquanto isso você só consegue olhar.', 'aviso--bloqueio', 'Ver detalhes', '/perfil/');
+    return;
+  }
+  if (u?.faixa === 'desconhecida') {
+    mostrarAvisoAssinatura($aviso, 'Informe sua data de nascimento para continuar usando o ValtaTCG.', 'aviso--atencao', 'Informar agora', '/perfil/');
+    return;
+  }
+
   try {
     const situacao = await api('/assinatura');
     if (situacao.bloqueado) {
@@ -183,10 +194,10 @@ export async function prepararCabecalho() {
   }
 }
 
-function mostrarAvisoAssinatura(elemento, mensagem, classeTom) {
+function mostrarAvisoAssinatura(elemento, mensagem, classeTom, rotuloLink = 'Abrir assinatura', href = '/assinatura/') {
   elemento.textContent = `${mensagem} `;
-  const link = el('a', 'weight--semibold', 'Abrir assinatura');
-  link.href = '/assinatura/';
+  const link = el('a', 'weight--semibold', rotuloLink);
+  link.href = href;
   elemento.append(link);
   elemento.className = `aviso--assinatura ${classeTom}`;
 }

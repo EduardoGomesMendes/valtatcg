@@ -54,6 +54,19 @@ adicionarColunaSeFaltando('usuarios', 'asaas_assinatura_id', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'usuario', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'avatar_mime', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'avatar_atualizado_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'nascimento', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_nome', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_email', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_status', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_token_hash', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_token_expira_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_confirmado_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'responsavel_envios', 'INTEGER NOT NULL DEFAULT 0');
+adicionarColunaSeFaltando('usuarios', 'responsavel_envios_data', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'aceite_termos_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'suspenso', 'INTEGER NOT NULL DEFAULT 0');
+adicionarColunaSeFaltando('usuarios', 'motivo_suspensao', 'TEXT');
+adicionarColunaSeFaltando('pagamento_eventos', 'loja_id', 'INTEGER');
 
 /*
   Índice único depois da coluna existir — não pode ir no schema.sql porque,

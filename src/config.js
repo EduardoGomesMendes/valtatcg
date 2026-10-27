@@ -38,6 +38,39 @@ export const config = {
     chave: process.env.POKEMONTCG_API_KEY || '',
   },
 
+  idade: {
+    // Abaixo disto não cadastramos (dados de criança exigem consentimento específico, LGPD art. 14).
+    minima: num(process.env.IDADE_MINIMA, 13),
+    // Menores de 18 só usam a conta com um responsável confirmado e ficam fora de venda, lance e mensagem.
+    maioridade: num(process.env.IDADE_MAIORIDADE, 18),
+  },
+
+  responsavel: {
+    // Validade do link que o responsável recebe por e-mail.
+    validadeHoras: num(process.env.RESPONSAVEL_VALIDADE_HORAS, 168),
+    // Limite de reenvios por conta por dia (o e-mail é de um terceiro: não pode virar spam).
+    reenviosPorDia: num(process.env.RESPONSAVEL_REENVIOS_DIA, 3),
+  },
+
+  // Endereço público: é de onde saem os links dos e-mails. NUNCA vem do cabeçalho da requisição.
+  urlPublica: (process.env.URL_PUBLICA || 'https://valtatcg.com.br').replace(/\/+$/, ''),
+
+  email: {
+    host: process.env.SMTP_HOST || '',
+    porta: num(process.env.SMTP_PORT, 465),
+    seguro: bool(process.env.SMTP_SEGURO, num(process.env.SMTP_PORT, 465) === 465),
+    usuario: process.env.SMTP_USER || '',
+    senha: process.env.SMTP_PASS || '',
+    remetente: process.env.EMAIL_REMETENTE || '',
+    // smtp (padrão quando há SMTP_HOST) | console (só escreve no log) | memoria (testes) | desligado
+    modo: (process.env.EMAIL_MODO || (process.env.SMTP_HOST ? 'smtp' : 'desligado')).toLowerCase(),
+  },
+
+  lojas: {
+    // 0 = mensalidade ainda não definida: a loja pode se cadastrar, mas o botão de assinar fica fechado.
+    precoMensal: num(process.env.PRECO_LOJA_MENSAL, 0),
+  },
+
   assinatura: {
     // Dias de uso grátis desde o cadastro, antes de exigir pagamento.
     diasDeTeste: num(process.env.DIAS_DE_TESTE, 7),
