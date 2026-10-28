@@ -25,11 +25,30 @@ const RESPOSTAS_POR_HORA = 20;
 const categoriaValida = (c) => Object.hasOwn(CATEGORIAS, c);
 
 /**
+ * Versão do texto das regras (Termos de Uso, seção 8, e a caixa "Regras do fórum"). Quem aceitou outra versão precisa
+ * aceitar de novo antes de escrever: mude este valor SEMPRE que uma regra mudar de verdade (e a data nos Termos).
+ */
+export const VERSAO_REGRAS = '2026-10-28';
+
+/** Admin fala em nome da equipe e não passa pelo aceite; os demais aceitam a versão em vigor. */
+export const aceitouRegras = (usuario) => Boolean(usuario.admin) || usuario.aceite_forum_versao === VERSAO_REGRAS;
+
+/**
  * Quem pode ESCREVER (ler é sempre liberado a quem tem conta). É aqui que a data de nascimento vira regra:
  * sem data, não dá para saber o que vale para a pessoa; menor escreve ou não conforme config.forum.menoresEscrevem.
  */
 export function podeEscrever(usuario) {
   if (usuario.admin) return { ok: true, motivo: null };
+  const pode = podeEscreverSemAceite(usuario);
+  if (!pode.ok) return pode;
+  if (!aceitouRegras(usuario)) {
+    return { ok: false, precisaAceitar: true, motivo: 'leia e aceite as regras do fórum para participar' };
+  }
+  return { ok: true, motivo: null };
+}
+
+/** As travas de idade, sem o aceite: é o que decide se a pessoa pode sequer ver o termo de aceite. */
+function podeEscreverSemAceite(usuario) {
   const faixa = faixaEtaria(usuario.nascimento);
   if (faixa === 'desconhecida') return { ok: false, motivo: 'informe sua data de nascimento no perfil para participar do fórum' };
   if (faixa === 'menor' && !config.forum.menoresEscrevem) {
@@ -40,7 +59,31 @@ export function podeEscrever(usuario) {
 
 function exigirPoderEscrever(usuario) {
   const permissao = podeEscrever(usuario);
-  if (!permissao.ok) throw new Error(permissao.motivo);
+  if (permissao.ok) return;
+  // O sinal viaja no erro para a rota responder 403 (e a tela abrir o termo), e não um 400 comum de validação.
+  throw Object.assign(new Error(permissao.motivo), { precisaAceitar: Boolean(permissao.precisaAceitar) });
+}
+
+/** Grava o aceite da versão em vigor. Sem checar nada: quem chama já conferiu (ou é teste). */
+export function registrarAceite(usuarioId) {
+  db.prepare("UPDATE usuarios SET aceite_forum_em = datetime('now'), aceite_forum_versao = ? WHERE id = ?")
+    .run(VERSAO_REGRAS, Number(usuarioId));
+}
+
+/**
+ * A pessoa confirma o termo de aceite. `versao` é a que a tela mostrou: se as regras mudaram no meio do caminho,
+ * o aceite não vale (ela concordou com um texto que já não é o atual).
+ */
+export function aceitarRegras(usuario, { aceito, versao, ciencia }) {
+  const pode = podeEscreverSemAceite(usuario);
+  if (!pode.ok) throw new Error(pode.motivo);
+  if (aceito !== true) throw new Error('marque que leu e concorda com as regras para continuar');
+  if (versao !== VERSAO_REGRAS) throw new Error('as regras foram atualizadas — recarregue a página e leia de novo');
+  // Menor declara que o responsável sabe que ele usa o fórum (Termos de Uso, seção 9).
+  if (faixaEtaria(usuario.nascimento) === 'menor' && ciencia !== true) {
+    throw new Error('marque que o seu responsável sabe que você usa o fórum');
+  }
+  registrarAceite(usuario.id);
 }
 
 /* ------------------------------------------------------------------ */

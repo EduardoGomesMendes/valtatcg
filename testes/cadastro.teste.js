@@ -22,7 +22,8 @@ const lanca = (fn) => { try { fn(); } catch (e) { return e; } return null; };
 console.log('\n--- cadastro aberto: sem responsável, com data de nascimento controlando o fórum ---');
 
 const base = { senha: 'Senha1234', aceiteTermos: true };
-const U = (u) => ({ ...usuarios.buscarPorId(u.id) });
+// Estes testes são das outras regras do fórum: quem escreve aqui já aceitou o termo (o aceite tem teste próprio).
+const U = (u) => { forum.registrarAceite(u.id); return { ...usuarios.buscarPorId(u.id) }; };
 const TEXTO = 'Quanto vale uma Charizard holo da coleção base?';
 const topico = (u) => forum.criarTopico(U(u), { categoria: 'cartas', titulo: 'Dúvida sobre preço', corpo: TEXTO });
 

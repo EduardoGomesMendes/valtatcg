@@ -68,4 +68,7 @@ echo.
 echo  --- termos ---
 node testes/termos.teste.js
 echo.
+echo  --- aceite-forum ---
+node testes/aceite-forum.teste.js
+echo.
 pause

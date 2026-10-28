@@ -56,7 +56,8 @@ ok('só pedido de contato/encontro/foto/segredo/sexual é "grave"; ofensa e link
 /* ---------- integração com o fórum ---------- */
 const base = { senha: 'Senha1234', aceiteTermos: true };
 const novo = (nome, usuario, nascimento = '1985-03-20') => usuarios.criar({ ...base, nome, email: `${usuario}@teste.local`, usuario, nascimento });
-const U = (u) => ({ ...usuarios.buscarPorId(u.id) });
+// Estes testes são das outras regras do fórum: quem escreve aqui já aceitou o termo (o aceite tem teste próprio).
+const U = (u) => { forum.registrarAceite(u.id); return { ...usuarios.buscarPorId(u.id) }; };
 const menor = novo('Menino Teste', 'menino', '2011-02-02');
 const adulto = novo('Adulto Teste', 'adultoteste');
 const admin = novo('Equipe', 'equipe');

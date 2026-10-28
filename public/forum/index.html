@@ -49,18 +49,46 @@
       <p class="text--sm text--muted">Troque informações sobre cartas, tire dúvidas e combine ideias com outros colecionadores. Aqui só texto: links, e-mails e telefones não são permitidos.</p>
     </div>
 
-    <details class="cartao p--4 text--sm">
+    <details class="cartao p--4 text--sm" id="regras">
       <summary class="weight--semibold">Regras do fórum (leia antes de escrever)</summary>
       <ul class="passos--lista flex flex--col gap--1">
-        <li>Respeite todo mundo. Xingamentos e ofensas não são publicados.</li>
-        <li>Nunca peça nem passe telefone, WhatsApp, Instagram ou outras redes. Tudo é conversado aqui, em público.</li>
+        <li>Respeite todo mundo. Xingamentos, ofensas, deboche com quem está começando e "rage" por causa de derrota, deck ou regra não são publicados. Critique ideias, não pessoas.</li>
+        <li>Nunca peça nem passe telefone, WhatsApp, Instagram, e-mail ou outras redes, e não coloque links. Tudo é conversado aqui, em público: o ValtaTCG não tem mensagens privadas.</li>
         <li>Nada de combinar encontros. Para eventos, use a página <a href="/eventos/" class="weight--semibold">Eventos</a>, que é conferida pela equipe.</li>
         <li>Não peça foto, idade, endereço ou escola de ninguém, e não divulgue os seus.</li>
+        <li>Aqui não é lugar de compra, venda ou troca: não anuncie nem peça cartas, e não divulgue Pix, conta bancária ou dados de pagamento. O ValtaTCG não intermedeia nem se responsabiliza por negócios.</li>
+        <li>Jogo limpo: nada de ensinar trapaça (cheat) em torneios, presenciais ou online, e nada de passar carta falsa ou proxy como se fosse original.</li>
+        <li>Fique no assunto (Pokémon TCG) e não se passe por outra pessoa, por uma loja ou pela equipe.</li>
         <li>Se alguém pedir qualquer uma dessas coisas, <strong>não responda</strong>: use o botão <strong>Denunciar</strong> e conte a um adulto de confiança. O Disque 100 também atende.</li>
         <li>Quem insistir em quebrar as regras de segurança tem a conta suspensa automaticamente.</li>
       </ul>
+      <p class="text--xs text--muted">Dica: ao pedir ajuda com o preço de uma carta, diga a edição, o número e a condição dela (Mint, Near Mint, Excelente, Jogada...).</p>
       <p class="text--xs text--muted">Estas regras fazem parte dos <a href="/termos/#forum" target="_blank" rel="noopener" class="weight--semibold">Termos de Uso</a>, que explicam também como as denúncias são tratadas.</p>
     </details>
+
+    <!-- Termo de aceite: sem ele ninguém escreve. Aparece só para quem ainda não aceitou a versão em vigor das regras. -->
+    <section class="cartao p--5 flex flex--col gap--3 hidden" id="cartao-aceite" aria-labelledby="titulo-aceite">
+      <h2 class="text--md weight--semibold" id="titulo-aceite">Termo de aceite do fórum</h2>
+      <p class="text--sm">Para escrever aqui, leia as regras acima e confirme que está de acordo. Ao aceitar, você declara que:</p>
+      <ul class="passos--lista flex flex--col gap--1 text--sm">
+        <li>leu as regras do fórum e os <a href="/termos/#forum" target="_blank" rel="noopener" class="weight--semibold">Termos de Uso</a> e vai cumpri-los;</li>
+        <li>é responsável pelo que publica, e sabe que textos podem ser ocultados e a conta pode ser suspensa se as regras forem quebradas;</li>
+        <li>não vai pedir nem passar contatos, fotos, endereço, escola, idade ou dados de pagamento, nem combinar encontros;</li>
+        <li>entende que o fórum não é espaço de compra, venda ou troca, e que o ValtaTCG não responde por negócios feitos por fora;</li>
+        <li>se alguém pedir qualquer coisa assim, não vai responder: vai denunciar e contar a um adulto de confiança.</li>
+      </ul>
+      <label class="flex items--start gap--2">
+        <input type="checkbox" id="aceite-regras">
+        <span class="text--sm">Li as regras do fórum e concordo com elas.</span>
+      </label>
+      <label class="flex items--start gap--2 hidden" id="rotulo-ciencia">
+        <input type="checkbox" id="aceite-ciencia">
+        <span class="text--sm">Tenho menos de 18 anos e o meu responsável sabe que eu uso o fórum.</span>
+      </label>
+      <p class="text--xs text--muted" id="versao-regras"></p>
+      <p class="hidden" id="aviso-aceite"></p>
+      <button class="botao botao--primario" type="button" id="btn-aceitar" disabled>Aceitar e participar</button>
+    </section>
 
     <div class="flex flex--wrap gap--2" id="abas-categorias"></div>
     <p class="text--sm text--muted" id="descricao-categoria"></p>

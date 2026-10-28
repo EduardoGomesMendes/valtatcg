@@ -19,6 +19,8 @@ export const CLASSES = Object.freeze({
   dados_pessoais: { grave: true, motivo: 'não peça nem divulgue dados pessoais, fotos, idade, endereço ou escola' },
   sexual: { grave: true, motivo: 'este tipo de assunto não é permitido' },
   segredo: { grave: true, motivo: 'não é permitido pedir segredo sobre a conversa' },
+  // Não é "grave" (não conta para a suspensão): quem escreve "pix" quase sempre está só perguntando. Mas o fórum não é lugar de negócio.
+  financeiro: { grave: false, motivo: 'o fórum não é lugar de compra, venda ou troca: não divulgue nem peça Pix, conta bancária ou dados de pagamento' },
 });
 
 const AJUDA = ' Se alguém pediu isso a você, use o botão Denunciar e conte a um adulto de confiança. O Disque 100 também atende.';
@@ -103,6 +105,10 @@ const FRASES = {
   sexual: [
     /\b(sexo|sexual|sexy|porno|pornografia|transar|transa|gostos[oa]s?|gostosinh[oa]|tesao|punheta|siririca|nude|nudes|pelad[oa]s?|peladinh[oa]|sem roupa|safadeza)\b/,
   ],
+  financeiro: [
+    /\b(chave|chaves)\s+pix\b/, /\bpix\b/, /\b(dados|conta|agencia)\s+bancari[oa]s?\b/, /\bconta\s+(corrente|poupanca)\b/,
+    /\b(transferencia|deposito)\s+(bancari[oa]|na conta|pra conta|para a conta)\b/, /\b(picpay|paypal|mercado\s*pago|pagseguro)\b/,
+  ],
   segredo: [
     /\bnosso segredo\b/, /\bsegredo nosso\b/, /\bso entre a gente\b/, /\bsem (ninguem saber|seus pais)\b/, /\bseus pais nao\b/,
     /\bnao (conta|conte|fala|fale|diz|diga) (pra|para|pro|pros|aos?) (ninguem|seus pais|sua mae|seu pai|os seus pais)\b/,
@@ -122,7 +128,7 @@ export function analisar(texto) {
   if (!t) return null;
 
   // Ordem: o que mais ameaça um menor primeiro, para a mensagem e a contagem refletirem o pior caso.
-  for (const classe of ['segredo', 'encontro', 'dados_pessoais', 'sexual', 'contato', 'tema_sensivel', 'ofensa']) {
+  for (const classe of ['segredo', 'encontro', 'dados_pessoais', 'sexual', 'contato', 'financeiro', 'tema_sensivel', 'ofensa']) {
     if (FRASES[classe]?.some((re) => re.test(t))) return resultado(classe);
   }
   if (t.split(' ').some((p) => OFENSIVAS_COLAPSADAS.has(colapsar(p)))) return resultado('ofensa');

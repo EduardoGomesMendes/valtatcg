@@ -4,6 +4,12 @@ import * as eventos from '../../comunidade/eventos.repo.js';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import { UFS } from '../../lojas/regioes.js';
 
+/** Erro de validação é 400; faltar o aceite das regras é 403 com um sinal que a tela entende. */
+function respostaDeErro(res, erro) {
+  if (erro.precisaAceitar) return res.status(403).json({ erro: erro.message, precisaAceitarRegras: true });
+  return res.status(400).json({ erro: erro.message });
+}
+
 /** Eventos são públicos: quem ainda não tem conta também procura um torneio perto de casa. */
 export function rotasEventosPublicos() {
   const rotas = Router();
@@ -36,7 +42,12 @@ export function rotasComunidade() {
   /* ---------------- fórum ---------------- */
 
   rotas.get('/forum/categorias', (req, res) => {
-    res.json({ categorias: forum.categoriasComContagem(), permissao: forum.podeEscrever(req.usuario) });
+    res.json({
+      categorias: forum.categoriasComContagem(),
+      permissao: forum.podeEscrever(req.usuario),
+      // A tela mostra o termo de aceite desta versão; ao aceitar, devolve a versão que leu.
+      regras: { versao: forum.VERSAO_REGRAS, aceito: forum.aceitouRegras(req.usuario) },
+    });
   });
 
   rotas.get('/forum/topicos', (req, res) => {
@@ -49,12 +60,22 @@ export function rotasComunidade() {
     res.json({ topico });
   });
 
+  /** Termo de aceite: sem ele ninguém escreve no fórum (ler continua liberado). */
+  rotas.post('/forum/aceitar', (req, res) => {
+    try {
+      forum.aceitarRegras(req.usuario, req.body ?? {});
+      res.json({ ok: true, versao: forum.VERSAO_REGRAS });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   rotas.post('/forum/topicos', (req, res) => {
     try {
       const id = forum.criarTopico(req.usuario, req.body ?? {});
       res.status(201).json({ id });
     } catch (erro) {
-      res.status(400).json({ erro: erro.message });
+      respostaDeErro(res, erro);
     }
   });
 
@@ -62,7 +83,7 @@ export function rotasComunidade() {
     try {
       res.status(201).json({ id: forum.responder(req.usuario, req.params.id, req.body?.corpo) });
     } catch (erro) {
-      res.status(400).json({ erro: erro.message });
+      respostaDeErro(res, erro);
     }
   });
 

@@ -69,6 +69,9 @@ adicionarColunaSeFaltando('usuarios', 'aceite_termos_em', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'suspenso', 'INTEGER NOT NULL DEFAULT 0');
 adicionarColunaSeFaltando('usuarios', 'motivo_suspensao', 'TEXT');
 adicionarColunaSeFaltando('pagamento_eventos', 'loja_id', 'INTEGER');
+// Termo de aceite do fórum: quando a pessoa aceitou e qual versão das regras ela leu.
+adicionarColunaSeFaltando('usuarios', 'aceite_forum_em', 'TEXT');
+adicionarColunaSeFaltando('usuarios', 'aceite_forum_versao', 'TEXT');
 // Última vez que a carta apareceu numa busca/tela: o job diário só acompanha o preço de quem foi visto há pouco.
 adicionarColunaSeFaltando('carta_cache', 'visto_em', 'TEXT');
 db.exec("UPDATE carta_cache SET visto_em = COALESCE(preco_atualizado_em, criado_em) WHERE visto_em IS NULL");

@@ -52,6 +52,12 @@ das regras do fórum (seção 8 dos Termos; a caixa "Regras do fórum" do `/foru
   histórico de preço), sessão. `testes/termos.teste.js` confere esses números contra `config.js` e quebra se divergirem.
 - As páginas públicas (`/`, `/entrar/`, `/lojas/`, `/eventos/`) **não podem mencionar o fórum** (decisão de produto,
   testada em `paginas.teste.js`); o fórum só aparece nos Termos e na Política, que são texto legal.
+- **Termo de aceite do fórum**: ninguém (exceto admin) escreve tópico ou resposta sem ter aceitado a versão em vigor
+  (`usuarios.aceite_forum_em` + `aceite_forum_versao`; sem aceite, as rotas respondem **403** com `precisaAceitarRegras`).
+  Ler continua livre. Menor também declara que o responsável sabe que ele usa o fórum. **Mudou uma regra de verdade?**
+  Mude o texto nos Termos (seção 8) e na caixa do `/forum/` **e suba `VERSAO_REGRAS` em `forum.repo.js`** — é isso que
+  faz todo mundo aceitar de novo. O filtro também barra Pix/dados bancários (classe `financeiro`, não conta como grave).
+  Fica de fora de propósito: mensagens privadas, anúncios de troca/venda e tags de jogo (o ValtaTCG é só Pokémon).
 - Texto jurídico escrito como rascunho: **precisa de revisão de advogado** antes de ser tratado como definitivo.
 
 ## Assinatura do cliente: regras que a revisão de 28/10/2026 fixou

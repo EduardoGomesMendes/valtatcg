@@ -24,6 +24,7 @@ let pagina = Number(params.get('pagina')) || 1;
 let admin = false;
 let podeDenunciar = false;
 let podeEscrever = true;
+let precisaAceitar = false;
 
 const SELO_MENOR = 'Menor de idade';
 
@@ -134,7 +135,9 @@ async function carregar() {
     $anterior.disabled = topico.pagina <= 1;
     $proxima.disabled = topico.pagina >= totalPaginas;
 
-    $cartaoResponder.classList.toggle('hidden', topico.fechado || topico.oculto || !podeEscrever);
+    const aberto = !(topico.fechado || topico.oculto);
+    $cartaoResponder.classList.toggle('hidden', !aberto || !podeEscrever);
+    document.getElementById('cartao-aceite-resposta').classList.toggle('hidden', !aberto || !precisaAceitar);
   } catch (erro) {
     $cartaoTopico.classList.add('hidden');
     avisar($aviso, erro.status === 404 ? 'Este tópico não existe ou foi removido.' : erro.message);
@@ -168,7 +171,9 @@ async function iniciar() {
     const estado = await api('/estado');
     admin = Boolean(estado.usuario?.admin);
     podeDenunciar = (await carregarMotivos()).length > 0;
-    podeEscrever = (await api('/forum/categorias')).permissao.ok;
+    const { permissao } = await api('/forum/categorias');
+    podeEscrever = permissao.ok;
+    precisaAceitar = Boolean(permissao.precisaAceitar);
   } catch {
     // sem o estado, a página segue só com leitura.
   }

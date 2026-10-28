@@ -101,6 +101,50 @@ $form.addEventListener('submit', async (ev) => {
   }
 });
 
+/* ------------------------------------------------------------------ */
+/* Termo de aceite das regras                                          */
+/* ------------------------------------------------------------------ */
+
+const $cartaoAceite = document.getElementById('cartao-aceite');
+const $aceiteRegras = document.getElementById('aceite-regras');
+const $aceiteCiencia = document.getElementById('aceite-ciencia');
+const $rotuloCiencia = document.getElementById('rotulo-ciencia');
+const $btnAceitar = document.getElementById('btn-aceitar');
+const $avisoAceite = document.getElementById('aviso-aceite');
+
+function mostrarAceite(regras, faixa) {
+  const menor = faixa === 'menor';
+  $cartaoAceite.classList.remove('hidden');
+  $rotuloCiencia.classList.toggle('hidden', !menor);
+  document.getElementById('regras').open = true;
+  document.getElementById('versao-regras').textContent = `Versão das regras: ${dataBr(`${regras.versao} 12:00:00`)}.`;
+
+  // O botão só habilita com tudo marcado: aceitar tem de ser um ato, não um clique distraído.
+  const atualizar = () => { $btnAceitar.disabled = !($aceiteRegras.checked && (!menor || $aceiteCiencia.checked)); };
+  $aceiteRegras.addEventListener('change', atualizar);
+  $aceiteCiencia.addEventListener('change', atualizar);
+
+  $btnAceitar.addEventListener('click', async () => {
+    $btnAceitar.disabled = true;
+    avisar($avisoAceite, null);
+    try {
+      await api('/forum/aceitar', {
+        method: 'POST',
+        body: JSON.stringify({ aceito: true, versao: regras.versao, ciencia: menor ? $aceiteCiencia.checked : undefined }),
+      });
+      $cartaoAceite.classList.add('hidden');
+      $btnNovo.classList.remove('hidden');
+      document.getElementById('regras').open = false;
+      avisar(document.getElementById('aviso-escrever'), 'Pronto! Você já pode escrever no fórum.', 'sucesso');
+    } catch (erro) {
+      avisar($avisoAceite, erro.message);
+      atualizar();
+    }
+  });
+
+  if (window.location.hash === '#aceite') $cartaoAceite.scrollIntoView();
+}
+
 $anterior.addEventListener('click', () => { pagina -= 1; carregar(); });
 $proxima.addEventListener('click', () => { pagina += 1; carregar(); });
 
@@ -109,8 +153,13 @@ async function iniciar() {
   try {
     const estado = await api('/estado');
     admin = Boolean(estado.usuario?.admin);
-    ({ categorias, permissao } = await api('/forum/categorias'));
-    if (!permissao.ok) {
+    let regras;
+    ({ categorias, permissao, regras } = await api('/forum/categorias'));
+    if (permissao.precisaAceitar) {
+      // Falta só o termo de aceite: em vez do botão, o termo (as regras abertas logo acima dele).
+      $btnNovo.classList.add('hidden');
+      mostrarAceite(regras, estado.usuario?.faixa);
+    } else if (!permissao.ok) {
       // Quem não pode escrever só lê: em vez do botão, a razão.
       $btnNovo.classList.add('hidden');
       const motivo = permissao.motivo.charAt(0).toUpperCase() + permissao.motivo.slice(1);

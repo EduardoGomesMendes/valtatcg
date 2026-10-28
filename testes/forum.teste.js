@@ -26,7 +26,8 @@ const ana = novo('Ana Souza Pereira', 'ana_cards');
 const bia = novo('Bia Lima', 'bia');
 const admin = novo('Equipe Valta', 'equipe');
 db.prepare('UPDATE usuarios SET admin = 1 WHERE id = ?').run(admin.id);
-const U = (u) => ({ ...usuarios.buscarPorId(u.id) });
+// Estes testes são das outras regras do fórum: quem escreve aqui já aceitou o termo (o aceite tem teste próprio).
+const U = (u) => { forum.registrarAceite(u.id); return { ...usuarios.buscarPorId(u.id) }; };
 const TEXTO = 'Alguém sabe o valor de uma Charizard holo da coleção base?';
 
 /* ---------- regras de texto ---------- */
