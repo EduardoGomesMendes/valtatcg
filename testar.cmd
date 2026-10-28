@@ -56,4 +56,7 @@ echo.
 echo  --- confirmacao-email ---
 node testes/confirmacao-email.teste.js
 echo.
+echo  --- redefinir-senha ---
+node testes/redefinir-senha.teste.js
+echo.
 pause

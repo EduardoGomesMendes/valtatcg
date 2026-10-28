@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Esqueci minha senha · ValtaTCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body>
+  <main class="tela--centro flex flex--col items--center justify--content--center p--6 gap--6">
+    <section class="flex flex--col items--center gap--2">
+      <img class="marca--simbolo marca--simbolo--grande" src="/assets/img/logo-simbolo.svg" alt="" width="64" height="64">
+      <h1 class="text--2xl marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></h1>
+    </section>
+
+    <section class="cartao p--6 flex flex--col gap--4 caixa--estreita">
+      <div class="flex flex--col gap--1">
+        <h2 class="text--lg weight--semibold">Esqueci minha senha</h2>
+        <p class="text--sm text--muted">Digite o e-mail da sua conta. Enviaremos um link para você escolher uma senha nova.</p>
+      </div>
+
+      <form class="flex flex--col gap--3" id="form-esqueci">
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">E-mail</span>
+          <input class="campo" type="email" name="email" autocomplete="email" required autofocus>
+        </label>
+        <p class="hidden" id="aviso"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-enviar">Enviar link</button>
+      </form>
+
+      <div class="hidden flex flex--col gap--2" id="enviado">
+        <p class="text--sm">Se este e-mail tiver uma conta, o link já está a caminho. Confira também o spam. Ele vale por 1 hora.</p>
+        <p class="text--xs text--muted">Por segurança, não dizemos se o e-mail tem conta ou não.</p>
+      </div>
+
+      <a class="text--sm text--primary" href="/entrar/">Voltar para o login</a>
+    </section>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/esqueci-senha.js"></script>
+</body>
+</html>

@@ -123,6 +123,9 @@ $btnReenviar.addEventListener('click', async () => {
 document.getElementById('btn-corrigir').addEventListener('click', () => mostrarEnvio(false));
 
 async function prepararTela() {
+  if (new URLSearchParams(window.location.search).get('senha') === 'trocada') {
+    avisar($avisoEntrar, 'Senha trocada! Entre com a senha nova.', 'sucesso');
+  }
   const estado = await api('/estado');
   if (estado.autenticado) window.location.href = destino();
 

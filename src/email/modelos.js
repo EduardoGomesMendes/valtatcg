@@ -53,6 +53,53 @@ export function emailJaTemCadastro({ nome, linkEntrar }) {
   return { assunto, texto, html };
 }
 
+/** "Esqueci minha senha": o link que leva a escolher uma senha nova. */
+export function emailRedefinirSenha({ nome, link, validadeMinutos }) {
+  const nomeCurto = primeiroNome(nome);
+  const assunto = 'Crie uma senha nova para o ValtaTCG';
+  const texto = [
+    `Olá, ${nomeCurto}!`,
+    '',
+    'Recebemos um pedido para criar uma senha nova na sua conta do ValtaTCG.',
+    '',
+    'Abra este endereço para escolher a senha nova:',
+    link,
+    '',
+    `O link vale por ${validadeMinutos} minutos e só pode ser usado uma vez.`,
+    '',
+    'Se não foi você que pediu, ignore este e-mail: a sua senha continua a mesma.',
+    '',
+    'ValtaTCG · desenvolvido por omva',
+  ].join('\n');
+  const html = `<p>Olá, ${esc(nomeCurto)}!</p>
+<p>Recebemos um pedido para criar uma senha nova na sua conta do ValtaTCG.</p>
+<p><a href="${esc(link)}"><strong>Escolher a senha nova</strong></a></p>
+<p>O link vale por ${validadeMinutos} minutos e só pode ser usado uma vez.</p>
+<p>Se não foi você que pediu, ignore este e-mail: a sua senha continua a mesma.</p>
+<p>ValtaTCG · desenvolvido por omva</p>`;
+  return { assunto, texto, html };
+}
+
+/** Depois da troca: se não foi a própria pessoa, este e-mail é o alarme. */
+export function emailSenhaAlterada({ nome, linkEsqueci }) {
+  const nomeCurto = primeiroNome(nome);
+  const assunto = 'A senha da sua conta do ValtaTCG foi alterada';
+  const texto = [
+    `Olá, ${nomeCurto}!`,
+    '',
+    'A senha da sua conta do ValtaTCG acabou de ser alterada, e as outras sessões abertas foram encerradas.',
+    '',
+    `Se não foi você, crie outra senha agora em ${linkEsqueci} e fale com o suporte.`,
+    '',
+    'ValtaTCG · desenvolvido por omva',
+  ].join('\n');
+  const html = `<p>Olá, ${esc(nomeCurto)}!</p>
+<p>A senha da sua conta do ValtaTCG acabou de ser alterada, e as outras sessões abertas foram encerradas.</p>
+<p>Se <strong>não foi você</strong>, <a href="${esc(linkEsqueci)}">crie outra senha agora</a> e fale com o suporte.</p>
+<p>ValtaTCG · desenvolvido por omva</p>`;
+  return { assunto, texto, html };
+}
+
 /** E-mail que o responsável recebe para autorizar a conta de um menor. */
 export function emailConfirmacaoResponsavel({ responsavelNome, nomeDoMenor, link, validadeHoras }) {
   const dias = Math.max(1, Math.round(validadeHoras / 24));

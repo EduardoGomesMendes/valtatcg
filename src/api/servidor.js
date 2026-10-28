@@ -5,6 +5,7 @@ import { criarLog } from '../logger.js';
 import { identificar, exigirLogin, exigirAssinatura, exigirResponsavel } from './autenticacao.js';
 import { rotasAcesso } from './routes/acesso.rotas.js';
 import { rotasCadastro } from './routes/cadastro.rotas.js';
+import { rotasRedefinicao } from './routes/redefinicao.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
 import { rotasAdmin } from './routes/admin.rotas.js';
@@ -69,6 +70,7 @@ export function criarServidor() {
   app.use('/api', rotasAcesso());
   // Cadastro por e-mail: quem ainda não tem conta pede, confirma o e-mail e escolhe a senha.
   app.use('/api', rotasCadastro());
+  app.use('/api', rotasRedefinicao());
   // O gateway avisa que alguém pagou; ele não tem sessão aqui. Quem
   // autentica é o token no header, conferido dentro da própria rota.
   app.use('/api', rotasPagamento());

@@ -40,7 +40,19 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   `EMAIL_MODO=console`: o link aparece no log. `/registrar` (conta com senha direto) **não existe mais**.
 - Pedido não confirmado é apagado 7 dias após vencer (guarda data de nascimento); ao criar a conta o pedido
   esquece nascimento e responsável (passam a viver só em `usuarios`).
-- Contas antigas não mudam. O "esqueci minha senha" ainda não existe; quando vier, reaproveita este mecanismo.
+- Contas antigas não mudam.
+
+## Esqueci minha senha
+
+`/esqueci-senha/` → `POST /api/senha/esqueci` → e-mail com `/redefinir-senha/?t=...` → `POST /api/senha/redefinir`.
+Mesmo desenho do cadastro, com estas regras:
+- A resposta é **idêntica** com ou sem conta (e conta suspensa conta como "sem conta"); o e-mail sai em segundo plano
+  para o tempo de resposta também não denunciar quem é usuário. Pedido sem conta entra em `redefinicoes_senha` sem
+  token, só para os limites (5/dia por e-mail, 10/hora por IP) valerem para todos.
+- Link de **60 minutos**, uma vez só; pedir de novo cancela o anterior; abrir o link só lê.
+- Trocar a senha **derruba todas as sessões** da conta e manda e-mail de "senha alterada". Não loga sozinho:
+  volta ao login (`/entrar/?senha=trocada`).
+- Sem e-mail configurado a tela avisa (`/senha/estado`). Em desenvolvimento, `EMAIL_MODO=console` imprime o link no log.
 
 ## Busca pela foto da carta
 

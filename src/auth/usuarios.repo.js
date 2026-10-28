@@ -279,9 +279,8 @@ export function reativar(usuarioId) {
 /**
  * Define uma senha nova para a conta, sem exigir a antiga.
  *
- * Existe para o admin resolver "esqueci minha senha" na mão — o valtatcg
- * ainda não tem um fluxo de recuperação por e-mail, então isto é o caminho
- * até lá existir (ver src/db/definir-senha.js).
+ * Usada pelo "esqueci minha senha" (redefinicoes.js, depois de provar o e-mail) e pelo admin,
+ * quando precisa resolver na mão (ver src/db/definir-senha.js).
  */
 export function definirSenha(usuarioId, novaSenha) {
   const alvo = buscarPorId(usuarioId);
@@ -415,6 +414,11 @@ export function usuarioDaSessao(token) {
   ).run(hash, `-${INTERVALO_REGISTRO_USO_SEG} seconds`);
 
   return semSegredos(usuario);
+}
+
+/** Derruba todas as sessões da conta (troca de senha: quem a tinha descoberto cai junto). */
+export function encerrarSessoesDoUsuario(usuarioId) {
+  db.prepare('DELETE FROM sessoes WHERE usuario_id = ?').run(Number(usuarioId));
 }
 
 export function encerrarSessao(token) {

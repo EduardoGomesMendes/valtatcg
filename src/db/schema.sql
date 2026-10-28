@@ -280,3 +280,20 @@ CREATE TABLE IF NOT EXISTS cadastros_envios (
 );
 CREATE INDEX IF NOT EXISTS idx_cadastros_envios_email ON cadastros_envios(email, criado_em);
 CREATE INDEX IF NOT EXISTS idx_cadastros_envios_ip ON cadastros_envios(ip, criado_em);
+
+-- "Esqueci minha senha": cada pedido de redefinição. Guarda só o HASH do token (quem lesse o banco não
+-- teria como trocar a senha de ninguém). Pedido de e-mail sem conta também vira linha, sem token e sem
+-- usuário: assim os limites por e-mail e por IP valem igual para todos e não revelam quem tem conta.
+CREATE TABLE IF NOT EXISTS redefinicoes_senha (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE,              -- NULL quando o e-mail não tem conta
+  email TEXT NOT NULL,
+  ip TEXT,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  expira_em TEXT NOT NULL,
+  usado_em TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_redefinicoes_email ON redefinicoes_senha(email, criado_em);
+CREATE INDEX IF NOT EXISTS idx_redefinicoes_ip ON redefinicoes_senha(ip, criado_em);
+CREATE INDEX IF NOT EXISTS idx_redefinicoes_usuario ON redefinicoes_senha(usuario_id);

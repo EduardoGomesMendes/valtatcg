@@ -69,6 +69,13 @@ export const config = {
     checarDominio: bool(process.env.CADASTRO_CHECAR_DOMINIO, true),
   },
 
+  // "Esqueci minha senha": link curto, uma vez só, e limites que valem para qualquer e-mail (com conta ou não).
+  redefinicao: {
+    validadeMinutos: num(process.env.REDEFINICAO_VALIDADE_MINUTOS, 60),
+    pedidosPorEmailPorDia: num(process.env.REDEFINICAO_PEDIDOS_POR_EMAIL_DIA, 5),
+    pedidosPorIpPorHora: num(process.env.REDEFINICAO_PEDIDOS_POR_IP_HORA, 10),
+  },
+
   email: {
     host: process.env.SMTP_HOST || '',
     porta: num(process.env.SMTP_PORT, 465),
