@@ -5,6 +5,8 @@ import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { caminhoAvatar } from '../../auth/avatar.js';
 import * as denuncias from '../../seguranca/denuncias.repo.js';
 import * as lojas from '../../lojas/lojas.repo.js';
+import { enviarLogo } from '../../lojas/logo.js';
+import { avisarDonoDaDecisao } from '../../lojas/avisos.js';
 import * as forum from '../../comunidade/forum.repo.js';
 import * as eventos from '../../comunidade/eventos.repo.js';
 import * as moderacao from '../../comunidade/moderacao.js';
@@ -91,9 +93,16 @@ export function rotasAdmin() {
     res.json({ lojas: lojas.listarParaAdmin(String(req.query.status ?? 'pendente')) });
   });
 
+  /** O administrador confere a logo antes de aprovar, mesmo com a loja ainda fora do ar. */
+  rotas.get('/admin/lojas/:id/logo', (req, res) => {
+    enviarLogo(res, lojas.obterPorId(req.params.id), 'private, no-cache');
+  });
+
   rotas.post('/admin/lojas/:id/status', (req, res) => {
     try {
-      res.json({ loja: lojas.mudarStatus(req.params.id, req.body?.status, req.body?.motivo) });
+      const loja = lojas.mudarStatus(req.params.id, req.body?.status, req.body?.motivo);
+      avisarDonoDaDecisao(loja, usuarios.buscarPorId(loja.dono_id)).catch(() => {});
+      res.json({ loja });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

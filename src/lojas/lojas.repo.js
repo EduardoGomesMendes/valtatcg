@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { UFS, semAcento } from './regioes.js';
 import { apenasDigitos, documentoValido } from '../documento.js';
 import { faixaEtaria } from '../seguranca/idade.js';
+import { salvarLogo, removerLogo } from './logo.js';
 
 const STATUS = ['pendente', 'ativa', 'recusada', 'suspensa'];
 const POR_PAGINA = 24;
@@ -98,13 +99,26 @@ export function obterPorDono(donoId) {
 // Cancelada continua no ar até o fim do período já pago; estorno zera a validade e some na hora.
 const VISIVEL = "status = 'ativa' AND assinatura_status IN ('ativa', 'cancelada') AND assinatura_expira_em > datetime('now')";
 
+/** Endereço da logo, com a data de troca na query: logo nova nunca fica presa no cache do navegador. */
+function enderecoDaLogo(l) {
+  return l.logo_mime ? `/api/lojas/${l.id}/logo?v=${encodeURIComponent(l.logo_atualizado_em ?? '')}` : null;
+}
+
 /** O que aparece para o público — nunca CNPJ, dono nem dados de cobrança. */
 function publica(l) {
   return {
     id: l.id, nome: l.nome, descricao: l.descricao, uf: l.uf, cidade: l.cidade,
-    whatsapp: l.whatsapp, instagram: l.instagram, site: l.site,
+    whatsapp: l.whatsapp, instagram: l.instagram, site: l.site, logo: enderecoDaLogo(l),
   };
 }
+
+/** A loja visível ao público (aprovada + mensalidade em dia), ou null — usado para servir a logo. */
+export function obterVisivel(id) {
+  return db.prepare(`SELECT * FROM lojas WHERE id = ? AND ${VISIVEL}`).get(Number(id)) ?? null;
+}
+
+/** "+48 hours": o prazo que prometemos à loja para o administrador decidir. */
+const prazoDeRevisao = () => `+${config.lojas.prazoRevisaoHoras} hours`;
 
 const escaparLike = (t) => t.replace(/[\\%_]/g, '\\$&');
 
@@ -159,9 +173,9 @@ export function criar(usuario, dados) {
   }
 
   const info = db.prepare(
-    `INSERT INTO lojas (dono_id, nome, cnpj, descricao, uf, cidade, cidade_busca, whatsapp, instagram, site)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(usuario.id, l.nome, l.cnpj, l.descricao, l.uf, l.cidade, l.cidade_busca, l.whatsapp, l.instagram, l.site);
+    `INSERT INTO lojas (dono_id, nome, cnpj, descricao, uf, cidade, cidade_busca, whatsapp, instagram, site, prazo_revisao_em)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', ?))`,
+  ).run(usuario.id, l.nome, l.cnpj, l.descricao, l.uf, l.cidade, l.cidade_busca, l.whatsapp, l.instagram, l.site, prazoDeRevisao());
   return obterPorId(info.lastInsertRowid);
 }
 
@@ -180,14 +194,36 @@ export function atualizar(donoId, dados) {
 
   db.prepare(
     `UPDATE lojas SET nome = ?, descricao = ?, uf = ?, cidade = ?, cidade_busca = ?, whatsapp = ?, instagram = ?, site = ?,
-        status = ?, motivo_status = ?, atualizado_em = datetime('now') WHERE id = ?`,
+        status = ?, motivo_status = ?, prazo_revisao_em = ${volta ? "datetime('now', ?)" : 'prazo_revisao_em'},
+        atualizado_em = datetime('now') WHERE id = ?`,
   ).run(
     l.nome, l.descricao, l.uf, l.cidade, l.cidade_busca, l.whatsapp, l.instagram, l.site,
     volta ? 'pendente' : atual.status,
     volta ? 'Alteração aguardando nova revisão.' : atual.motivo_status,
+    ...(volta ? [prazoDeRevisao()] : []),
     atual.id,
   );
   return obterPorId(atual.id);
+}
+
+/**
+ * Troca (dataUrl) ou tira (null) a logo. A logo é vitrine como o nome: se a loja estava no ar,
+ * volta para revisão — senão daria para ser aprovada com uma imagem e trocar por outra depois.
+ */
+export function trocarLogo(donoId, dataUrl) {
+  const atual = obterPorDono(donoId);
+  if (!atual) throw new Error('cadastre a loja antes de enviar a logo');
+
+  if (dataUrl === null) removerLogo(atual.id);
+  else salvarLogo(atual.id, dataUrl);
+
+  const volta = atual.status === 'ativa';
+  if (volta) {
+    db.prepare(
+      "UPDATE lojas SET status = 'pendente', motivo_status = 'Alteração aguardando nova revisão.', prazo_revisao_em = datetime('now', ?) WHERE id = ?",
+    ).run(prazoDeRevisao(), atual.id);
+  }
+  return { loja: obterPorId(atual.id), voltouParaRevisao: volta };
 }
 
 /* ------------------------------------------------------------------ */
@@ -196,18 +232,34 @@ export function atualizar(donoId, dados) {
 
 export function listarParaAdmin(status = 'pendente') {
   const filtrar = STATUS.includes(status);
+  // Em análise: quem vence primeiro aparece primeiro.
+  const ordem = status === 'pendente' ? 'l.prazo_revisao_em, l.id' : 'l.id DESC';
   return db.prepare(
     `SELECT l.*, u.nome AS dono_nome, u.email AS dono_email
        FROM lojas l JOIN usuarios u ON u.id = l.dono_id ${filtrar ? 'WHERE l.status = ?' : ''}
-      ORDER BY l.id DESC LIMIT 200`,
-  ).all(...(filtrar ? [status] : []));
+      ORDER BY ${ordem} LIMIT 200`,
+  ).all(...(filtrar ? [status] : [])).map((l) => ({ ...l, logo: enderecoDaLogo(l) }));
+}
+
+/** O aviso fixo do administrador: quantas lojas esperam e quantas já passaram do prazo. */
+export function resumoDeRevisoes() {
+  const r = db.prepare(
+    `SELECT COUNT(*) AS pendentes,
+            COALESCE(SUM(CASE WHEN prazo_revisao_em <= datetime('now') THEN 1 ELSE 0 END), 0) AS vencidas,
+            MIN(prazo_revisao_em) AS proximoPrazo
+       FROM lojas WHERE status = 'pendente'`,
+  ).get();
+  return { lojasPendentes: r.pendentes, lojasVencidas: r.vencidas, lojasProximoPrazo: r.proximoPrazo };
 }
 
 export function mudarStatus(id, status, motivo = null) {
   if (!STATUS.includes(status)) throw new Error('status inválido');
   if (!obterPorId(id)) throw new Error('loja não encontrada');
-  db.prepare("UPDATE lojas SET status = ?, motivo_status = ?, atualizado_em = datetime('now') WHERE id = ?")
-    .run(status, String(motivo ?? '').trim().slice(0, 300) || null, Number(id));
+  // Decidida, a loja deixa de ter prazo; em análise de novo (reabrir), o prazo recomeça.
+  db.prepare(
+    `UPDATE lojas SET status = ?, motivo_status = ?, atualizado_em = datetime('now'),
+        prazo_revisao_em = ${status === 'pendente' ? "datetime('now', ?)" : 'NULL'} WHERE id = ?`,
+  ).run(status, String(motivo ?? '').trim().slice(0, 300) || null, ...(status === 'pendente' ? [prazoDeRevisao()] : []), Number(id));
   return obterPorId(id);
 }
 
@@ -253,5 +305,5 @@ export function lojaPorAssinaturaExterna(assinaturaId) {
 export function paraODono(l) {
   if (!l) return null;
   const { asaas_cliente_id: _c, asaas_assinatura_id: assinaturaGateway, ...resto } = l;
-  return { ...resto, temAssinaturaNoGateway: Boolean(assinaturaGateway) };
+  return { ...resto, logo: enderecoDaLogo(l), temAssinaturaNoGateway: Boolean(assinaturaGateway) };
 }

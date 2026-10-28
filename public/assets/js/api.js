@@ -80,6 +80,14 @@ export function dolar(valor) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
+/** "30/10 14:20" no horário de Brasília — para prazos, que importam até a hora. */
+export function dataHoraBr(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.includes('T') ? iso : `${iso.replace(' ', 'T')}Z`);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 export function dataBr(iso) {
   if (!iso) return '—';
   const d = new Date(iso.includes('T') ? iso : `${iso.replace(' ', 'T')}Z`);
@@ -333,15 +341,49 @@ export async function prepararCabecalho() {
   }
 }
 
-/** O moderador vê em toda página quantas denúncias esperam — as de segurança de menores primeiro. */
+/**
+ * O administrador vê em toda página o que espera por ele: denúncias (as de segurança de menores primeiro)
+ * e lojas aguardando aprovação, com o prazo de 48 horas. Cada aviso tem o seu link.
+ */
 function mostrarAvisoDoModerador(resumo) {
   const $aviso = document.getElementById('aviso-assinatura');
-  if (!$aviso || !resumo?.denunciasAbertas) return;
-  const urgentes = resumo.denunciasUrgentes;
-  const texto = urgentes > 0
-    ? `ATENÇÃO: ${urgentes} denúncia(s) URGENTE(S) de segurança de menores aguardando você (${resumo.denunciasAbertas} no total).`
-    : `${resumo.denunciasAbertas} denúncia(s) aguardando análise.`;
-  mostrarAvisoAssinatura($aviso, texto, urgentes > 0 ? 'aviso--bloqueio' : 'aviso--atencao', 'Abrir denúncias', '/admin-denuncias/');
+  if (!$aviso || !resumo) return;
+
+  const avisos = [];
+  if (resumo.denunciasAbertas) {
+    const urgentes = resumo.denunciasUrgentes;
+    avisos.push({
+      urgente: urgentes > 0,
+      texto: urgentes > 0
+        ? `ATENÇÃO: ${urgentes} denúncia(s) URGENTE(S) de segurança de menores aguardando você (${resumo.denunciasAbertas} no total).`
+        : `${resumo.denunciasAbertas} denúncia(s) aguardando análise.`,
+      rotulo: 'Abrir denúncias',
+      href: '/admin-denuncias/',
+    });
+  }
+  if (resumo.lojasPendentes) {
+    const vencidas = resumo.lojasVencidas;
+    avisos.push({
+      urgente: vencidas > 0,
+      texto: vencidas > 0
+        ? `ATENÇÃO: ${vencidas} loja(s) passaram do prazo de 48 horas para aprovação (${resumo.lojasPendentes} aguardando no total).`
+        : `${resumo.lojasPendentes} loja(s) aguardando aprovação — responder até ${dataHoraBr(resumo.lojasProximoPrazo)}.`,
+      rotulo: 'Abrir lojas',
+      href: '/admin-lojas/',
+    });
+  }
+  if (!avisos.length) return;
+
+  // O tom do aviso é o do mais urgente; os textos se juntam, cada um com o seu link.
+  avisos.sort((a, b) => Number(b.urgente) - Number(a.urgente));
+  $aviso.textContent = '';
+  avisos.forEach((a, i) => {
+    $aviso.append(`${i > 0 ? ' · ' : ''}${a.texto} `);
+    const link = el('a', 'weight--semibold', a.rotulo);
+    link.href = a.href;
+    $aviso.append(link);
+  });
+  $aviso.className = `aviso--assinatura ${avisos[0].urgente ? 'aviso--bloqueio' : 'aviso--atencao'}`;
 }
 
 function mostrarAvisoAssinatura(elemento, mensagem, classeTom, rotuloLink = 'Abrir assinatura', href = '/assinatura/') {

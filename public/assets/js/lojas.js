@@ -43,8 +43,30 @@ function botaoLink(rotulo, href) {
   return a;
 }
 
+/** A logo é a marca da loja: quando há site, ela leva direto até ele. */
+function blocoDaLogo(loja) {
+  const img = document.createElement('img');
+  // O endereço vem do servidor, mas só é aceito no formato exato da rota da logo.
+  img.src = /^\/api\/lojas\/\d+\/logo\?v=[^\s"'<>]*$/.test(loja.logo) ? loja.logo : '';
+  img.alt = `Logo de ${loja.nome}`;
+  img.className = 'loja--logo';
+  img.loading = 'lazy';
+
+  const destino = loja.site && linkSite(loja.site);
+  if (!destino) return img;
+  const a = el('a', 'loja--logo--link', '');
+  a.href = destino;
+  a.target = '_blank';
+  // nofollow: o link é da loja, não uma recomendação nossa.
+  a.rel = 'noopener noreferrer nofollow';
+  a.title = `Visitar o site de ${loja.nome}`;
+  a.append(img);
+  return a;
+}
+
 function cartaoLoja(loja) {
   const cartao = el('article', 'cartao p--4 flex flex--col gap--2 loja--cartao', '');
+  if (loja.logo) cartao.append(blocoDaLogo(loja));
   cartao.append(el('h2', 'text--md weight--semibold', loja.nome));
   cartao.append(el('span', 'text--sm text--muted', `${loja.cidade} · ${loja.uf}`));
   if (loja.descricao) cartao.append(el('p', 'text--sm', loja.descricao));

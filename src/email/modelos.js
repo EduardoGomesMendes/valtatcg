@@ -30,3 +30,43 @@ export function emailConfirmacaoResponsavel({ responsavelNome, nomeDoMenor, link
 
   return { assunto, texto, html };
 }
+
+const dataHoraBr = (iso) => new Date(`${String(iso).replace(' ', 'T')}Z`)
+  .toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+/** Aviso ao administrador: loja nova (ou alterada) esperando decisão dentro do prazo prometido. */
+export function emailLojaParaRevisar({ nomeDaLoja, cidade, uf, prazoEm, link, alteracao }) {
+  const assunto = `${alteracao ? 'Loja alterada' : 'Nova loja'} para aprovar: ${nomeDaLoja}`;
+  const prazo = dataHoraBr(prazoEm);
+  const linhas = [
+    `${alteracao ? 'A loja alterou o cadastro e voltou para análise' : 'Uma loja se cadastrou no ValtaTCG'}: ${nomeDaLoja} (${cidade} · ${uf}).`,
+    '',
+    `Prometemos a resposta até ${prazo}. Abra a fila de lojas para aprovar ou recusar:`,
+    link,
+  ];
+  const html = `<p>${esc(linhas[0])}</p>
+<p>Prometemos a resposta até <strong>${esc(prazo)}</strong>. <a href="${esc(link)}">Abrir a fila de lojas</a>.</p>`;
+  return { assunto, texto: linhas.join('\n'), html };
+}
+
+/** Aviso ao dono da loja: a decisão do administrador e o próximo passo. */
+export function emailDecisaoDaLoja({ nomeDaLoja, aprovada, motivo, preco, link }) {
+  const reais = Number(preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const assunto = aprovada ? `Sua loja ${nomeDaLoja} foi aprovada no ValtaTCG` : `Sobre o cadastro da loja ${nomeDaLoja} no ValtaTCG`;
+  const linhas = aprovada
+    ? [
+      `A loja ${nomeDaLoja} foi aprovada.`,
+      '',
+      preco > 0
+        ? `Para aparecer no diretório, com sua logo e o link do seu site, ative a mensalidade de ${reais} em: ${link}`
+        : `Acompanhe a situação da loja em: ${link}`,
+    ]
+    : [
+      `O cadastro da loja ${nomeDaLoja} não foi aprovado.`,
+      motivo ? `Motivo: ${motivo}` : '',
+      '',
+      `Detalhes em: ${link}`,
+    ];
+  const html = linhas.map((l) => (l ? `<p>${esc(l)}</p>` : '')).join('\n');
+  return { assunto, texto: linhas.join('\n'), html };
+}

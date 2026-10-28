@@ -50,4 +50,7 @@ echo.
 echo  --- foto ---
 node testes/foto.teste.js
 echo.
+echo  --- lojas-marca ---
+node testes/lojas-marca.teste.js
+echo.
 pause

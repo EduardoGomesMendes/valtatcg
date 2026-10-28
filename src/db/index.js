@@ -69,6 +69,12 @@ adicionarColunaSeFaltando('usuarios', 'aceite_termos_em', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'suspenso', 'INTEGER NOT NULL DEFAULT 0');
 adicionarColunaSeFaltando('usuarios', 'motivo_suspensao', 'TEXT');
 adicionarColunaSeFaltando('pagamento_eventos', 'loja_id', 'INTEGER');
+// Logo da loja (arquivo em data/logos) e prazo de 48 h para o administrador revisar o cadastro.
+adicionarColunaSeFaltando('lojas', 'logo_mime', 'TEXT');
+adicionarColunaSeFaltando('lojas', 'logo_atualizado_em', 'TEXT');
+adicionarColunaSeFaltando('lojas', 'prazo_revisao_em', 'TEXT');
+// Lojas que já estavam em análise antes do prazo existir: contam as 48 h a partir de agora, não do cadastro.
+db.exec("UPDATE lojas SET prazo_revisao_em = datetime('now', '+48 hours') WHERE status = 'pendente' AND prazo_revisao_em IS NULL");
 
 /*
   Índice único depois da coluna existir — não pode ir no schema.sql porque,

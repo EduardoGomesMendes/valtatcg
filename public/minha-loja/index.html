@@ -74,6 +74,7 @@
 
     <section class="cartao p--5 flex flex--col gap--3 hidden" id="cartao-form">
       <h2 class="text--md weight--semibold" id="titulo-form">Cadastrar loja</h2>
+      <p class="text--sm" id="texto-oferta"></p>
       <form class="flex flex--col gap--3" id="form-loja">
         <label class="flex flex--col gap--1">
           <span class="rotulo">Nome da loja</span>
@@ -112,11 +113,27 @@
         <label class="flex flex--col gap--1">
           <span class="rotulo">Site</span>
           <input class="campo" type="text" name="site" placeholder="sualoja.com.br" autocomplete="off">
+          <span class="text--xs text--muted">Quem clicar na sua logo no diretório vai direto para este endereço.</span>
         </label>
-        <p class="text--xs text--muted hidden" id="aviso-revisao">Se você mudar nome, local ou contatos, a loja sai do ar até uma nova revisão.</p>
+        <p class="text--xs text--muted hidden" id="aviso-revisao">Se você mudar nome, local, contatos, site ou logo, a loja sai do ar até uma nova revisão (em até 48 horas).</p>
         <p class="hidden" id="aviso-loja"></p>
         <button class="botao botao--primario w--full" type="submit" id="btn-salvar-loja">Enviar para aprovação</button>
       </form>
+    </section>
+
+    <section class="cartao p--5 flex flex--col gap--3 hidden" id="cartao-logo">
+      <h2 class="text--md weight--semibold">Logo da loja</h2>
+      <p class="text--sm text--muted">A logo aparece no diretório, no lugar de só o nome, e leva ao seu site. PNG, JPEG ou WEBP; fundo transparente funciona bem.</p>
+      <div class="flex items--center gap--3 flex--wrap">
+        <img class="loja--logo loja--logo--previa hidden" id="previa-logo" alt="Logo atual da loja">
+        <span class="text--sm text--muted" id="sem-logo">Nenhuma logo enviada.</span>
+        <div class="flex flex--wrap gap--2">
+          <button class="botao botao--secundario botao--pequeno" type="button" id="btn-escolher-logo">Escolher logo</button>
+          <button class="botao botao--secundario botao--pequeno hidden" type="button" id="btn-remover-logo">Remover</button>
+        </div>
+        <input class="hidden" type="file" accept="image/png,image/jpeg,image/webp" id="entrada-logo">
+      </div>
+      <p class="hidden" id="aviso-logo"></p>
     </section>
   </main>
 

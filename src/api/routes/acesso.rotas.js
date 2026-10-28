@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { config } from '../../config.js';
 import { resumoParaModerador } from '../../comunidade/moderacao.js';
 import * as usuarios from '../../auth/usuarios.repo.js';
+import { resumoDeRevisoes } from '../../lojas/lojas.repo.js';
 import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
 import { enviarConfirmacaoResponsavel } from '../../seguranca/responsavel.js';
 import { faixaEtaria } from '../../seguranca/idade.js';
@@ -21,7 +22,7 @@ export function rotasAcesso() {
         ...req.usuario,
         faixa: faixaEtaria(req.usuario.nascimento),
         // Só para o moderador: o aviso fixo no topo das páginas (denúncias abertas, urgentes, tentativas graves).
-        ...(req.usuario.admin ? { moderacao: resumoParaModerador() } : {}),
+        ...(req.usuario.admin ? { moderacao: { ...resumoParaModerador(), ...resumoDeRevisoes() } } : {}),
       } : null,
     });
   });

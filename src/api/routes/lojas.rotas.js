@@ -4,6 +4,9 @@ import { UFS } from '../../lojas/regioes.js';
 import { pagamento } from '../../pagamento/index.js';
 import { ErroDePagamento } from '../../pagamento/provedor.js';
 import { criarLog } from '../../logger.js';
+import { config } from '../../config.js';
+import { enviarLogo } from '../../lojas/logo.js';
+import { avisarAdminsDaLoja } from '../../lojas/avisos.js';
 
 const log = criarLog('lojas');
 
@@ -25,6 +28,11 @@ export function rotasLojasPublicas() {
     res.json({ ufs: UFS, comLojas: lojas.contarPorUf() });
   });
 
+  /** Só serve a logo de loja que está no ar; a URL leva ?v=<data da troca>, então pode ficar em cache por um dia. */
+  rotas.get('/lojas/:id/logo', (req, res) => {
+    enviarLogo(res, lojas.obterVisivel(req.params.id), 'public, max-age=86400');
+  });
+
   return rotas;
 }
 
@@ -37,6 +45,7 @@ export function rotasMinhaLoja() {
       loja: lojas.paraODono(lojas.obterPorDono(req.usuario.id)),
       permissao: lojas.podeCadastrar(req.usuario),
       precoMensal: lojas.precoMensal(),
+      prazoRevisaoHoras: config.lojas.prazoRevisaoHoras,
       pagamentoAutomatico: pagamento().configurado,
     });
   });
@@ -44,7 +53,8 @@ export function rotasMinhaLoja() {
   rotas.post('/minha-loja', (req, res) => {
     try {
       const loja = lojas.criar(req.usuario, req.body ?? {});
-      log.info(`loja ${loja.id} cadastrada pelo usuário ${req.usuario.id} (aguardando aprovação)`);
+      log.info(`loja ${loja.id} cadastrada pelo usuário ${req.usuario.id} (aguardando aprovação até ${loja.prazo_revisao_em} UTC)`);
+      avisarAdminsDaLoja(loja).catch(() => {});
       res.status(201).json({ loja: lojas.paraODono(loja) });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
@@ -53,7 +63,35 @@ export function rotasMinhaLoja() {
 
   rotas.patch('/minha-loja', (req, res) => {
     try {
-      res.json({ loja: lojas.paraODono(lojas.atualizar(req.usuario.id, req.body ?? {})) });
+      const antes = lojas.obterPorDono(req.usuario.id);
+      const loja = lojas.atualizar(req.usuario.id, req.body ?? {});
+      if (antes?.status === 'ativa' && loja.status === 'pendente') avisarAdminsDaLoja(loja, { alteracao: true }).catch(() => {});
+      res.json({ loja: lojas.paraODono(loja) });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  /* Logo: o dono vê a própria mesmo antes da aprovação (a pública só serve loja no ar). */
+  rotas.get('/minha-loja/logo', (req, res) => {
+    enviarLogo(res, lojas.obterPorDono(req.usuario.id), 'private, no-cache');
+  });
+
+  rotas.post('/minha-loja/logo', (req, res) => {
+    try {
+      const { loja, voltouParaRevisao } = lojas.trocarLogo(req.usuario.id, req.body?.imagem);
+      if (voltouParaRevisao) avisarAdminsDaLoja(loja, { alteracao: true }).catch(() => {});
+      res.json({ loja: lojas.paraODono(loja), voltouParaRevisao });
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  rotas.delete('/minha-loja/logo', (req, res) => {
+    try {
+      const { loja, voltouParaRevisao } = lojas.trocarLogo(req.usuario.id, null);
+      if (voltouParaRevisao) avisarAdminsDaLoja(loja, { alteracao: true }).catch(() => {});
+      res.json({ loja: lojas.paraODono(loja), voltouParaRevisao });
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }

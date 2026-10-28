@@ -452,3 +452,8 @@ export function excluirComoAdmin(id) {
   }
   db.prepare('DELETE FROM usuarios WHERE id = ?').run(Number(id));
 }
+
+/** Quem recebe os avisos do sistema (loja nova esperando aprovação, por exemplo): administradores ativos. */
+export function emailsDosAdmins() {
+  return db.prepare("SELECT email FROM usuarios WHERE admin = 1 AND suspenso = 0 AND email IS NOT NULL AND email != ''").all().map((u) => u.email);
+}

@@ -1,4 +1,4 @@
-import { api, avisar, el, dataBr, prepararCabecalho } from './api.js';
+import { api, avisar, el, dataBr, dataHoraBr, prepararCabecalho } from './api.js';
 
 const $ = (id) => document.getElementById(id);
 const $form = $('form-loja');
@@ -6,7 +6,7 @@ const $aviso = $('aviso-loja');
 const $avisoMensalidade = $('aviso-mensalidade');
 
 const ROTULO_STATUS = {
-  pendente: ['Em análise', 'Recebemos o cadastro. Assim que a equipe aprovar, a mensalidade é liberada.'],
+  pendente: ['Em análise', 'Recebemos o cadastro. Assim que a equipe aprovar, a mensalidade é liberada.'], // o prazo entra em mostrarSituacao
   ativa: ['Aprovada', 'Loja aprovada.'],
   recusada: ['Recusada', 'O cadastro não foi aprovado.'],
   suspensa: ['Suspensa', 'A loja foi suspensa e não aparece no diretório.'],
@@ -31,8 +31,12 @@ function preencherFormulario(loja) {
   $form.cnpj.readOnly = true;
 }
 
-function mostrarSituacao(loja) {
-  const [selo, texto] = ROTULO_STATUS[loja.status];
+function mostrarSituacao(loja, prazoHoras) {
+  const [selo, textoPadrao] = ROTULO_STATUS[loja.status];
+  // Em análise, a promessa concreta: o administrador tem até {prazoHoras} h e a pessoa vê até quando.
+  const texto = loja.status === 'pendente' && loja.prazo_revisao_em
+    ? `Recebemos o cadastro. A equipe responde em até ${prazoHoras} horas (até ${dataHoraBr(loja.prazo_revisao_em)}). Depois da aprovação, a mensalidade é liberada.`
+    : textoPadrao;
   $('selo-status').textContent = selo;
   $('selo-status').className = `selo ${loja.status === 'ativa' ? 'selo--sucesso' : loja.status === 'pendente' ? 'selo--neutro' : 'selo--perigo'}`;
   $('texto-status').textContent = texto;
@@ -76,9 +80,31 @@ async function mostrarMensalidade(dados) {
   }
 }
 
+/** A oferta, dita antes de a pessoa preencher qualquer coisa: o que ela recebe, quanto custa e quanto demora. */
+function textoDaOferta({ precoMensal, prazoRevisaoHoras }) {
+  const preco = precoMensal > 0
+    ? `A mensalidade é de ${reais(precoMensal)}: seu cadastro fica sempre atualizado no ValtaTCG e sua marca aparece no diretório, com a logo e o link direto para o seu site. `
+    : '';
+  return `${preco}Depois do envio, nossa equipe libera o cadastro em até ${prazoRevisaoHoras} horas.`;
+}
+
+function mostrarLogo(loja) {
+  $('cartao-logo').classList.toggle('hidden', !loja);
+  if (!loja) return;
+  const tem = Boolean(loja.logo);
+  $('previa-logo').classList.toggle('hidden', !tem);
+  $('sem-logo').classList.toggle('hidden', tem);
+  $('btn-remover-logo').classList.toggle('hidden', !tem);
+  $('btn-escolher-logo').textContent = tem ? 'Trocar logo' : 'Escolher logo';
+  // O dono vê a própria logo mesmo antes da aprovação; o ?v= força recarregar depois de uma troca.
+  if (tem) $('previa-logo').src = `/api/minha-loja/logo?v=${encodeURIComponent(loja.logo_atualizado_em ?? '')}`;
+}
+
 async function carregar() {
   const dados = await api('/minha-loja');
   const { loja, permissao } = dados;
+  $('texto-oferta').textContent = textoDaOferta(dados);
+  mostrarLogo(loja);
 
   $('cartao-bloqueio').classList.toggle('hidden', Boolean(loja) || permissao.ok);
   if (!loja && !permissao.ok) {
@@ -94,7 +120,7 @@ async function carregar() {
 
   if (loja) {
     preencherFormulario(loja);
-    mostrarSituacao(loja);
+    mostrarSituacao(loja, dados.prazoRevisaoHoras);
     await mostrarMensalidade(dados);
   }
 }
@@ -138,6 +164,59 @@ $('btn-cancelar-loja').addEventListener('click', async () => {
     avisar($avisoMensalidade, 'Mensalidade cancelada.', 'info');
   } catch (erro) {
     avisar($avisoMensalidade, erro.message);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* Logo                                                                */
+/* ------------------------------------------------------------------ */
+
+const LADO_MAXIMO = 600;
+
+/** Reduz a imagem no próprio navegador (logo de 4000 px não precisa subir inteira) e a devolve em PNG, com transparência. */
+async function prepararLogo(arquivo) {
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(arquivo.type)) throw new Error('envie a logo em PNG, JPEG ou WEBP');
+  const bitmap = await createImageBitmap(arquivo, { imageOrientation: 'from-image' }).catch(() => {
+    throw new Error('não consegui abrir essa imagem');
+  });
+  const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * escala));
+  canvas.height = Math.max(1, Math.round(bitmap.height * escala));
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  return canvas.toDataURL('image/png');
+}
+
+$('btn-escolher-logo').addEventListener('click', () => $('entrada-logo').click());
+
+$('entrada-logo').addEventListener('change', async () => {
+  const arquivo = $('entrada-logo').files[0];
+  $('entrada-logo').value = '';
+  if (!arquivo) return;
+  $('btn-escolher-logo').disabled = true;
+  try {
+    const imagem = await prepararLogo(arquivo);
+    const r = await api('/minha-loja/logo', { method: 'POST', body: JSON.stringify({ imagem }) });
+    avisar($('aviso-logo'), r.voltouParaRevisao
+      ? 'Logo enviada. A loja volta para revisão e reaparece no diretório quando for aprovada.'
+      : 'Logo enviada. Ela aparece no diretório assim que a loja for aprovada.', 'sucesso');
+    await carregar();
+  } catch (erro) {
+    avisar($('aviso-logo'), erro.message);
+  } finally {
+    $('btn-escolher-logo').disabled = false;
+  }
+});
+
+$('btn-remover-logo').addEventListener('click', async () => {
+  if (!confirm('Remover a logo da loja?')) return;
+  try {
+    await api('/minha-loja/logo', { method: 'DELETE' });
+    avisar($('aviso-logo'), 'Logo removida.', 'info');
+    await carregar();
+  } catch (erro) {
+    avisar($('aviso-logo'), erro.message);
   }
 });
 

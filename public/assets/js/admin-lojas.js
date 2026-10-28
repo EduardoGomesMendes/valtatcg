@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar, dataBr, prepararCabecalho } from './api.js';
+import { api, avisar, el, limpar, dataBr, dataHoraBr, prepararCabecalho } from './api.js';
 
 const $lista = document.getElementById('lista-lojas');
 const $aviso = document.getElementById('aviso');
@@ -61,6 +61,18 @@ function validade(loja) {
   return `Mensalidade ${loja.assinatura_status} · até ${dataBr(loja.assinatura_expira_em)}`;
 }
 
+/** "Faltam 20 h 10 min" em texto normal; passado do prazo vira alerta vermelho. */
+function linhaDoPrazo(prazoIso) {
+  const restante = new Date(`${prazoIso.replace(' ', 'T')}Z`).getTime() - Date.now();
+  const abs = Math.abs(restante);
+  const horas = Math.floor(abs / 3600000);
+  const minutos = Math.floor((abs % 3600000) / 60000);
+  const duracao = horas > 0 ? `${horas} h ${minutos} min` : `${minutos} min`;
+  return restante > 0
+    ? el('span', 'text--sm weight--semibold', `Responder até ${dataHoraBr(prazoIso)} — faltam ${duracao}`)
+    : el('span', 'text--sm weight--semibold text--danger', `PRAZO VENCIDO há ${duracao} (era ${dataHoraBr(prazoIso)})`);
+}
+
 function cartaoLoja(loja) {
   const cartao = el('article', 'cartao p--4 flex flex--col gap--2', '');
 
@@ -69,6 +81,16 @@ function cartaoLoja(loja) {
   topo.append(el('span', 'weight--semibold', loja.nome));
   topo.append(el('span', 'text--sm text--muted', `${loja.cidade} · ${loja.uf}`));
   cartao.append(topo);
+
+  if (loja.status === 'pendente' && loja.prazo_revisao_em) cartao.append(linhaDoPrazo(loja.prazo_revisao_em));
+  if (loja.logo) {
+    // O administrador vê a logo antes de aprovar: a rota pública só serve loja que já está no ar.
+    const logo = document.createElement('img');
+    logo.src = `/api/admin/lojas/${Number(loja.id)}/logo?v=${encodeURIComponent(loja.logo_atualizado_em ?? '')}`;
+    logo.alt = `Logo de ${loja.nome}`;
+    logo.className = 'loja--logo loja--logo--previa';
+    cartao.append(logo);
+  }
 
   cartao.append(el('span', 'text--sm', `CNPJ ${cnpjBr(loja.cnpj)}`));
   cartao.append(el('span', 'text--xs text--muted', `Dono: ${loja.dono_nome} (${loja.dono_email})`));

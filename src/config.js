@@ -77,8 +77,11 @@ export const config = {
   },
 
   lojas: {
-    // 0 = mensalidade ainda não definida: a loja pode se cadastrar, mas o botão de assinar fica fechado.
-    precoMensal: num(process.env.PRECO_LOJA_MENSAL, 0),
+    // Mensalidade da loja: cadastro atualizado no diretório + marca (logo e link do site) em destaque.
+    // 0 fecha o botão de assinar (ex.: para negociar um valor à parte).
+    precoMensal: num(process.env.PRECO_LOJA_MENSAL, 49.77),
+    // Prazo que a loja ouve de nós para o administrador liberar o cadastro.
+    prazoRevisaoHoras: num(process.env.LOJA_PRAZO_REVISAO_HORAS, 48),
   },
 
   assinatura: {

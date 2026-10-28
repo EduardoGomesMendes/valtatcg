@@ -164,6 +164,9 @@ CREATE TABLE IF NOT EXISTS lojas (
   assinatura_expira_em TEXT,
   asaas_cliente_id TEXT,
   asaas_assinatura_id TEXT,
+  logo_mime TEXT,                     -- a imagem fica em data/logos/<id>; só PNG, JPEG ou WEBP
+  logo_atualizado_em TEXT,
+  prazo_revisao_em TEXT,              -- até quando o administrador deve decidir (só enquanto pendente)
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );

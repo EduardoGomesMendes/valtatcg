@@ -12,6 +12,19 @@ como um portfólio de investimentos.
 versão: catálogo + portfólio (o "Track" do Collectr). Fora do escopo por enquanto: trade analyzer,
 feed social, app mobile nativo, outros jogos de cartas.
 
+## Lojas: mensalidade, prazo de 48 h, logo e site
+
+- **R$ 49,77/mês** (`PRECO_LOJA_MENSAL`, padrão 49.77): cadastro atualizado no diretório + marca em destaque.
+- **Prazo de 48 h** (`LOJA_PRAZO_REVISAO_HORAS`): `lojas.prazo_revisao_em` nasce com o cadastro (e recomeça quando uma
+  loja no ar altera nome, contatos, site ou logo e volta para "pendente"). O administrador é avisado por **faixa
+  fixa no topo** (`/estado` → `moderacao.lojasPendentes/lojasVencidas`), pela fila ordenada pelo prazo em
+  `/admin-lojas/` e por **e-mail** (`src/lojas/avisos.js`, só se houver SMTP; nunca bloqueia o cadastro).
+  O dono recebe e-mail quando a loja é aprovada ou recusada.
+- **Logo**: arquivo em `data/logos/<id>` (PNG/JPEG/WEBP, nunca SVG; 2 MB; a tela reduz para 600 px). Pública só
+  de loja no ar (aprovada + mensalidade em dia); o dono e o administrador veem a dela antes da aprovação.
+  No diretório a logo vira link para o `site` da loja (`target=_blank`, `rel=noopener noreferrer nofollow`).
+- Mudar a logo de loja no ar a devolve para revisão, como mudar o nome.
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

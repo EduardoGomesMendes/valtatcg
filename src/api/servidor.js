@@ -33,6 +33,8 @@ export function criarServidor() {
     jeito errado de resolver isto.
   */
   app.use('/api/perfil/avatar', express.json({ limit: '5mb' }));
+  // A logo da loja vai em base64 (a tela já a reduz); o limite real de 2 MB é conferido em lojas/logo.js.
+  app.use('/api/minha-loja/logo', express.json({ limit: '4mb' }));
   app.use(express.json({ limit: '256kb' }));
 
   app.use((req, res, next) => {

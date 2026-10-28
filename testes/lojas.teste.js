@@ -73,7 +73,7 @@ ok('CNPJ não pode repetir entre donos', Boolean(lanca(() => lojas.criar(usuario
 ok('pendente não aparece no diretório', lojas.buscar({}).total === 0);
 lojas.mudarStatus(loja.id, 'ativa');
 ok('aprovada sem mensalidade ainda não aparece', lojas.buscar({}).total === 0);
-ok('mensalidade não definida por padrão (0)', lojas.precoMensal() === 0);
+ok('mensalidade padrão da loja é R$ 49,77', lojas.precoMensal() === 49.77);
 
 lojas.ativarAssinatura(loja.id, 30);
 const r = lojas.buscar({});
