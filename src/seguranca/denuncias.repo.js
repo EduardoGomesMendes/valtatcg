@@ -1,7 +1,10 @@
 import { db } from '../db/index.js';
 import { faixaEtaria } from './idade.js';
+import * as forum from '../comunidade/forum.repo.js';
 
 export const MOTIVOS = Object.freeze({
+  seguranca_menor: 'Contato inadequado com menor (pedido de foto, telefone, encontro ou segredo)',
+  ofensa: 'Ofensa, xingamento ou bullying',
   golpe: 'Golpe ou tentativa de fraude',
   falsificacao: 'Carta falsificada ou produto enganoso',
   conteudo_improprio: 'Conteúdo impróprio',
@@ -38,7 +41,13 @@ export function criar({ autorId, alvoTipo, alvoId, motivo, detalhe = '' }) {
   const info = db.prepare(
     'INSERT INTO denuncias (autor_id, alvo_tipo, alvo_id, motivo, detalhe) VALUES (?, ?, ?, ?, ?)',
   ).run(Number(autorId), alvoTipo, Number(alvoId), motivo, texto || null);
-  return { id: Number(info.lastInsertRowid), repetida: false };
+
+  // Risco a menor: o conteúdo sai do ar NA HORA, antes de qualquer análise. Se foi engano, o moderador reabre.
+  if (motivo === 'seguranca_menor') {
+    if (alvoTipo === 'topico') forum.moderarTopico(alvoId, 'ocultar');
+    if (alvoTipo === 'resposta') forum.moderarResposta(alvoId, 'ocultar');
+  }
+  return { id: Number(info.lastInsertRowid), repetida: false, ocultado: motivo === 'seguranca_menor' };
 }
 
 /** O que o admin precisa ver para decidir: o conteúdo denunciado e quem o escreveu (para suspender a conta, se for o caso). */
@@ -59,7 +68,8 @@ export function listar(status = 'aberta') {
   const linhas = db.prepare(
     `SELECT d.*, a.nome AS autor_nome, a.email AS autor_email
        FROM denuncias d LEFT JOIN usuarios a ON a.id = d.autor_id
-      WHERE (? = 'todas' OR d.status = ?) ORDER BY d.id DESC LIMIT 200`,
+      WHERE (? = 'todas' OR d.status = ?)
+      ORDER BY (d.motivo = 'seguranca_menor') DESC, d.id DESC LIMIT 200`,
   ).all(status, status);
 
   return linhas.map((d) => {

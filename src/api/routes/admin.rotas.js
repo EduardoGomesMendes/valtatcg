@@ -7,6 +7,7 @@ import * as denuncias from '../../seguranca/denuncias.repo.js';
 import * as lojas from '../../lojas/lojas.repo.js';
 import * as forum from '../../comunidade/forum.repo.js';
 import * as eventos from '../../comunidade/eventos.repo.js';
+import * as moderacao from '../../comunidade/moderacao.js';
 import { exigirAdmin } from '../autenticacao.js';
 
 export function rotasAdmin() {
@@ -107,6 +108,15 @@ export function rotasAdmin() {
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
     }
+  });
+
+  /* Moderação do fórum: o que foi escrito (inclusive o que ninguém denunciou) e o que o filtro barrou. */
+  rotas.get('/admin/moderacao/mensagens', (req, res) => {
+    res.json({ mensagens: moderacao.mensagensRecentes() });
+  });
+
+  rotas.get('/admin/moderacao/bloqueios', (req, res) => {
+    res.json({ bloqueios: moderacao.bloqueiosRecentes(), limites: moderacao.LIMITES });
   });
 
   /* Eventos: aprovação e remoção. */

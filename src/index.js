@@ -5,6 +5,7 @@ import './db/index.js'; // cria/abre o banco antes de qualquer coisa
 import { iniciarJobDePrecos } from './portfolio/precos.job.js';
 import { pagamento } from './pagamento/index.js';
 import { apagarPassados } from './comunidade/eventos.repo.js';
+import { apagarBloqueiosAntigos } from './comunidade/moderacao.js';
 
 const log = criarLog('sistema');
 
@@ -80,6 +81,8 @@ async function iniciar() {
     try {
       const n = apagarPassados();
       if (n) log.info(`eventos passados apagados: ${n}`);
+      const b = apagarBloqueiosAntigos();
+      if (b) log.info(`registros antigos de mensagens bloqueadas apagados: ${b}`);
     } catch (erro) {
       log.error(`falha ao apagar eventos passados: ${erro.message}`);
     }

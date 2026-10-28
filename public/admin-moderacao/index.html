@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moderação · ValtaTCG</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body class="app">
+  <header class="topo flex items--center justify--content--between px--6 bg--surface border--bottom">
+    <a href="/colecao/" class="flex items--center gap--2">
+      <img class="marca--simbolo" src="/assets/img/logo-simbolo.svg" alt="" width="32" height="32">
+      <span class="marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></span>
+    </a>
+    <nav class="flex items--center gap--5 topo--links">
+      <a href="/colecao/" class="nao--encolhe text--muted">Coleção</a>
+      <a href="/buscar/" class="nao--encolhe text--muted">Buscar cartas</a>
+      <a href="/lojas/" class="nao--encolhe text--muted">Lojas</a>
+      <a href="/eventos/" class="nao--encolhe text--muted">Eventos</a>
+      <a href="/forum/" class="nao--encolhe text--muted">Fórum</a>
+      <a href="/assinatura/" class="nao--encolhe text--muted">Assinatura</a>
+      <a href="/admin/" class="nao--encolhe weight--semibold" id="link-admin">Admin</a>
+    </nav>
+    <div class="menu--grupo nao--encolhe" id="menu-perfil">
+      <button type="button" class="avatar-botao" id="btn-avatar-menu" aria-haspopup="true" aria-expanded="false" title="Menu da conta">
+        <img class="hidden" id="avatar-topo-imagem" alt="">
+        <span id="avatar-topo-placeholder">?</span>
+      </button>
+      <div class="menu--lista hidden" id="menu-avatar-lista">
+        <a href="/perfil/" class="menu--item">Editar perfil</a>
+        <a href="/minha-loja/" class="menu--item">Minha loja</a>
+        <a href="/meus-eventos/" class="menu--item">Meus eventos</a>
+        <span class="menu--item menu--item--desabilitado">Configurações</span>
+        <button type="button" class="menu--item" id="btn-sair">Sair</button>
+      </div>
+    </div>
+  </header>
+  <div class="hidden" id="aviso-assinatura"></div>
+
+  <main class="conteudo flex flex--col gap--5">
+    <h1 class="text--xl weight--bold">Moderação do fórum</h1>
+    <nav class="admin--abas flex flex--wrap">
+      <a href="/admin/" class="botao botao--secundario botao--pequeno">Contas</a>
+      <a href="/admin-denuncias/" class="botao botao--secundario botao--pequeno">Denúncias</a>
+      <a href="/admin-lojas/" class="botao botao--secundario botao--pequeno">Lojas</a>
+      <a href="/admin-eventos/" class="botao botao--secundario botao--pequeno">Eventos</a>
+      <a href="/admin-moderacao/" class="botao botao--primario botao--pequeno">Moderação</a>
+    </nav>
+
+    <p class="text--sm text--muted">Aqui você vê o que está sendo escrito <strong>sem esperar denúncia</strong>. Fique de olho em adultos respondendo tópicos de menores, em pedidos de contato ou encontro e em ofensas. Ocultar não apaga: dá para desfazer.</p>
+
+    <div class="flex flex--wrap gap--2" id="abas"></div>
+    <p class="hidden" id="aviso"></p>
+    <div class="flex flex--col gap--3" id="lista"></div>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/admin-moderacao.js"></script>
+</body>
+</html>

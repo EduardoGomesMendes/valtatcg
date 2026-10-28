@@ -171,6 +171,7 @@ export async function prepararCabecalho() {
 
   if (estado.usuario?.admin) {
     document.getElementById('link-admin')?.classList.remove('hidden');
+    mostrarAvisoDoModerador(estado.usuario.moderacao);
     return;
   }
 
@@ -198,6 +199,17 @@ export async function prepararCabecalho() {
   } catch {
     // se a checagem falhar, só não mostra o aviso — não é motivo para travar a página.
   }
+}
+
+/** O moderador vê em toda página quantas denúncias esperam — as de segurança de menores primeiro. */
+function mostrarAvisoDoModerador(resumo) {
+  const $aviso = document.getElementById('aviso-assinatura');
+  if (!$aviso || !resumo?.denunciasAbertas) return;
+  const urgentes = resumo.denunciasUrgentes;
+  const texto = urgentes > 0
+    ? `ATENÇÃO: ${urgentes} denúncia(s) URGENTE(S) de segurança de menores aguardando você (${resumo.denunciasAbertas} no total).`
+    : `${resumo.denunciasAbertas} denúncia(s) aguardando análise.`;
+  mostrarAvisoAssinatura($aviso, texto, urgentes > 0 ? 'aviso--bloqueio' : 'aviso--atencao', 'Abrir denúncias', '/admin-denuncias/');
 }
 
 function mostrarAvisoAssinatura(elemento, mensagem, classeTom, rotuloLink = 'Abrir assinatura', href = '/assinatura/') {

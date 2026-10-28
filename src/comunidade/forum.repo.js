@@ -2,6 +2,7 @@ import { db } from '../db/index.js';
 import { config } from '../config.js';
 import { faixaEtaria } from '../seguranca/idade.js';
 import { validarTexto, nomePublico } from './texto.js';
+import { conferirConteudo } from './moderacao.js';
 
 /*
   Fórum simples: categorias fixas, tópicos e respostas só em texto.
@@ -12,7 +13,7 @@ import { validarTexto, nomePublico } from './texto.js';
 export const CATEGORIAS = Object.freeze({
   cartas: { rotulo: 'Cartas e coleções', descricao: 'Preços, raridades, edições e dicas sobre cartas.', soAdmin: false },
   iniciantes: { rotulo: 'Quem está começando', descricao: 'Dúvidas de quem acabou de entrar no mundo das cartas.', soAdmin: false },
-  eventos: { rotulo: 'Eventos e encontros', descricao: 'Conversa sobre torneios, feiras e encontros. Para divulgar um evento, use a página de Eventos.', soAdmin: false },
+  eventos: { rotulo: 'Eventos e encontros', descricao: 'Conversa sobre torneios e feiras. Para divulgar um evento, use a página de Eventos. Não combine encontros pessoais aqui.', soAdmin: false },
   avisos: { rotulo: 'Avisos do ValtaTCG', descricao: 'Novidades e regras da plataforma.', soAdmin: true },
 });
 
@@ -145,6 +146,7 @@ export function criarTopico(usuario, { categoria, titulo, corpo }) {
   exigirPoderEscrever(usuario);
   if (!categoriaValida(categoria)) throw new Error('escolha uma categoria');
   if (CATEGORIAS[categoria].soAdmin && !usuario.admin) throw new Error('só a equipe publica nesta categoria');
+  conferirConteudo(usuario, [titulo, corpo], 'topico');
   const t = validarTexto(titulo, { campo: 'título', min: 5, max: 120 });
   if (t.includes('\n')) throw new Error('título: use uma linha só');
   const c = validarTexto(corpo, { campo: 'texto', min: 10, max: 4000 });
@@ -160,6 +162,7 @@ export function responder(usuario, topicoId, corpo) {
   const t = db.prepare('SELECT id, fechado, oculto FROM forum_topicos WHERE id = ?').get(Number(topicoId));
   if (!t || t.oculto) throw new Error('tópico não encontrado');
   if (t.fechado) throw new Error('este tópico está fechado para novas respostas');
+  conferirConteudo(usuario, [corpo], 'resposta');
   const c = validarTexto(corpo, { campo: 'resposta', min: 2, max: 2000 });
   conferirLimite('forum_respostas', usuario, RESPOSTAS_POR_HORA, 'você respondeu muitas vezes agora há pouco — espere um pouco');
 

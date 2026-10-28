@@ -38,4 +38,7 @@ echo.
 echo  --- cadastro ---
 node testes/cadastro.teste.js
 echo.
+echo  --- moderacao ---
+node testes/moderacao.teste.js
+echo.
 pause

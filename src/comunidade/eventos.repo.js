@@ -3,6 +3,7 @@ import { UFS, semAcento } from '../lojas/regioes.js';
 import { faixaEtaria } from '../seguranca/idade.js';
 import * as lojas from '../lojas/lojas.repo.js';
 import { validarTexto } from './texto.js';
+import { conferirConteudo } from './moderacao.js';
 
 /*
   Eventos de cartas em todo o Brasil.
@@ -114,6 +115,7 @@ export function criar(usuario, dados, hoje = hojeNoBrasil()) {
   const permissao = podeDivulgar(usuario);
   if (!permissao.ok) throw new Error(permissao.motivo);
 
+  conferirConteudo(usuario, [dados.titulo, dados.descricao, dados.local], 'evento');
   const e = validar(dados, hoje);
   const ativos = db.prepare("SELECT COUNT(*) AS n FROM eventos WHERE criado_por = ? AND data_fim >= ?").get(usuario.id, hoje).n;
   if (ativos >= MAX_ATIVOS_POR_PESSOA) throw new Error('você já tem muitos eventos cadastrados — espere algum acontecer');

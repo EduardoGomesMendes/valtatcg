@@ -80,6 +80,10 @@ function cartaoDenuncia(d) {
   const cartao = el('article', 'cartao p--4 flex flex--col gap--2', '');
 
   const topo = el('div', 'flex items--center gap--2 flex--wrap', '');
+  if (d.motivo === 'seguranca_menor') {
+    cartao.classList.add('denuncia--urgente');
+    topo.append(el('span', 'selo selo--perigo', 'URGENTE'));
+  }
   topo.append(el('span', 'selo selo--perigo', d.motivo_rotulo));
   topo.append(el('span', 'weight--semibold', nomeDoAlvo(d)));
   cartao.append(topo);
@@ -88,7 +92,7 @@ function cartaoDenuncia(d) {
   cartao.append(el(
     'span',
     'text--xs text--muted',
-    `Enviada por ${d.autor_nome ?? 'conta removida'}${d.autor_email ? ` (${d.autor_email})` : ''} em ${dataBr(d.criado_em)}`,
+    `Enviada por ${d.autor_nome ?? 'o sistema (bloqueio automático) ou conta removida'}${d.autor_email ? ` (${d.autor_email})` : ''} em ${dataBr(d.criado_em)}`,
   ));
 
   if (d.status !== 'aberta') {

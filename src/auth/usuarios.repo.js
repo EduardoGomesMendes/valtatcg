@@ -2,6 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypt
 import { db } from '../db/index.js';
 import { config } from '../config.js';
 import { nascimentoValido, faixaEtaria, idadeMinimaAtingida } from '../seguranca/idade.js';
+import { analisar } from '../comunidade/filtro.js';
 
 /* ------------------------------------------------------------------ */
 /* Senhas                                                              */
@@ -95,6 +96,13 @@ export function buscarPorEmail(email) {
 /* Escrita                                                             */
 /* ------------------------------------------------------------------ */
 
+/** O nome de usuário aparece para todos no fórum: nada de ofensa, assunto sexual ou telefone nele. */
+function apelidoProibido(apelido) {
+  return Boolean(analisar(apelido) || analisar(String(apelido).replace(/[0-9_.]+/g, ' ')));
+}
+
+const MSG_APELIDO_PROIBIDO = 'escolha outro nome de usuário — este não pode ser usado';
+
 const MSG_USUARIO = 'nome de usuário precisa ter de 3 a 20 caracteres, só letras, números, "_" ou "."';
 
 /** Valida o responsável de quem é menor de idade: tem que ser outra pessoa, com e-mail próprio. */
@@ -114,6 +122,7 @@ export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, r
   if (!String(nome ?? '').trim()) throw new Error('nome é obrigatório');
   if (!emailValido(emailLimpo)) throw new Error('informe um e-mail válido');
   if (!usuarioValido(usuarioLimpo)) throw new Error(MSG_USUARIO);
+  if (apelidoProibido(usuarioLimpo)) throw new Error(MSG_APELIDO_PROIBIDO);
 
   if (!nascimentoValido(nascimento)) throw new Error('informe sua data de nascimento');
   if (!idadeMinimaAtingida(nascimento)) {
@@ -311,6 +320,7 @@ export function atualizarPerfil(usuarioId, { nome, email, usuario } = {}) {
     if (!usuarioValido(novo)) {
       throw new Error(MSG_USUARIO);
     }
+    if (apelidoProibido(novo)) throw new Error(MSG_APELIDO_PROIBIDO);
     const jaUsado = buscarPorUsuario(novo);
     if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este nome de usuário já está em uso');
     sets.push('usuario = ?');
@@ -423,6 +433,10 @@ export function contarAdmins() {
 export function definirAdmin(id, valor) {
   const alvo = buscarPorId(id);
   if (!alvo) throw new Error('usuário não encontrado');
+  // O administrador vê dados e conversas de menores: só um adulto, que informou a idade, pode ter esse acesso.
+  if (valor && faixaEtaria(alvo.nascimento) !== 'adulto') {
+    throw new Error('só contas de maiores de 18 anos, com data de nascimento informada, podem ser administradoras');
+  }
   if (!valor && alvo.admin && contarAdmins() <= 1) {
     throw new Error('este é o único administrador — promova outra conta antes de tirar o acesso desta');
   }

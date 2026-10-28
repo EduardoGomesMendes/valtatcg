@@ -221,3 +221,17 @@ CREATE TABLE IF NOT EXISTS eventos (
 );
 
 CREATE INDEX IF NOT EXISTS idx_eventos_busca ON eventos(status, data_fim, uf);
+
+-- Mensagens que o filtro barrou antes de publicar. É sinal para o moderador: quem insiste em pedir telefone
+-- ou encontro a menores aparece aqui. O trecho é curto e apagado depois de 90 dias.
+CREATE TABLE IF NOT EXISTS bloqueios_conteudo (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  classe TEXT NOT NULL,
+  grave INTEGER NOT NULL DEFAULT 0,
+  origem TEXT NOT NULL,                -- topico | resposta | evento
+  trecho TEXT NOT NULL,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_bloqueios_usuario ON bloqueios_conteudo(usuario_id, grave, criado_em);
