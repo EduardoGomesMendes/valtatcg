@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar, dataSimples, mostrarLinkDoForum } from './api.js';
+import { api, avisar, el, limpar, dataSimples, montarCabecalhoLogado } from './api.js';
 import { carregarMotivos, denunciar } from './denunciar.js';
 
 const $form = document.getElementById('form-busca');
@@ -98,10 +98,8 @@ async function iniciar() {
   try {
     const estado = await fetch('/api/estado', { credentials: 'same-origin' }).then((r) => r.json());
     if (estado.autenticado) {
+      montarCabecalhoLogado('/eventos/');
       logado = (await carregarMotivos()).length > 0;
-      document.getElementById('topo-entrar').classList.add('hidden');
-      mostrarLinkDoForum();
-      document.getElementById('topo-colecao').classList.remove('hidden');
     }
   } catch {
     // sem sessão, a agenda continua pública.

@@ -95,6 +95,82 @@ export function mostrarLinkDoForum() {
   antes.before(link);
 }
 
+/**
+ * Páginas abertas ao público (Lojas, Eventos) nascem com o cabeçalho de visitante. Quem está logado precisa do
+ * menu completo do sistema — senão, ao clicar nelas, o resto do menu e o avatar somem. Este cabeçalho é montado
+ * aqui (e não no HTML) para o link do fórum também só existir depois do login.
+ * @param {string} ativo caminho da página atual, para destacar no menu
+ */
+export function montarCabecalhoLogado(ativo) {
+  const visitante = document.querySelector('header.home--topo');
+  if (!visitante) return;
+
+  const cabecalho = el('header', 'topo flex items--center justify--content--between px--6 bg--surface border--bottom', '');
+
+  const marca = el('a', 'flex items--center gap--2', '');
+  marca.href = '/colecao/';
+  const simbolo = el('img', 'marca--simbolo', '');
+  simbolo.src = '/assets/img/logo-simbolo.svg';
+  simbolo.alt = '';
+  simbolo.width = 32;
+  simbolo.height = 32;
+  const texto = el('span', 'marca--texto', '');
+  texto.append(el('span', 'fonte--display', 'Valta'), ' ', el('span', 'marca--tcg', 'TCG'));
+  marca.append(simbolo, texto);
+
+  const nav = el('nav', 'flex items--center gap--5 topo--links', '');
+  [['/colecao/', 'Coleção'], ['/buscar/', 'Buscar cartas'], ['/lojas/', 'Lojas'], ['/eventos/', 'Eventos'], ['/forum/', 'Fórum'], ['/assinatura/', 'Assinatura']]
+    .forEach(([href, rotulo]) => {
+      const a = el('a', `nao--encolhe ${href === ativo ? 'weight--semibold' : 'text--muted'}`, rotulo);
+      a.href = href;
+      nav.append(a);
+    });
+  const admin = el('a', 'nao--encolhe text--muted hidden', 'Admin');
+  admin.href = '/admin/';
+  admin.id = 'link-admin';
+  nav.append(admin);
+
+  const grupo = el('div', 'menu--grupo nao--encolhe', '');
+  grupo.id = 'menu-perfil';
+  const botao = el('button', 'avatar-botao', '');
+  botao.type = 'button';
+  botao.id = 'btn-avatar-menu';
+  botao.setAttribute('aria-haspopup', 'true');
+  botao.setAttribute('aria-expanded', 'false');
+  botao.title = 'Menu da conta';
+  const imagem = el('img', 'hidden', '');
+  imagem.id = 'avatar-topo-imagem';
+  imagem.alt = '';
+  const iniciais = el('span', '', '?');
+  iniciais.id = 'avatar-topo-placeholder';
+  botao.append(imagem, iniciais);
+
+  const lista = el('div', 'menu--lista hidden', '');
+  lista.id = 'menu-avatar-lista';
+  [['/perfil/', 'Editar perfil'], ['/minha-loja/', 'Minha loja'], ['/meus-eventos/', 'Meus eventos']].forEach(([href, rotulo]) => {
+    const a = el('a', 'menu--item', rotulo);
+    a.href = href;
+    lista.append(a);
+  });
+  lista.append(el('span', 'menu--item menu--item--desabilitado', 'Configurações'));
+  const sair = el('button', 'menu--item', 'Sair');
+  sair.type = 'button';
+  sair.id = 'btn-sair';
+  sair.addEventListener('click', async () => {
+    await api('/sair', { method: 'POST' }).catch(() => {});
+    window.location.href = '/entrar/';
+  });
+  lista.append(sair);
+
+  grupo.append(botao, lista);
+  cabecalho.append(marca, nav, grupo);
+
+  const aviso = el('div', 'hidden', '');
+  aviso.id = 'aviso-assinatura';
+  visitante.replaceWith(cabecalho, aviso);
+  prepararCabecalho();
+}
+
 /** Data sem hora (AAAA-MM-DD → DD/MM/AAAA). Não passa por Date: o fuso do Brasil deslocaria um dia. */
 export function dataSimples(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ''));
