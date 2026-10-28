@@ -61,8 +61,7 @@ function desenharGrafico(serie) {
 }
 
 function cartaoItem(item) {
-  const cartao = el('article', 'cartao p--3 flex flex--col gap--2', '');
-  cartao.style.width = '160px';
+  const cartao = el('article', 'cartao carta--item p--3 flex flex--col gap--2', '');
 
   const img = document.createElement('img');
   img.src = item.imagem_pequena ?? '';
@@ -72,14 +71,15 @@ function cartaoItem(item) {
 
   const link = document.createElement('a');
   link.href = `/carta/?id=${encodeURIComponent(item.carta_id)}`;
-  link.className = 'text--sm weight--semibold text--truncate';
+  link.className = 'carta--nome text--sm weight--semibold';
   link.textContent = item.nome;
   cartao.append(link);
-  cartao.append(el('span', 'text--xs text--muted', `${item.set_nome ?? ''} · #${item.numero ?? '?'}`));
+  cartao.append(el('span', 'carta--meta text--xs text--muted', item.set_nome ?? ''));
+  cartao.append(el('span', 'text--xs text--muted', `#${item.numero ?? '?'}`));
   cartao.append(el('span', 'text--sm weight--semibold', dolar(item.preco_mercado_usd)));
   cartao.append(el('span', 'text--xs text--muted', `Qtd: ${item.quantidade}${item.variante ? ' · ' + item.variante : ''}`));
 
-  const remover = el('button', 'botao botao--perigo botao--pequeno', 'Remover');
+  const remover = el('button', 'botao botao--perigo botao--pequeno carta--acao', 'Remover');
   remover.type = 'button';
   remover.addEventListener('click', async () => {
     if (!confirm('Remover esta carta da coleção?')) return;

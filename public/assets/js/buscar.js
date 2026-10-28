@@ -123,8 +123,7 @@ function precoDeExibicao(carta) {
 }
 
 function cartaoResultado(carta) {
-  const cartao = el('article', 'cartao p--3 flex flex--col gap--2', '');
-  cartao.style.width = '200px';
+  const cartao = el('article', 'cartao carta--item p--3 flex flex--col gap--2', '');
 
   const img = document.createElement('img');
   img.src = carta.images?.small ?? '';
@@ -134,21 +133,23 @@ function cartaoResultado(carta) {
 
   const link = document.createElement('a');
   link.href = `/carta/?id=${encodeURIComponent(carta.id)}`;
-  link.className = 'text--sm weight--semibold text--truncate';
+  link.className = 'carta--nome text--sm weight--semibold';
   link.textContent = carta.name;
   cartao.append(link);
 
-  cartao.append(el('span', 'text--xs text--muted', `${carta.set?.name ?? ''} · #${carta.number ?? '?'}`));
+  cartao.append(el('span', 'carta--meta text--xs text--muted', carta.set?.name ?? ''));
+  cartao.append(el('span', 'text--xs text--muted', `${carta.rarity ? `${carta.rarity} · ` : ''}#${carta.number ?? '?'}`));
 
   const preco = precoDeExibicao(carta);
   cartao.append(el('span', 'text--sm weight--semibold', preco !== null ? `US$ ${preco.toFixed(2)}` : '—'));
 
-  const botaoAdicionar = el('button', 'botao botao--secundario botao--pequeno w--full', '+ Adicionar');
+  const botaoAdicionar = el('button', 'botao botao--secundario botao--pequeno w--full carta--acao', '+ Adicionar');
   botaoAdicionar.type = 'button';
   let aberto = false;
   let form = null;
   botaoAdicionar.addEventListener('click', () => {
     aberto = !aberto;
+    cartao.classList.toggle('carta--item--aberta', aberto);
     if (aberto) {
       form = formularioAdicionar(carta);
       cartao.append(form);
@@ -162,6 +163,9 @@ function cartaoResultado(carta) {
 
   return cartao;
 }
+
+// No celular o foco automático abre o teclado e esconde os resultados: só foca onde há mouse.
+if (window.matchMedia('(hover: hover)').matches) $form.nome.focus();
 
 $form.addEventListener('submit', async (ev) => {
   ev.preventDefault();

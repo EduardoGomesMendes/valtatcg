@@ -64,8 +64,7 @@ async function carregar() {
     const img = document.createElement('img');
     img.src = carta.imagem_grande ?? carta.imagem_pequena ?? '';
     img.alt = carta.nome;
-    img.style.width = '260px';
-    img.className = 'imagem--carta';
+    img.className = 'imagem--carta imagem--carta--detalhe';
     $detalhe.append(img);
 
     const info = el('div', 'flex flex--col gap--2', '');
