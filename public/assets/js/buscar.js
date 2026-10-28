@@ -84,7 +84,7 @@ function formularioAdicionar(carta, aoAdicionar) {
   campoPreco.step = '0.01';
   campoPreco.min = '0';
   campoPreco.name = 'precoPagoBrl';
-  campoPreco.placeholder = 'Preço pago (R$)';
+  campoPreco.placeholder = 'Preço pago por carta (R$)';
   linhaPrecoData.append(campoPreco);
 
   const campoData = document.createElement('input');
