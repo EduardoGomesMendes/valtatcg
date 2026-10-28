@@ -247,3 +247,36 @@ CREATE TABLE IF NOT EXISTS cambio_diario (
   fonte TEXT,
   buscado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Cadastro público: o pedido fica aqui até a pessoa abrir o link do e-mail e escolher a senha.
+-- Só então nasce a conta em `usuarios`. Guarda o HASH do token (quem lesse o banco não teria como
+-- concluir o cadastro de ninguém) e NÃO guarda senha: ela só existe depois da confirmação.
+CREATE TABLE IF NOT EXISTS cadastros_pendentes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token_hash TEXT NOT NULL UNIQUE,
+  nome TEXT NOT NULL,
+  usuario TEXT NOT NULL,
+  email TEXT NOT NULL,
+  nascimento TEXT,                     -- apagado quando a conta é criada (passa a viver em usuarios)
+  responsavel_nome TEXT,
+  responsavel_email TEXT,
+  ip TEXT,
+  aceite_termos_em TEXT NOT NULL,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  expira_em TEXT NOT NULL,
+  confirmado_em TEXT,
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cadastros_pendentes_email ON cadastros_pendentes(email, id DESC);
+
+-- Cada e-mail mandado (ou tentativa), para limitar abuso por endereço e por IP. No banco, e não na
+-- memória, porque o serviço reinicia a cada atualização.
+CREATE TABLE IF NOT EXISTS cadastros_envios (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  ip TEXT,
+  tipo TEXT NOT NULL,                  -- confirmacao | reenvio | ja_cadastrado
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cadastros_envios_email ON cadastros_envios(email, criado_em);
+CREATE INDEX IF NOT EXISTS idx_cadastros_envios_ip ON cadastros_envios(ip, criado_em);

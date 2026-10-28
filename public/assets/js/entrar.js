@@ -21,6 +21,7 @@ function mostrarAba(aba) {
   const ehEntrar = aba === 'entrar';
   $formEntrar.classList.toggle('hidden', !ehEntrar);
   $formRegistrar.classList.toggle('hidden', ehEntrar);
+  document.getElementById('registro-enviado').classList.add('hidden');
   $abaEntrar.setAttribute('aria-pressed', String(ehEntrar));
   $abaRegistrar.setAttribute('aria-pressed', String(!ehEntrar));
   $abaEntrar.className = `botao flex--1 ${ehEntrar ? 'botao--primario' : 'botao--secundario'}`;
@@ -75,26 +76,62 @@ $formEntrar.addEventListener('submit', async (ev) => {
   }
 });
 
+const $registroEnviado = document.getElementById('registro-enviado');
+const $avisoReenvio = document.getElementById('aviso-reenvio');
+const $btnReenviar = document.getElementById('btn-reenviar');
+let emailDoPedido = '';
+
+/** Troca o formulário pelo "confira o seu e-mail" (ou volta para o formulário, com os campos como estavam). */
+function mostrarEnvio(enviado) {
+  $formRegistrar.classList.toggle('hidden', enviado);
+  $registroEnviado.classList.toggle('hidden', !enviado);
+  avisar($avisoReenvio, null);
+}
+
 $formRegistrar.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   avisar($avisoRegistrar, null);
   $btnRegistrar.disabled = true;
-  $btnRegistrar.textContent = 'Criando…';
+  $btnRegistrar.textContent = 'Enviando…';
 
   const dados = Object.fromEntries(new FormData($formRegistrar).entries());
   try {
-    await api('/registrar', { method: 'POST', body: JSON.stringify(dados) });
-    window.location.href = destino();
+    await api('/cadastro', { method: 'POST', body: JSON.stringify(dados) });
+    emailDoPedido = dados.email;
+    document.getElementById('email-enviado').textContent = dados.email;
+    mostrarEnvio(true);
   } catch (erro) {
     avisar($avisoRegistrar, erro.message);
+  } finally {
     $btnRegistrar.disabled = false;
-    $btnRegistrar.textContent = 'Criar conta';
+    $btnRegistrar.textContent = 'Cadastrar';
   }
 });
+
+$btnReenviar.addEventListener('click', async () => {
+  $btnReenviar.disabled = true;
+  try {
+    await api('/cadastro/reenviar', { method: 'POST', body: JSON.stringify({ email: emailDoPedido }) });
+    avisar($avisoReenvio, 'Enviamos o e-mail de novo. O link anterior deixou de valer.', 'sucesso');
+  } catch (erro) {
+    avisar($avisoReenvio, erro.message);
+  } finally {
+    $btnReenviar.disabled = false;
+  }
+});
+
+document.getElementById('btn-corrigir').addEventListener('click', () => mostrarEnvio(false));
 
 async function prepararTela() {
   const estado = await api('/estado');
   if (estado.autenticado) window.location.href = destino();
+
+  // Sem e-mail configurado o servidor não consegue mandar o link: melhor avisar antes de a pessoa preencher tudo.
+  const { aberto } = await api('/cadastro/estado');
+  if (!aberto) {
+    avisar($avisoRegistrar, 'O cadastro online está indisponível no momento. Tente novamente mais tarde.');
+    $btnRegistrar.disabled = true;
+  }
 }
 
 prepararTela().catch(() => {});

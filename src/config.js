@@ -59,6 +59,16 @@ export const config = {
   // Endereço público: é de onde saem os links dos e-mails. NUNCA vem do cabeçalho da requisição.
   urlPublica: (process.env.URL_PUBLICA || 'https://valtatcg.com.br').replace(/\/+$/, ''),
 
+  // Cadastro público: a conta só nasce depois de a pessoa abrir o link do e-mail e escolher a senha.
+  cadastro: {
+    validadeHoras: num(process.env.CADASTRO_VALIDADE_HORAS, 24),
+    // E-mails que o mesmo endereço recebe por dia (confirmação + reenvios).
+    enviosPorEmailPorDia: num(process.env.CADASTRO_ENVIOS_POR_EMAIL_DIA, 3),
+    pedidosPorIpPorHora: num(process.env.CADASTRO_PEDIDOS_POR_IP_HORA, 8),
+    // Confere se o domínio do e-mail existe (registro MX). Pega "gmial.com". Desligue só em teste.
+    checarDominio: bool(process.env.CADASTRO_CHECAR_DOMINIO, true),
+  },
+
   email: {
     host: process.env.SMTP_HOST || '',
     porta: num(process.env.SMTP_PORT, 465),

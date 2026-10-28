@@ -3,8 +3,6 @@ import { config } from '../../config.js';
 import { resumoParaModerador } from '../../comunidade/moderacao.js';
 import * as usuarios from '../../auth/usuarios.repo.js';
 import { resumoDeRevisoes } from '../../lojas/lojas.repo.js';
-import * as assinaturas from '../../assinaturas/assinaturas.repo.js';
-import { enviarConfirmacaoResponsavel } from '../../seguranca/responsavel.js';
 import { faixaEtaria } from '../../seguranca/idade.js';
 import {
   gravarCookieSessao, apagarCookieSessao,
@@ -25,21 +23,6 @@ export function rotasAcesso() {
         ...(req.usuario.admin ? { moderacao: { ...resumoParaModerador(), ...resumoDeRevisoes() } } : {}),
       } : null,
     });
-  });
-
-  rotas.post('/registrar', async (req, res) => {
-    try {
-      const usuario = usuarios.criar(req.body ?? {});
-      assinaturas.iniciarTeste(usuario.id);
-      const responsavel = usuario.responsavel_status === 'pendente'
-        ? await enviarConfirmacaoResponsavel(usuario.id)
-        : null;
-      const token = usuarios.abrirSessao(usuario.id);
-      gravarCookieSessao(res, token);
-      res.status(201).json({ usuario, responsavel });
-    } catch (erro) {
-      res.status(400).json({ erro: erro.message });
-    }
   });
 
   rotas.post('/entrar', (req, res) => {

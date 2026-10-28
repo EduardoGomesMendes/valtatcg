@@ -1,5 +1,58 @@
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+const primeiroNome = (nome) => String(nome ?? '').trim().split(/\s+/)[0] || 'tudo bem';
+
+/** Primeiro e-mail do cadastro: prova que o endereço é da pessoa e leva ao passo de criar a senha. */
+export function emailConfirmacaoDeCadastro({ nome, link, validadeHoras }) {
+  const nomeCurto = primeiroNome(nome);
+  const assunto = 'Confirme seu e-mail para criar sua conta no ValtaTCG';
+  const texto = [
+    `Olá, ${nomeCurto}!`,
+    '',
+    'Recebemos o seu cadastro no ValtaTCG. Falta só um passo: confirmar este e-mail e criar a sua senha.',
+    '',
+    'Abra este endereço:',
+    link,
+    '',
+    `O link vale por ${validadeHoras} horas e só pode ser usado uma vez.`,
+    '',
+    'Se não foi você que fez o cadastro, ignore este e-mail: nenhuma conta será criada.',
+    '',
+    'ValtaTCG · desenvolvido por omva',
+  ].join('\n');
+  const html = `<p>Olá, ${esc(nomeCurto)}!</p>
+<p>Recebemos o seu cadastro no ValtaTCG. Falta só um passo: confirmar este e-mail e criar a sua senha.</p>
+<p><a href="${esc(link)}"><strong>Confirmar e-mail e criar senha</strong></a></p>
+<p>O link vale por ${validadeHoras} horas e só pode ser usado uma vez.</p>
+<p>Se não foi você que fez o cadastro, ignore este e-mail: nenhuma conta será criada.</p>
+<p>ValtaTCG · desenvolvido por omva</p>`;
+  return { assunto, texto, html };
+}
+
+/** Alguém tentou se cadastrar com um e-mail que já tem conta: a resposta na tela é igual, e o aviso vai para o dono do e-mail. */
+export function emailJaTemCadastro({ nome, linkEntrar }) {
+  const nomeCurto = primeiroNome(nome);
+  const assunto = 'Este e-mail já tem conta no ValtaTCG';
+  const texto = [
+    `Olá, ${nomeCurto}!`,
+    '',
+    'Alguém tentou criar uma conta no ValtaTCG com este e-mail, mas ele já tem cadastro.',
+    '',
+    'Para entrar, use:',
+    linkEntrar,
+    '',
+    'Se foi você e esqueceu a senha, fale com o suporte. Se não foi você, ignore este e-mail.',
+    '',
+    'ValtaTCG · desenvolvido por omva',
+  ].join('\n');
+  const html = `<p>Olá, ${esc(nomeCurto)}!</p>
+<p>Alguém tentou criar uma conta no ValtaTCG com este e-mail, mas ele <strong>já tem cadastro</strong>.</p>
+<p><a href="${esc(linkEntrar)}">Entrar no ValtaTCG</a></p>
+<p>Se foi você e esqueceu a senha, fale com o suporte. Se não foi você, ignore este e-mail.</p>
+<p>ValtaTCG · desenvolvido por omva</p>`;
+  return { assunto, texto, html };
+}
+
 /** E-mail que o responsável recebe para autorizar a conta de um menor. */
 export function emailConfirmacaoResponsavel({ responsavelNome, nomeDoMenor, link, validadeHoras }) {
   const dias = Math.max(1, Math.round(validadeHoras / 24));

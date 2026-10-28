@@ -25,6 +25,23 @@ feed social, app mobile nativo, outros jogos de cartas.
   No diretório a logo vira link para o `site` da loja (`target=_blank`, `rel=noopener noreferrer nofollow`).
 - Mudar a logo de loja no ar a devolve para revisão, como mudar o nome.
 
+## Cadastro: e-mail primeiro, senha depois
+
+Igual ao omvazap e ao omvalic. O formulário de cadastro **não pede senha**: `POST /api/cadastro` valida os dados
+e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta ainda). O e-mail leva a
+`/confirmar/?t=...`, onde a pessoa escolhe a senha; só então `POST /api/cadastro/concluir` cria o usuário
+(`usuarios.criar`), inicia o teste grátis e abre a sessão. Regras que não podem se perder:
+- A consulta do link (`GET /cadastro/confirmar`) **só lê**: leitores de e-mail abrem links sozinhos e não podem gastá-lo.
+  O link vale `CADASTRO_VALIDADE_HORAS` (24 h) e uma vez; reenviar troca o link (o anterior morre).
+- A resposta do pedido é a mesma haja ou não conta para o e-mail (não entrega quem é usuário); quem já tem conta
+  recebe um aviso por e-mail. Já o **nome de usuário em uso** é dito na tela (ele é público no fórum).
+- Limites por e-mail (3/dia) e por IP (8/hora) ficam no banco (`cadastros_envios`), não na memória.
+- Sem e-mail configurado o cadastro fecha (`/cadastro/estado` → `aberto: false`). Em desenvolvimento use
+  `EMAIL_MODO=console`: o link aparece no log. `/registrar` (conta com senha direto) **não existe mais**.
+- Pedido não confirmado é apagado 7 dias após vencer (guarda data de nascimento); ao criar a conta o pedido
+  esquece nascimento e responsável (passam a viver só em `usuarios`).
+- Contas antigas não mudam. O "esqueci minha senha" ainda não existe; quando vier, reaproveita este mecanismo.
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

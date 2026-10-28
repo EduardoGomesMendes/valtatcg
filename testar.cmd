@@ -53,4 +53,7 @@ echo.
 echo  --- lojas-marca ---
 node testes/lojas-marca.teste.js
 echo.
+echo  --- confirmacao-email ---
+node testes/confirmacao-email.teste.js
+echo.
 pause

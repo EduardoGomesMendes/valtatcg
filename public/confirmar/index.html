@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Confirmar e-mail · ValtaTCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/global/global.css">
+  <link rel="stylesheet" href="../assets/css/project/project.css">
+  <link rel="icon" href="/assets/img/logo-simbolo.svg" type="image/svg+xml">
+</head>
+<body>
+  <main class="tela--centro flex flex--col items--center justify--content--center p--6 gap--6">
+    <section class="flex flex--col items--center gap--2">
+      <img class="marca--simbolo marca--simbolo--grande" src="/assets/img/logo-simbolo.svg" alt="" width="64" height="64">
+      <h1 class="text--2xl marca--texto"><span class="fonte--display">Valta</span> <span class="marca--tcg">TCG</span></h1>
+    </section>
+
+    <p class="text--sm text--muted" id="carregando">Conferindo o seu link…</p>
+
+    <!-- Link válido: escolher a senha -->
+    <section class="cartao p--6 flex flex--col gap--4 caixa--estreita hidden" id="painel-senha">
+      <div class="flex flex--col gap--1">
+        <h2 class="text--lg weight--semibold">Crie a sua senha</h2>
+        <p class="text--sm text--muted">Último passo, <strong id="nome-confirmado"></strong>. Seu e-mail <strong id="email-confirmado"></strong> está confirmado; escolha uma senha para entrar.</p>
+      </div>
+
+      <form class="flex flex--col gap--3" id="form-senha" novalidate>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Senha</span>
+          <input class="campo" type="password" name="senha" autocomplete="new-password" minlength="8" required autofocus>
+          <span class="text--xs text--muted">Pelo menos 8 caracteres, com letra e número.</span>
+        </label>
+        <label class="flex flex--col gap--1">
+          <span class="rotulo">Repita a senha</span>
+          <input class="campo" type="password" name="repetir" autocomplete="new-password" required>
+        </label>
+        <p class="hidden" id="aviso"></p>
+        <button class="botao botao--primario w--full" type="submit" id="btn-concluir">Criar minha conta</button>
+      </form>
+    </section>
+
+    <!-- Link usado, vencido ou inválido -->
+    <section class="cartao p--6 flex flex--col gap--3 caixa--estreita hidden" id="painel-problema">
+      <h2 class="text--lg weight--semibold" id="titulo-problema"></h2>
+      <p class="text--sm" id="texto-problema"></p>
+      <p class="hidden" id="aviso-problema"></p>
+      <div class="flex flex--row gap--2 flex--wrap" id="acoes-problema"></div>
+    </section>
+  </main>
+
+  <footer class="rodape flex flex--col items--center gap--1">
+    <a href="https://omva.com.br" target="_blank" rel="noopener" class="text--xs text--muted">Desenvolvido por omva</a>
+    <p class="text--xs text--muted">OMVA ATENDIMENTO CONTINUO LTDA · CNPJ 69.724.570/0001-20</p>
+  </footer>
+
+  <script type="module" src="../assets/js/confirmar.js"></script>
+</body>
+</html>

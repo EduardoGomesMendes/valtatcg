@@ -23,7 +23,7 @@
     <section class="cartao p--6 flex flex--col gap--4 caixa--estreita">
       <div class="flex gap--2" id="abas">
         <button class="botao botao--primario flex--1" type="button" id="aba-entrar" aria-pressed="true">Entrar</button>
-        <button class="botao botao--secundario flex--1" type="button" id="aba-registrar" aria-pressed="false">Criar conta</button>
+        <button class="botao botao--secundario flex--1" type="button" id="aba-registrar" aria-pressed="false">Cadastrar</button>
       </div>
 
       <form class="flex flex--col gap--3" id="form-entrar">
@@ -54,11 +54,7 @@
           <span class="rotulo">E-mail</span>
           <input class="campo" type="email" name="email" autocomplete="email" required>
         </label>
-        <label class="flex flex--col gap--1">
-          <span class="rotulo">Senha</span>
-          <input class="campo" type="password" name="senha" autocomplete="new-password" required minlength="8">
-        </label>
-        <p class="text--xs text--muted">Pelo menos 8 caracteres, com letra e número.</p>
+        <p class="text--xs text--muted">Enviaremos um link para este e-mail. É nele que você cria a sua senha.</p>
 
         <label class="flex flex--col gap--1">
           <span class="rotulo">Data de nascimento</span>
@@ -84,8 +80,20 @@
         </label>
 
         <p class="hidden" id="aviso-registrar"></p>
-        <button class="botao botao--primario w--full" type="submit" id="btn-registrar">Criar conta</button>
+        <button class="botao botao--primario w--full" type="submit" id="btn-registrar">Cadastrar</button>
       </form>
+
+      <!-- Depois do pedido: o próximo passo está na caixa de entrada -->
+      <div class="hidden flex flex--col gap--3" id="registro-enviado">
+        <h2 class="text--lg weight--semibold">Confira o seu e-mail</h2>
+        <p class="text--sm">Enviamos um link para <strong id="email-enviado"></strong>. Abra o e-mail e clique no link para criar a sua senha e entrar.</p>
+        <p class="text--xs text--muted">Não achou? Olhe também o spam e a aba Promoções. O link vale por 24 horas.</p>
+        <p class="hidden" id="aviso-reenvio"></p>
+        <div class="flex flex--wrap gap--2">
+          <button class="botao botao--secundario" type="button" id="btn-reenviar">Reenviar o e-mail</button>
+          <button class="botao botao--secundario" type="button" id="btn-corrigir">Corrigir o e-mail</button>
+        </div>
+      </div>
     </section>
   </main>
 

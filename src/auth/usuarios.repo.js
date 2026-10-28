@@ -115,7 +115,13 @@ function conferirResponsavel({ responsavelNome, responsavelEmail }, emailDoMenor
   return { nome, email };
 }
 
-export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, responsavelNome, responsavelEmail }) {
+export const usuarioEmUso = (usuario) => Boolean(buscarPorUsuario(usuario));
+
+/**
+ * Tudo o que o cadastro exige além da senha e da unicidade. Fica separado de `criar` porque o cadastro público
+ * valida isto no PEDIDO (antes de mandar o e-mail) e só pede a senha depois que a pessoa abre o link.
+ */
+export function conferirDadosDoCadastro({ nome, email, usuario, nascimento, aceiteTermos, responsavelNome, responsavelEmail }) {
   const emailLimpo = normalizarEmail(email);
   const usuarioLimpo = normalizarUsuario(usuario);
 
@@ -134,6 +140,14 @@ export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, r
 
   const exigeResponsavel = config.responsavel.obrigatorio && faixaEtaria(nascimento) === 'menor';
   const responsavel = exigeResponsavel ? conferirResponsavel({ responsavelNome, responsavelEmail }, emailLimpo) : null;
+  return { emailLimpo, usuarioLimpo, responsavel };
+}
+
+/** `aceiteTermosEm`: no cadastro por e-mail o aceite aconteceu no pedido, horas antes de a conta nascer. */
+export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, aceiteTermosEm, responsavelNome, responsavelEmail }) {
+  const { emailLimpo, usuarioLimpo, responsavel } = conferirDadosDoCadastro({
+    nome, email, usuario, nascimento, aceiteTermos, responsavelNome, responsavelEmail,
+  });
 
   const problema = validarSenha(senha);
   if (problema) throw new Error(problema);
@@ -146,9 +160,9 @@ export function criar({ nome, email, usuario, senha, nascimento, aceiteTermos, r
     `INSERT INTO usuarios
        (nome, email, usuario, senha_hash, senha_salt, nascimento, aceite_termos_em,
         responsavel_nome, responsavel_email, responsavel_status)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?, ?, ?)`,
   ).run(
-    String(nome).trim(), emailLimpo, usuarioLimpo, hash, salt, nascimento,
+    String(nome).trim(), emailLimpo, usuarioLimpo, hash, salt, nascimento, aceiteTermosEm ?? null,
     responsavel?.nome ?? null, responsavel?.email ?? null, responsavel ? 'pendente' : null,
   );
 
