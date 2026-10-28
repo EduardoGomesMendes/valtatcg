@@ -1,6 +1,7 @@
 import { api, avisar, el, limpar, prepararCabecalho } from './api.js';
 import { carregarCambio, preco, elementoVariacao } from './moeda.js';
 import { icone } from './icones.js';
+import { interpretarBusca, ordenarPorNome, pontuarNome } from './leitura-carta.js';
 
 prepararCabecalho();
 
@@ -8,6 +9,8 @@ const $form = document.getElementById('form-busca');
 const $resultados = document.getElementById('resultados');
 const $aviso = document.getElementById('aviso');
 const $btnSair = document.getElementById('btn-sair');
+const $btnFoto = document.getElementById('btn-foto');
+const $entradaFoto = document.getElementById('entrada-foto');
 
 $btnSair.addEventListener('click', async () => {
   await api('/sair', { method: 'POST' }).catch(() => {});
@@ -207,19 +210,126 @@ if (window.matchMedia('(hover: hover)').matches) $form.nome.focus();
 
 const prontos = Promise.all([carregarCambio(), carregarPossuidas()]);
 
+/** Consulta a busca do servidor (por nome, ou por número impresso quando vem da foto). */
+async function consultar(parametros) {
+  const [{ cartas, variacoes }] = await Promise.all([api(`/cartas/buscar?${parametros}`), prontos]);
+  return { cartas, variacoes };
+}
+
+function mostrarCartas({ cartas, variacoes }) {
+  limpar($resultados);
+  cartas.forEach((carta) => $resultados.append(cartaoResultado(carta, variacoes?.[carta.id] ?? null)));
+}
+
 $form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   avisar($aviso, null);
-  const nome = new FormData($form).get('nome');
+  const texto = String(new FormData($form).get('nome') ?? '').trim();
   limpar($resultados);
   try {
-    const [{ cartas, variacoes }] = await Promise.all([api(`/cartas/buscar?nome=${encodeURIComponent(nome)}`), prontos]);
-    if (!cartas.length) {
+    // O campo aceita nome, número ("25", "025/165", "SWSH123") ou os dois ("pikachu 25").
+    const { nome, numero, total } = interpretarBusca(texto);
+    let achadas = numero
+      ? await consultar(`numero=${encodeURIComponent(numero)}&total=${encodeURIComponent(total)}&nome=${encodeURIComponent(nome)}`)
+      : await consultar(`nome=${encodeURIComponent(texto)}`);
+    // Texto que parecia número mas era nome (ex.: "Pokémon 151"): tenta de novo como nome.
+    if (numero && !achadas.cartas.length) achadas = await consultar(`nome=${encodeURIComponent(texto)}`);
+    if (!achadas.cartas.length) {
       avisar($aviso, 'Nenhuma carta encontrada.', 'info');
       return;
     }
-    cartas.forEach((carta) => $resultados.append(cartaoResultado(carta, variacoes?.[carta.id] ?? null)));
+    mostrarCartas(achadas);
+    if (numero && !total && !nome) {
+      avisar($aviso, `Cartas de número ${numero} de várias coleções. Acrescente o nome (ex.: "pikachu ${numero}") ou o total ("${numero}/165") para filtrar.`, 'info');
+    }
   } catch (erro) {
     avisar($aviso, erro.message);
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* Busca pela foto da carta                                            */
+/* ------------------------------------------------------------------ */
+
+$btnFoto.append(icone('camera', 20));
+
+// Com câmera disponível abre o quadro-guia; sem ela (ou sem permissão) cai no seletor de arquivo do aparelho.
+$btnFoto.addEventListener('click', async () => {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    $entradaFoto.click();
+    return;
+  }
+  try {
+    const { abrirCamera } = await import('./camera-carta.js');
+    const resultado = await abrirCamera();
+    if (resultado === 'galeria') $entradaFoto.click();
+    else if (resultado) await lerEBuscar(resultado);
+  } catch {
+    avisar($aviso, 'Não consegui abrir a câmera. Escolha uma foto da carta.', 'info');
+    $entradaFoto.click();
+  }
+});
+
+/**
+ * O número impresso ("025/165") é a pista mais firme; o nome lido pelo OCR é só reforço. Sem número,
+ * busca pelo começo do nome — e, se nada vier, por um pedaço menor, que sobrevive a uma letra errada.
+ */
+async function buscarPelaLeitura(lida) {
+  if (lida.numero) {
+    try {
+      const achadas = await consultar(`numero=${encodeURIComponent(lida.numero)}&total=${encodeURIComponent(lida.total)}`);
+      if (achadas.cartas.length) return { ...achadas, cartas: ordenarPorNome(achadas.cartas, lida.chave) };
+    } catch {
+      // Sem resposta por número, ainda dá para tentar pelo nome.
+    }
+  }
+  const prefixos = lida.chave ? [lida.chave, lida.chave.length > 5 ? lida.chave.slice(0, 4) : null] : [];
+  for (const prefixo of prefixos.filter(Boolean)) {
+    const achadas = await consultar(`nome=${encodeURIComponent(prefixo)}`);
+    if (achadas.cartas.length) return { ...achadas, cartas: ordenarPorNome(achadas.cartas, lida.chave) };
+  }
+  return null;
+}
+
+$entradaFoto.addEventListener('change', async () => {
+  const arquivo = $entradaFoto.files[0];
+  $entradaFoto.value = ''; // permite escolher a mesma foto de novo depois de um erro
+  if (arquivo) await lerEBuscar(arquivo);
+});
+
+/** @param {File | HTMLCanvasElement} origem foto escolhida na galeria ou carta recortada pela câmera */
+async function lerEBuscar(origem) {
+  limpar($resultados);
+  $btnFoto.disabled = true;
+  try {
+    // Import dinâmico: o leitor de texto é pesado e só quem usa a câmera paga por ele.
+    const { lerCartaDaFoto } = await import('./foto-carta.js');
+    const lida = await lerCartaDaFoto(origem, (texto) => avisar($aviso, texto, 'info'));
+
+    if (!lida.numero && !lida.chave) {
+      avisar($aviso, 'Não consegui ler a carta. Tente com mais luz, a carta reta e sem reflexo — ou digite o nome.');
+      return;
+    }
+
+    const achadas = await buscarPelaLeitura(lida);
+    const pista = [lida.chave, lida.numero ? `${lida.numero}${lida.total ? `/${lida.total}` : ''}` : ''].filter(Boolean).join(' · ');
+    if (!achadas) {
+      if (lida.chave) $form.nome.value = lida.chave;
+      avisar($aviso, `Li "${pista}", mas não achei essa carta. Corrija o nome e toque em Buscar.`, 'info');
+      return;
+    }
+    mostrarCartas(achadas);
+    // Nome lido que não bate com a primeira carta é lixo do OCR (nome em letra decorada, por exemplo):
+    // não vale preencher o campo com ele; o número já trouxe as candidatas.
+    if (!lida.numero || pontuarNome(achadas.cartas[0].name, lida.chave) >= 0.5) {
+      $form.nome.value = achadas.cartas[0].name;
+      avisar($aviso, `Li "${pista}". Não é essa? Corrija o nome e toque em Buscar.`, 'info');
+    } else {
+      avisar($aviso, `Li o número ${pista.split(' · ').pop()}. Confira abaixo qual é a sua carta.`, 'info');
+    }
+  } catch (erro) {
+    avisar($aviso, `Não consegui ler a foto: ${erro.message}`);
+  } finally {
+    $btnFoto.disabled = false;
+  }
+}

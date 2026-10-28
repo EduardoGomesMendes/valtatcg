@@ -46,7 +46,8 @@ export function criarServidor() {
         "img-src 'self' data: https://images.pokemontcg.io https://images.scrydex.com",
         "style-src 'self' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "script-src 'self'",
+        // 'wasm-unsafe-eval' só libera compilar WebAssembly (o leitor de texto das fotos de carta); não libera eval de JavaScript.
+        "script-src 'self' 'wasm-unsafe-eval'",
         "connect-src 'self'",
         "frame-ancestors 'none'",
         "base-uri 'none'",

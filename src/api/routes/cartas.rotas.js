@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { buscarCartas, obterCarta } from '../../pokemontcg/cliente.js';
+import { buscarCartas, buscarCartasPorNumero, obterCarta } from '../../pokemontcg/cliente.js';
 import * as cartasRepo from '../../portfolio/cartas.repo.js';
 import * as precosRepo from '../../portfolio/precos.repo.js';
 import { obterTaxa } from '../../cambio/cambio.js';
@@ -14,11 +14,21 @@ export function rotasCartas() {
 
   rotas.get('/cartas/buscar', async (req, res) => {
     const nome = String(req.query.nome ?? '').trim();
-    if (!nome) return res.json({ cartas: [], total: 0 });
+    // Busca pelo número impresso (vem da foto): "numero=25&total=165". Valida antes de montar a consulta
+    // da API externa, para nada além de letras e dígitos curtos chegar lá.
+    const numero = String(req.query.numero ?? '').trim();
+    const totalImpresso = String(req.query.total ?? '').trim();
+    const porNumero = numero !== '';
+    if (porNumero && (!/^[A-Za-z]{0,5}\d{1,3}$/.test(numero) || !/^(\d{1,3})?$/.test(totalImpresso))) {
+      return res.status(400).json({ erro: 'número da carta inválido' });
+    }
+    if (!porNumero && !nome) return res.json({ cartas: [], total: 0 });
 
     try {
       const pagina = Math.max(1, Number(req.query.pagina) || 1);
-      const { cartas, total } = await buscarCartas({ nome, pagina });
+      const { cartas, total } = porNumero
+        ? await buscarCartasPorNumero({ numero, totalImpresso, nome })
+        : await buscarCartas({ nome, pagina });
       // Já deixa em cache: quem clicar em "adicionar" não espera outra chamada à API externa.
       const precos = {};
       for (const carta of cartas) {

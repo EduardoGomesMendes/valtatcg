@@ -53,6 +53,29 @@ export async function buscarCartas({ nome, pagina = 1, tamanhoPagina = 20 }) {
   return { cartas: dados.data ?? [], total: dados.totalCount ?? 0 };
 }
 
+/**
+ * Busca pelo número impresso na carta ("025/165" → número 25 de uma coleção com 165 cartas).
+ *
+ * É o jeito mais confiável de achar uma carta lida por foto: o número é curto e a leitura costuma
+ * acertar, enquanto o nome sai errado com brilho no holofoil. Número + total da coleção quase sempre
+ * identifica uma carta só. O chamador valida o formato; aqui só tiramos os zeros à esquerda, porque
+ * a API guarda "25" e não "025".
+ */
+export async function buscarCartasPorNumero({ numero, totalImpresso, nome }) {
+  const limpo = String(numero ?? '').replace(/^0+(?=\d)/, '');
+  if (!limpo) return { cartas: [], total: 0 };
+  const partes = [`number:${limpo}`];
+  if (totalImpresso) partes.push(`set.printedTotal:${Number(totalImpresso)}`);
+  // Nome opcional ("pikachu 25"): fica só com letras, dígitos e pontuação de nome, para ninguém
+  // injetar operadores da consulta da API (aspas, "*", ":") no texto digitado.
+  const nomeLimpo = String(nome ?? '').replace(/[^\p{L}\p{N}\s'’.&-]/gu, ' ').replace(/\s+/g, ' ').trim();
+  if (nomeLimpo) partes.push(/\s/.test(nomeLimpo) ? `name:"${nomeLimpo}"` : `name:${nomeLimpo}*`);
+  const dados = await chamar(
+    `/cards?q=${encodeURIComponent(partes.join(' '))}&pageSize=20&orderBy=-set.releaseDate`,
+  );
+  return { cartas: dados.data ?? [], total: dados.totalCount ?? 0 };
+}
+
 export async function obterCarta(id) {
   const dados = await chamar(`/cards/${encodeURIComponent(id)}`);
   return dados.data;

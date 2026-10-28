@@ -9,8 +9,24 @@ O usuário cataloga as cartas que possui e acompanha o valor de mercado da cole�
 como um portfólio de investimentos.
 
 **v1 cobre só Pokémon**, via a API pública [pokemontcg.io](https://docs.pokemontcg.io). Escopo desta
-versão: catálogo + portfólio (o "Track" do Collectr). Fora do escopo por enquanto: scan de carta por
-câmera, trade analyzer, feed social, assinatura paga, app mobile nativo, outros jogos de cartas.
+versão: catálogo + portfólio (o "Track" do Collectr). Fora do escopo por enquanto: trade analyzer,
+feed social, app mobile nativo, outros jogos de cartas.
+
+## Busca pela foto da carta
+
+O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a
+foto a ninguém). A câmera abre um quadro no formato da carta; a foto da galeria também serve.
+- O leitor (~11 MB) fica **versionado** em `public/vendor/tesseract/` e é servido por nós: a CSP continua
+  `script-src 'self'` (só ganhou `'wasm-unsafe-eval'`, que libera compilar WebAssembly e não eval de JS).
+  Não trocar por CDN. É carregado sob demanda (import dinâmico), então só quem usa a câmera baixa.
+- Lê duas faixas: o **número impresso** no rodapé (`025/165`) e o **nome** no topo. O número é a pista firme:
+  `GET /cartas/buscar?numero=25&total=165` consulta `number:25 set.printedTotal:165`. O nome só ordena e é
+  plano B. A tela sempre mostra o que foi lido para a pessoa corrigir.
+- O campo de busca também aceita **número digitado**: `025/165`, `25`, `pikachu 25`, `SWSH123`
+  (`interpretarBusca`). Texto que parecia número mas não achou nada é tentado de novo como nome.
+- As regras de texto (`leitura-carta.js`) são funções puras, testadas em `testes/foto.teste.js`.
+- Limite conhecido: o OCR erra com brilho forte e carta inclinada; sem número nem nome legíveis a tela pede
+  outra foto ou o nome digitado.
 
 ## Comandos
 

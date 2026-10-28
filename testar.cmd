@@ -47,4 +47,7 @@ echo.
 echo  --- cambio ---
 node testes/cambio.teste.js
 echo.
+echo  --- foto ---
+node testes/foto.teste.js
+echo.
 pause

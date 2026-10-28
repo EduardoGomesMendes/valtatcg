@@ -44,8 +44,10 @@
 
   <main class="conteudo flex flex--col gap--5">
     <form class="flex gap--2" id="form-busca">
-      <input class="campo campo--busca" type="search" name="nome" placeholder="Nome da carta (ex.: Charizard)">
+      <input class="campo campo--busca" type="search" name="nome" placeholder="Nome ou número da carta" aria-label="Nome ou número da carta">
+      <button class="botao botao--secundario nao--encolhe" type="button" id="btn-foto" aria-label="Buscar pela foto da carta" title="Buscar pela foto da carta"></button>
       <button class="botao botao--primario" type="submit">Buscar</button>
+      <input class="hidden" type="file" accept="image/*" id="entrada-foto">
     </form>
 
     <p class="hidden" id="aviso"></p>
