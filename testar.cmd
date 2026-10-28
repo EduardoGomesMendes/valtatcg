@@ -44,4 +44,7 @@ echo.
 echo  --- paginas ---
 node testes/paginas.teste.js
 echo.
+echo  --- cambio ---
+node testes/cambio.teste.js
+echo.
 pause

@@ -22,19 +22,19 @@ function validarQuantidade(quantidade) {
   }
 }
 
-export function adicionar({ usuarioId, cartaId, quantidade, variante, condicao, precoPagoUsd, adquiridoEm }) {
+export function adicionar({ usuarioId, cartaId, quantidade, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm }) {
   validarQuantidade(quantidade);
   const info = db.prepare(`
-    INSERT INTO colecao_item (usuario_id, carta_id, quantidade, variante, condicao, preco_pago_usd, adquirido_em)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO colecao_item (usuario_id, carta_id, quantidade, variante, condicao, preco_pago_usd, preco_pago_brl, adquirido_em)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     Number(usuarioId), cartaId, quantidade,
-    variante ?? null, condicao ?? null, precoPagoUsd ?? null, adquiridoEm ?? null,
+    variante ?? null, condicao ?? null, precoPagoUsd ?? null, precoPagoBrl ?? null, adquiridoEm ?? null,
   );
   return db.prepare('SELECT * FROM colecao_item WHERE id = ?').get(info.lastInsertRowid);
 }
 
-export function atualizar(id, usuarioId, { quantidade, variante, condicao, precoPagoUsd, adquiridoEm }) {
+export function atualizar(id, usuarioId, { quantidade, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm }) {
   const alvo = obter(id, usuarioId);
   if (!alvo) throw new Error('item não encontrado');
 
@@ -49,6 +49,7 @@ export function atualizar(id, usuarioId, { quantidade, variante, condicao, preco
   if (variante !== undefined) { sets.push('variante = ?'); valores.push(variante); }
   if (condicao !== undefined) { sets.push('condicao = ?'); valores.push(condicao); }
   if (precoPagoUsd !== undefined) { sets.push('preco_pago_usd = ?'); valores.push(precoPagoUsd); }
+  if (precoPagoBrl !== undefined) { sets.push('preco_pago_brl = ?'); valores.push(precoPagoBrl); }
   if (adquiridoEm !== undefined) { sets.push('adquirido_em = ?'); valores.push(adquiridoEm); }
 
   if (!sets.length) return alvo;

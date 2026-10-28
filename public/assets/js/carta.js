@@ -1,4 +1,5 @@
 import { api, avisar, el, prepararCabecalho } from './api.js';
+import { carregarCambio, preco, elementoVariacao } from './moeda.js';
 
 prepararCabecalho();
 
@@ -59,7 +60,7 @@ async function carregar() {
     return;
   }
   try {
-    const { carta } = await api(`/cartas/${encodeURIComponent(cartaId)}`);
+    const [{ carta, variacao }] = await Promise.all([api(`/cartas/${encodeURIComponent(cartaId)}`), carregarCambio()]);
 
     const img = document.createElement('img');
     img.src = carta.imagem_grande ?? carta.imagem_pequena ?? '';
@@ -70,13 +71,9 @@ async function carregar() {
     const info = el('div', 'flex flex--col gap--2', '');
     info.append(el('h1', 'text--xl weight--bold', carta.nome));
     info.append(el('p', 'text--sm text--muted', `${carta.set_nome ?? ''} · #${carta.numero ?? '?'} · ${carta.raridade ?? ''}`));
-    info.append(el(
-      'p',
-      'text--2xl weight--bold text--primary',
-      carta.preco_mercado_usd !== null && carta.preco_mercado_usd !== undefined
-        ? `US$ ${Number(carta.preco_mercado_usd).toFixed(2)}`
-        : 'Preço indisponível',
-    ));
+    const temPreco = carta.preco_mercado_usd !== null && carta.preco_mercado_usd !== undefined;
+    info.append(el('p', 'text--2xl weight--bold text--primary', temPreco ? preco(carta.preco_mercado_usd) : 'Preço indisponível'));
+    if (temPreco) info.append(elementoVariacao(variacao));
     $detalhe.append(info);
 
     const { historico } = await api(`/cartas/${encodeURIComponent(cartaId)}/historico`);

@@ -3,29 +3,39 @@ import * as colecaoRepo from '../../portfolio/colecao.repo.js';
 import * as precosRepo from '../../portfolio/precos.repo.js';
 import * as cartasRepo from '../../portfolio/cartas.repo.js';
 import { obterCarta } from '../../pokemontcg/cliente.js';
+import { obterTaxa, taxaDoDia } from '../../cambio/cambio.js';
+import { calcularResumo } from '../../portfolio/resumo.js';
+
+/** Valor em dinheiro vindo do formulário: vazio vira null; negativo ou texto vira erro. */
+function dinheiroOuNulo(valor) {
+  if (valor === undefined || valor === null || valor === '') return null;
+  const n = Number(valor);
+  if (!Number.isFinite(n) || n < 0) throw new Error('o preço pago precisa ser um número maior ou igual a zero');
+  return n;
+}
 
 export function rotasColecao() {
   const rotas = Router();
 
   rotas.get('/colecao', (req, res) => {
-    res.json({ itens: colecaoRepo.listar(req.usuario.id) });
+    const itens = colecaoRepo.listar(req.usuario.id);
+    const variacoes = precosRepo.variacoes(Object.fromEntries(itens.map((i) => [i.carta_id, i.preco_mercado_usd])));
+    res.json({ itens: itens.map((i) => ({ ...i, variacao: variacoes[i.carta_id] ?? null })) });
   });
 
-  rotas.get('/colecao/resumo', (req, res) => {
-    const itens = colecaoRepo.listar(req.usuario.id);
-    let custo = 0;
-    let valorAtual = 0;
-    for (const item of itens) {
-      custo += (item.preco_pago_usd ?? 0) * item.quantidade;
-      valorAtual += (item.preco_mercado_usd ?? 0) * item.quantidade;
-    }
-    const serie = precosRepo.serieDoPortfolio(req.usuario.id);
-    res.json({ custo, valorAtual, ganho: valorAtual - custo, serie });
+  rotas.get('/colecao/resumo', async (req, res) => {
+    const cambio = await obterTaxa();
+    res.json(calcularResumo({
+      itens: colecaoRepo.listar(req.usuario.id),
+      taxa: cambio?.usdBrl ?? null,
+      serie: precosRepo.serieDoPortfolio(req.usuario.id),
+      taxaDoDia,
+    }));
   });
 
   rotas.post('/colecao', async (req, res) => {
     try {
-      const { cartaId, quantidade = 1, variante, condicao, precoPagoUsd, adquiridoEm } = req.body ?? {};
+      const { cartaId, quantidade = 1, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm } = req.body ?? {};
       if (!cartaId) return res.status(400).json({ erro: 'cartaId é obrigatório' });
 
       // Garante a carta em cache antes de referenciá-la (colecao_item.carta_id é FK).
@@ -40,7 +50,8 @@ export function rotasColecao() {
         quantidade: Number(quantidade),
         variante,
         condicao,
-        precoPagoUsd: precoPagoUsd !== undefined && precoPagoUsd !== null ? Number(precoPagoUsd) : null,
+        precoPagoUsd: dinheiroOuNulo(precoPagoUsd),
+        precoPagoBrl: dinheiroOuNulo(precoPagoBrl),
         adquiridoEm,
       });
       res.status(201).json({ item });
@@ -51,12 +62,13 @@ export function rotasColecao() {
 
   rotas.patch('/colecao/:id', (req, res) => {
     try {
-      const { quantidade, variante, condicao, precoPagoUsd, adquiridoEm } = req.body ?? {};
+      const { quantidade, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm } = req.body ?? {};
       const item = colecaoRepo.atualizar(req.params.id, req.usuario.id, {
         quantidade: quantidade !== undefined ? Number(quantidade) : undefined,
         variante,
         condicao,
-        precoPagoUsd: precoPagoUsd !== undefined ? Number(precoPagoUsd) : undefined,
+        precoPagoUsd: precoPagoUsd !== undefined ? dinheiroOuNulo(precoPagoUsd) : undefined,
+        precoPagoBrl: precoPagoBrl !== undefined ? dinheiroOuNulo(precoPagoBrl) : undefined,
         adquiridoEm,
       });
       res.json({ item });

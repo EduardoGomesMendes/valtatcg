@@ -1,4 +1,5 @@
 import { api, avisar, el, limpar, dolar, prepararCabecalho } from './api.js';
+import { carregarCambio, preco, formatarReais, elementoVariacao, notaDoCambio } from './moeda.js';
 
 prepararCabecalho();
 
@@ -9,6 +10,7 @@ const $lista = document.getElementById('lista-itens');
 const $avisoLista = document.getElementById('aviso-lista');
 const $avisoGrafico = document.getElementById('aviso-grafico');
 const $canvas = document.getElementById('grafico');
+const $notaCambio = document.getElementById('nota-cambio');
 const $btnSair = document.getElementById('btn-sair');
 
 $btnSair.addEventListener('click', async () => {
@@ -76,7 +78,8 @@ function cartaoItem(item) {
   cartao.append(link);
   cartao.append(el('span', 'carta--meta text--xs text--muted', item.set_nome ?? ''));
   cartao.append(el('span', 'text--xs text--muted', `#${item.numero ?? '?'}`));
-  cartao.append(el('span', 'text--sm weight--semibold', dolar(item.preco_mercado_usd)));
+  cartao.append(el('span', 'text--md weight--semibold', preco(item.preco_mercado_usd)));
+  cartao.append(elementoVariacao(item.variacao));
   cartao.append(el('span', 'text--xs text--muted', `Qtd: ${item.quantidade}${item.variante ? ' · ' + item.variante : ''}`));
 
   const remover = el('button', 'botao botao--perigo botao--pequeno carta--acao', 'Remover');
@@ -97,14 +100,14 @@ function cartaoItem(item) {
 
 async function carregar() {
   try {
-    const [resumo, colecao] = await Promise.all([
-      api('/colecao/resumo'),
-      api('/colecao'),
-    ]);
+    // A cotação precisa estar carregada antes de desenhar os cartões (o preço de cada carta é convertido na tela).
+    const [resumo, colecao] = await Promise.all([api('/colecao/resumo'), api('/colecao'), carregarCambio()]);
 
-    $valorAtual.textContent = dolar(resumo.valorAtual);
-    $valorCusto.textContent = dolar(resumo.custo);
-    $valorGanho.textContent = dolar(resumo.ganho);
+    const formatar = resumo.moeda === 'BRL' ? formatarReais : dolar;
+    $valorAtual.textContent = formatar(resumo.valorAtual);
+    $valorCusto.textContent = formatar(resumo.custo);
+    $valorGanho.textContent = formatar(resumo.ganho);
+    $notaCambio.textContent = notaDoCambio();
     $valorGanho.classList.toggle('text--success', resumo.ganho >= 0);
     $valorGanho.classList.toggle('text--danger', resumo.ganho < 0);
 

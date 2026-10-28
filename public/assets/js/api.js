@@ -5,6 +5,8 @@
   A sessão vive em cookie HttpOnly — o JavaScript não enxerga o token.
 */
 
+import { icone } from './icones.js';
+
 const PUBLICAS = ['/entrar/'];
 
 function ehPaginaPublica() {
@@ -233,6 +235,47 @@ function inicializarMenuAvatar() {
   });
 }
 
+const ATALHOS = [
+  { href: '/colecao/', rotulo: 'Coleção', icone: 'colecao', rotas: ['/colecao/', '/carta/'] },
+  { href: '/buscar/', rotulo: 'Buscar', icone: 'buscar', rotas: ['/buscar/'] },
+  { href: '/lojas/', rotulo: 'Lojas', icone: 'lojas', rotas: ['/lojas/', '/minha-loja/'] },
+  { href: '/eventos/', rotulo: 'Eventos', icone: 'eventos', rotas: ['/eventos/', '/meus-eventos/'] },
+  { href: '/forum/', rotulo: 'Fórum', icone: 'forum', rotas: ['/forum/'] },
+];
+
+/** Barra de atalhos fixa embaixo da tela, como nos apps. Só aparece no celular: o CSS a esconde em telas maiores. */
+export function montarBarraInferior() {
+  if (document.getElementById('barra-inferior')) return;
+  const barra = el('nav', 'barra--inferior', '');
+  barra.id = 'barra-inferior';
+  barra.setAttribute('aria-label', 'Atalhos');
+  for (const atalho of ATALHOS) {
+    const ativo = atalho.rotas.some((r) => window.location.pathname.startsWith(r));
+    const link = el('a', `barra--item${ativo ? ' barra--item--ativo' : ''}`, '');
+    link.href = atalho.href;
+    if (ativo) link.setAttribute('aria-current', 'page');
+    link.append(icone(atalho.icone, 22), el('span', '', atalho.rotulo));
+    barra.append(link);
+  }
+  document.body.append(barra);
+  document.body.classList.add('com-barra-inferior');
+}
+
+/** No celular os links de texto saem do topo; o que não cabe na barra (Assinatura, Admin) vai para o menu do avatar. */
+function adicionarItensDoMenuMovel(usuario) {
+  const lista = document.getElementById('menu-avatar-lista');
+  if (!lista || lista.querySelector('[data-movel]')) return;
+  const antes = [...lista.children].find((c) => c.textContent === 'Configurações') ?? null;
+  const itens = [['/assinatura/', 'Assinatura']];
+  if (usuario?.admin) itens.push(['/admin/', 'Admin']);
+  for (const [href, rotulo] of itens) {
+    const a = el('a', 'menu--item menu--item--so-movel', rotulo);
+    a.href = href;
+    a.dataset.movel = '1';
+    lista.insertBefore(a, antes);
+  }
+}
+
 /**
  * Prepara o cabeçalho de toda página logada: o menu do avatar (foto/
  * iniciais + editar perfil/configurações/sair), o link "Admin" para quem
@@ -254,6 +297,9 @@ export async function prepararCabecalho() {
     document.getElementById('avatar-topo-placeholder'),
     estado.usuario?.nome,
   );
+
+  montarBarraInferior();
+  adicionarItensDoMenuMovel(estado.usuario);
 
   if (estado.usuario?.admin) {
     document.getElementById('link-admin')?.classList.remove('hidden');

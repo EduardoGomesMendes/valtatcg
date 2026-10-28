@@ -43,6 +43,8 @@ function adicionarColunaSeFaltando(tabela, coluna, definicao) {
   log.info(`coluna "${coluna}" adicionada em ${tabela}`);
 }
 
+// Custo pago em reais: o que a pessoa realmente pagou, sem variar com o dólar. Itens antigos seguem em preco_pago_usd.
+adicionarColunaSeFaltando('colecao_item', 'preco_pago_brl', 'REAL');
 adicionarColunaSeFaltando('usuarios', 'admin', 'INTEGER NOT NULL DEFAULT 0');
 adicionarColunaSeFaltando('usuarios', 'assinatura_status', "TEXT NOT NULL DEFAULT 'teste'");
 adicionarColunaSeFaltando('usuarios', 'teste_termina_em', 'TEXT');

@@ -41,6 +41,8 @@ const carta = salvar({
   tcgplayer: { prices: { normal: { market: 5 } } },
 });
 colecaoRepo.adicionar({ usuarioId: usuario.id, cartaId: carta.id, quantidade: 3 });
+// A carta entrou na coleção em 1º/09: os preços de 20 e 21/09 são DEPOIS da compra e contam no gráfico.
+db.prepare("UPDATE colecao_item SET criado_em = '2026-09-01 00:00:00' WHERE usuario_id = ?").run(usuario.id);
 
 precosRepo.registrarSnapshot(carta.id, 5, '2026-09-20');
 precosRepo.registrarSnapshot(carta.id, 6, '2026-09-21');
@@ -55,6 +57,13 @@ const serie = precosRepo.serieDoPortfolio(usuario.id, 365);
 ok(
   'série do portfólio multiplica preço pela quantidade possuída',
   serie.find((s) => s.data === '2026-09-21')?.valor === 21, // 7 * 3
+);
+
+// O histórico também é gravado para cartas só vistas em buscas: o gráfico não pode mostrar dias anteriores à compra.
+precosRepo.registrarSnapshot(carta.id, 99, '2026-08-15');
+ok(
+  'o gráfico ignora preços de antes de a carta entrar na coleção',
+  !precosRepo.serieDoPortfolio(usuario.id, 365).some((s) => s.data === '2026-08-15'),
 );
 
 db.close();

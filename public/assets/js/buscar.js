@@ -1,4 +1,6 @@
 import { api, avisar, el, limpar, prepararCabecalho } from './api.js';
+import { carregarCambio, preco, elementoVariacao } from './moeda.js';
+import { icone } from './icones.js';
 
 prepararCabecalho();
 
@@ -23,6 +25,19 @@ const VARIANTES = [
 
 const CONDICOES = ['Lacrado', 'Mint', 'Near Mint', 'Excelente', 'Jogado', 'Danificado'];
 
+/** Quantas de cada carta a pessoa já tem (id da carta → quantidade), para mostrar "Qtd" nos resultados. */
+let possuidas = new Map();
+
+async function carregarPossuidas() {
+  try {
+    const { itens } = await api('/colecao');
+    possuidas = new Map();
+    for (const item of itens) possuidas.set(item.carta_id, (possuidas.get(item.carta_id) ?? 0) + item.quantidade);
+  } catch {
+    possuidas = new Map(); // sem a lista, a busca funciona do mesmo jeito, só sem o "Qtd".
+  }
+}
+
 function campoSelect(nome, opcoes, comEspacoVazio, textoVazio) {
   const campo = document.createElement('select');
   campo.className = 'campo';
@@ -43,7 +58,8 @@ function campoSelect(nome, opcoes, comEspacoVazio, textoVazio) {
   return campo;
 }
 
-function formularioAdicionar(carta) {
+/** @param {(quantidade: number) => void} aoAdicionar chamado depois de a carta entrar na coleção */
+function formularioAdicionar(carta, aoAdicionar) {
   const form = el('form', 'flex flex--col gap--2 mt--2', '');
 
   const linhaQtdVariante = el('div', 'flex gap--2', '');
@@ -54,6 +70,7 @@ function formularioAdicionar(carta) {
   campoQtd.min = '1';
   campoQtd.value = '1';
   campoQtd.required = true;
+  campoQtd.setAttribute('aria-label', 'Quantidade');
   linhaQtdVariante.append(campoQtd);
   linhaQtdVariante.append(campoSelect('variante', VARIANTES, false));
   form.append(linhaQtdVariante);
@@ -66,19 +83,20 @@ function formularioAdicionar(carta) {
   campoPreco.type = 'number';
   campoPreco.step = '0.01';
   campoPreco.min = '0';
-  campoPreco.name = 'precoPagoUsd';
-  campoPreco.placeholder = 'Preço pago (US$)';
+  campoPreco.name = 'precoPagoBrl';
+  campoPreco.placeholder = 'Preço pago (R$)';
   linhaPrecoData.append(campoPreco);
 
   const campoData = document.createElement('input');
   campoData.className = 'campo';
   campoData.type = 'date';
   campoData.name = 'adquiridoEm';
+  campoData.setAttribute('aria-label', 'Data da compra');
   linhaPrecoData.append(campoData);
   form.append(linhaPrecoData);
 
-  const aviso = el('p', 'hidden text--xs', '');
-  form.append(aviso);
+  const avisoForm = el('p', 'hidden text--xs', '');
+  form.append(avisoForm);
 
   const botao = el('button', 'botao botao--primario botao--pequeno w--full', 'Confirmar');
   botao.type = 'submit';
@@ -89,21 +107,22 @@ function formularioAdicionar(carta) {
     botao.disabled = true;
     botao.textContent = 'Adicionando…';
     const dados = Object.fromEntries(new FormData(form).entries());
+    const quantidade = Number(dados.quantidade);
     try {
       await api('/colecao', {
         method: 'POST',
         body: JSON.stringify({
           cartaId: carta.id,
-          quantidade: Number(dados.quantidade),
+          quantidade,
           variante: dados.variante || null,
           condicao: dados.condicao || null,
-          precoPagoUsd: dados.precoPagoUsd ? Number(dados.precoPagoUsd) : null,
+          precoPagoBrl: dados.precoPagoBrl ? Number(dados.precoPagoBrl) : null,
           adquiridoEm: dados.adquiridoEm || null,
         }),
       });
-      window.location.href = '/colecao/';
+      aoAdicionar(quantidade);
     } catch (erro) {
-      avisar(aviso, erro.message);
+      avisar(avisoForm, erro.message);
       botao.disabled = false;
       botao.textContent = 'Confirmar';
     }
@@ -122,13 +141,14 @@ function precoDeExibicao(carta) {
   return null;
 }
 
-function cartaoResultado(carta) {
+function cartaoResultado(carta, variacao) {
   const cartao = el('article', 'cartao carta--item p--3 flex flex--col gap--2', '');
 
   const img = document.createElement('img');
   img.src = carta.images?.small ?? '';
   img.alt = carta.name;
   img.className = 'imagem--carta';
+  img.loading = 'lazy';
   cartao.append(img);
 
   const link = document.createElement('a');
@@ -140,26 +160,44 @@ function cartaoResultado(carta) {
   cartao.append(el('span', 'carta--meta text--xs text--muted', carta.set?.name ?? ''));
   cartao.append(el('span', 'text--xs text--muted', `${carta.rarity ? `${carta.rarity} · ` : ''}#${carta.number ?? '?'}`));
 
-  const preco = precoDeExibicao(carta);
-  cartao.append(el('span', 'text--sm weight--semibold', preco !== null ? `US$ ${preco.toFixed(2)}` : '—'));
+  cartao.append(el('span', 'text--md weight--semibold', preco(precoDeExibicao(carta))));
+  cartao.append(elementoVariacao(variacao));
 
-  const botaoAdicionar = el('button', 'botao botao--secundario botao--pequeno w--full carta--acao', '+ Adicionar');
-  botaoAdicionar.type = 'button';
-  let aberto = false;
+  const rotuloQtd = () => `Qtd: ${possuidas.get(carta.id) ?? 0}`;
+  const rodape = el('div', 'carta--rodape flex items--center justify--content--between', '');
+  const qtd = el('span', 'text--xs text--muted', rotuloQtd());
+  const botao = el('button', 'botao--redondo', '');
+  botao.type = 'button';
+  botao.setAttribute('aria-label', 'Adicionar à coleção');
+  botao.append(icone('mais', 22));
+  rodape.append(qtd, botao);
+  cartao.append(rodape);
+
   let form = null;
-  botaoAdicionar.addEventListener('click', () => {
-    aberto = !aberto;
-    cartao.classList.toggle('carta--item--aberta', aberto);
-    if (aberto) {
-      form = formularioAdicionar(carta);
-      cartao.append(form);
-      botaoAdicionar.textContent = 'Cancelar';
-    } else {
-      form?.remove();
-      botaoAdicionar.textContent = '+ Adicionar';
+  const fechar = () => {
+    form?.remove();
+    form = null;
+    cartao.classList.remove('carta--item--aberta');
+    botao.replaceChildren(icone('mais', 22));
+    botao.setAttribute('aria-label', 'Adicionar à coleção');
+  };
+
+  botao.addEventListener('click', () => {
+    if (form) {
+      fechar();
+      return;
     }
+    form = formularioAdicionar(carta, (quantidade) => {
+      possuidas.set(carta.id, (possuidas.get(carta.id) ?? 0) + quantidade);
+      qtd.textContent = rotuloQtd();
+      fechar();
+      avisar($aviso, `${carta.name} foi adicionada à sua coleção.`, 'sucesso');
+    });
+    cartao.append(form);
+    cartao.classList.add('carta--item--aberta');
+    botao.replaceChildren(icone('fechar', 22));
+    botao.setAttribute('aria-label', 'Cancelar');
   });
-  cartao.append(botaoAdicionar);
 
   return cartao;
 }
@@ -167,18 +205,20 @@ function cartaoResultado(carta) {
 // No celular o foco automático abre o teclado e esconde os resultados: só foca onde há mouse.
 if (window.matchMedia('(hover: hover)').matches) $form.nome.focus();
 
+const prontos = Promise.all([carregarCambio(), carregarPossuidas()]);
+
 $form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   avisar($aviso, null);
   const nome = new FormData($form).get('nome');
   limpar($resultados);
   try {
-    const { cartas } = await api(`/cartas/buscar?nome=${encodeURIComponent(nome)}`);
+    const [{ cartas, variacoes }] = await Promise.all([api(`/cartas/buscar?nome=${encodeURIComponent(nome)}`), prontos]);
     if (!cartas.length) {
       avisar($aviso, 'Nenhuma carta encontrada.', 'info');
       return;
     }
-    cartas.forEach((carta) => $resultados.append(cartaoResultado(carta)));
+    cartas.forEach((carta) => $resultados.append(cartaoResultado(carta, variacoes?.[carta.id] ?? null)));
   } catch (erro) {
     avisar($aviso, erro.message);
   }

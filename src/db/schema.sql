@@ -235,3 +235,11 @@ CREATE TABLE IF NOT EXISTS bloqueios_conteudo (
 );
 
 CREATE INDEX IF NOT EXISTS idx_bloqueios_usuario ON bloqueios_conteudo(usuario_id, grave, criado_em);
+
+-- Cotação dólar→real, uma por dia. Reserva quando as fontes caem e base para converter o gráfico dia a dia.
+CREATE TABLE IF NOT EXISTS cambio_diario (
+  data TEXT PRIMARY KEY,
+  usd_brl REAL NOT NULL,
+  fonte TEXT,
+  buscado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
