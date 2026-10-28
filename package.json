@@ -12,7 +12,7 @@
     "dev": "node --watch src/index.js",
     "db:reset": "node src/db/reset.js",
     "db:seed": "node src/db/seed.js",
-    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js && node testes/admin.teste.js && node testes/assinaturas.teste.js && node testes/avatar.teste.js && node testes/seguranca.teste.js && node testes/lojas.teste.js && node testes/forum.teste.js && node testes/eventos.teste.js && node testes/cadastro.teste.js && node testes/moderacao.teste.js && node testes/paginas.teste.js && node testes/cambio.teste.js && node testes/foto.teste.js && node testes/lojas-marca.teste.js && node testes/confirmacao-email.teste.js && node testes/redefinir-senha.teste.js && node testes/webhook-asaas.teste.js && node testes/revisao-geral.teste.js",
+    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js && node testes/admin.teste.js && node testes/assinaturas.teste.js && node testes/avatar.teste.js && node testes/seguranca.teste.js && node testes/lojas.teste.js && node testes/forum.teste.js && node testes/eventos.teste.js && node testes/cadastro.teste.js && node testes/moderacao.teste.js && node testes/paginas.teste.js && node testes/cambio.teste.js && node testes/foto.teste.js && node testes/lojas-marca.teste.js && node testes/confirmacao-email.teste.js && node testes/redefinir-senha.teste.js && node testes/webhook-asaas.teste.js && node testes/revisao-geral.teste.js && node testes/termos.teste.js",
     "test:acesso": "node testes/acesso.teste.js",
     "test:colecao": "node testes/colecao.teste.js",
     "test:precos": "node testes/precos.teste.js",
@@ -33,6 +33,7 @@
     "test:redefinir-senha": "node testes/redefinir-senha.teste.js",
     "test:webhook-asaas": "node testes/webhook-asaas.teste.js",
     "test:revisao-geral": "node testes/revisao-geral.teste.js",
+    "test:termos": "node testes/termos.teste.js",
     "email:testar": "node scripts/testar-email.mjs"
   },
   "dependencies": {

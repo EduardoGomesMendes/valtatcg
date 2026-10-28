@@ -65,4 +65,7 @@ echo.
 echo  --- revisao-geral ---
 node testes/revisao-geral.teste.js
 echo.
+echo  --- termos ---
+node testes/termos.teste.js
+echo.
 pause

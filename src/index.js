@@ -7,6 +7,8 @@ import { pagamento } from './pagamento/index.js';
 import { apagarPassados } from './comunidade/eventos.repo.js';
 import { apagarBloqueiosAntigos } from './comunidade/moderacao.js';
 import { apagarHistoricoDeCartasNaoPossuidas } from './portfolio/precos.repo.js';
+import { limparAntigos as limparPedidosDeCadastro } from './auth/cadastros.repo.js';
+import { limparAntigos as limparPedidosDeSenha } from './auth/redefinicoes.repo.js';
 
 const log = criarLog('sistema');
 
@@ -84,6 +86,9 @@ async function iniciar() {
       if (n) log.info(`eventos passados apagados: ${n}`);
       const h = apagarHistoricoDeCartasNaoPossuidas();
       if (h) log.info(`histórico de preço de cartas sem dono apagado: ${h} registro(s)`);
+      // Prazos prometidos na Política de Privacidade: não podem depender de alguém fazer um novo pedido.
+      limparPedidosDeCadastro();
+      limparPedidosDeSenha();
       const b = apagarBloqueiosAntigos();
       if (b) log.info(`registros antigos de mensagens bloqueadas apagados: ${b}`);
     } catch (erro) {

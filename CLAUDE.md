@@ -42,6 +42,18 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Termos de Uso e Política de Privacidade (próprios do ValtaTCG)
+
+`public/termos/` e `public/privacidade/` são **independentes** dos documentos de omva.com.br (que falam de omvazap,
+omvalic e omvalot, só para maiores de 18). O cadastro e o rodapé de todas as páginas apontam para estes. São a fonte
+das regras do fórum (seção 8 dos Termos; a caixa "Regras do fórum" do `/forum/` é o resumo e aponta para lá).
+- **Quando mudar uma regra no código, mude o texto** (e a data "Última atualização"): preço do plano e da loja, dias de
+  teste, prazo de 48 h, idade mínima, retenções (7 dias de cadastro/IP, 90 dias de mensagens barradas, 60 dias de
+  histórico de preço), sessão. `testes/termos.teste.js` confere esses números contra `config.js` e quebra se divergirem.
+- As páginas públicas (`/`, `/entrar/`, `/lojas/`, `/eventos/`) **não podem mencionar o fórum** (decisão de produto,
+  testada em `paginas.teste.js`); o fórum só aparece nos Termos e na Política, que são texto legal.
+- Texto jurídico escrito como rascunho: **precisa de revisão de advogado** antes de ser tratado como definitivo.
+
 ## Assinatura do cliente: regras que a revisão de 28/10/2026 fixou
 
 - **Cancelar não corta o que já foi pago**: `cancelada` com `assinatura_expira_em` no futuro segue liberada até a data

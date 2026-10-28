@@ -66,10 +66,10 @@ export function liberar(id) {
   db.prepare('UPDATE cadastros_pendentes SET confirmado_em = NULL WHERE id = ? AND usuario_id IS NULL').run(Number(id));
 }
 
-/** Conta criada: o pedido aponta para ela e deixa de guardar a data de nascimento e o responsável. */
+/** Conta criada: o pedido aponta para ela e deixa de guardar o que já vive na conta (nascimento, responsável) e o IP. */
 export function vincularUsuario(id, usuarioId) {
   db.prepare(
-    'UPDATE cadastros_pendentes SET usuario_id = ?, nascimento = NULL, responsavel_nome = NULL, responsavel_email = NULL WHERE id = ?',
+    'UPDATE cadastros_pendentes SET usuario_id = ?, nascimento = NULL, responsavel_nome = NULL, responsavel_email = NULL, ip = NULL WHERE id = ?',
   ).run(Number(usuarioId), Number(id));
 }
 
@@ -80,8 +80,12 @@ export function registrarEnvio({ email, ip, tipo }) {
 export const enviosDoEmail = (email, desde) => db.prepare('SELECT COUNT(*) AS n FROM cadastros_envios WHERE email = ? AND criado_em >= ?').get(email, desde).n;
 export const enviosDoIp = (ip, desde) => db.prepare('SELECT COUNT(*) AS n FROM cadastros_envios WHERE ip = ? AND criado_em >= ?').get(ip ?? '', desde).n;
 
-/** Pedido que ninguém confirmou guarda data de nascimento: não fica mais que uma semana depois de vencer. */
+/**
+ * Pedido que ninguém confirmou guarda data de nascimento: não fica mais que uma semana depois de vencer. O confirmado
+ * não tem mais função (a conta já existe) e também sai depois de uma semana. Os prazos batem com a Política de Privacidade.
+ */
 export function limparAntigos() {
   db.prepare("DELETE FROM cadastros_envios WHERE criado_em < datetime('now', '-7 days')").run();
   db.prepare("DELETE FROM cadastros_pendentes WHERE confirmado_em IS NULL AND expira_em < datetime('now', '-7 days')").run();
+  db.prepare("DELETE FROM cadastros_pendentes WHERE confirmado_em IS NOT NULL AND usuario_id IS NOT NULL AND confirmado_em < datetime('now', '-7 days')").run();
 }
