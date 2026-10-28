@@ -42,6 +42,15 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Backup (guia completo em `docs/backup-e-restauracao.md`)
+
+`scripts/backup.mjs` faz, todo dia às 03:30, cópia **consistente** do banco (`VACUUM INTO`, com o site no ar) + logos,
+fotos de perfil e vínculos, em `/opt/valtatcg/backups/`, conferindo o `integrity_check` antes de guardar; 14 diários +
+domingos por 8 semanas. `scripts/instalar-backup.sh` (root, uma vez) instala o timer do systemd e roda um backup na hora.
+`baixar-backup.cmd` traz uma cópia para o PC (fora da VPS). Se criar pasta nova de arquivos em `data/`, **inclua-a em
+`PASTAS_DE_ARQUIVOS`** no script: o que não está no banco e não está lá não tem backup. `testes/backup.teste.js` restaura
+um backup de verdade e confere a retenção.
+
 ## Termos de Uso e Política de Privacidade (próprios do ValtaTCG)
 
 `public/termos/` e `public/privacidade/` são **independentes** dos documentos de omva.com.br (que falam de omvazap,

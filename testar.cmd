@@ -71,4 +71,7 @@ echo.
 echo  --- aceite-forum ---
 node testes/aceite-forum.teste.js
 echo.
+echo  --- backup ---
+node testes/backup.teste.js
+echo.
 pause
