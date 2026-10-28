@@ -41,4 +41,7 @@ echo.
 echo  --- moderacao ---
 node testes/moderacao.teste.js
 echo.
+echo  --- paginas ---
+node testes/paginas.teste.js
+echo.
 pause

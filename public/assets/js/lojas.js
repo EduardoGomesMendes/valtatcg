@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar } from './api.js';
+import { api, avisar, el, limpar, mostrarLinkDoForum } from './api.js';
 import { carregarMotivos, denunciar } from './denunciar.js';
 
 const $form = document.getElementById('form-busca');
@@ -93,6 +93,7 @@ async function iniciar() {
     const estado = await fetch('/api/estado', { credentials: 'same-origin' }).then((r) => r.json());
     if (estado.autenticado) {
       document.getElementById('topo-entrar').classList.add('hidden');
+      mostrarLinkDoForum();
       document.getElementById('topo-colecao').classList.remove('hidden');
       logado = (await carregarMotivos()).length > 0;
     }

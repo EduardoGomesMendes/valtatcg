@@ -99,6 +99,13 @@ export function criarServidor() {
 
   app.use('/api', (req, res) => res.status(404).json({ erro: 'rota não encontrada' }));
 
+  // O fórum só existe para quem está logado: visitante vai para o login e nada da página é entregue.
+  app.use('/forum', identificar, (req, res, next) => {
+    if (!req.usuario) return res.redirect(302, `/entrar/?destino=${encodeURIComponent(req.originalUrl)}`);
+    res.setHeader('Cache-Control', 'private, no-store');
+    next();
+  });
+
   app.use(express.static(path.join(config.raiz, 'public'), { extensions: ['html'] }));
 
   // eslint-disable-next-line no-unused-vars -- o Express exige os 4 parâmetros

@@ -85,6 +85,16 @@ export function dataBr(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+/** O fórum só existe para quem entrou: o link nasce aqui, depois do login, e não vai no HTML público. */
+export function mostrarLinkDoForum() {
+  const antes = document.getElementById('topo-entrar');
+  if (!antes || document.getElementById('topo-forum')) return;
+  const link = el('a', 'nao--encolhe text--muted', 'Fórum');
+  link.href = '/forum/';
+  link.id = 'topo-forum';
+  antes.before(link);
+}
+
 /** Data sem hora (AAAA-MM-DD → DD/MM/AAAA). Não passa por Date: o fuso do Brasil deslocaria um dia. */
 export function dataSimples(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ''));

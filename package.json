@@ -12,7 +12,7 @@
     "dev": "node --watch src/index.js",
     "db:reset": "node src/db/reset.js",
     "db:seed": "node src/db/seed.js",
-    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js && node testes/admin.teste.js && node testes/assinaturas.teste.js && node testes/avatar.teste.js && node testes/seguranca.teste.js && node testes/lojas.teste.js && node testes/forum.teste.js && node testes/eventos.teste.js && node testes/cadastro.teste.js && node testes/moderacao.teste.js",
+    "test": "node testes/acesso.teste.js && node testes/colecao.teste.js && node testes/precos.teste.js && node testes/admin.teste.js && node testes/assinaturas.teste.js && node testes/avatar.teste.js && node testes/seguranca.teste.js && node testes/lojas.teste.js && node testes/forum.teste.js && node testes/eventos.teste.js && node testes/cadastro.teste.js && node testes/moderacao.teste.js && node testes/paginas.teste.js",
     "test:acesso": "node testes/acesso.teste.js",
     "test:colecao": "node testes/colecao.teste.js",
     "test:precos": "node testes/precos.teste.js",
@@ -24,7 +24,8 @@
     "test:forum": "node testes/forum.teste.js",
     "test:eventos": "node testes/eventos.teste.js",
     "test:cadastro": "node testes/cadastro.teste.js",
-    "test:moderacao": "node testes/moderacao.teste.js"
+    "test:moderacao": "node testes/moderacao.teste.js",
+    "test:paginas": "node testes/paginas.teste.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
