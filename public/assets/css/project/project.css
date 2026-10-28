@@ -613,6 +613,10 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   letter-spacing: var(--tracking-tight);
 }
 
+/* Fechamento da página: centralizado, como o cartão do plano logo acima */
+.home--fecho { align-items: center; text-align: center; }
+.home--fecho .home--subtitulo { margin: 0 auto; }
+
 .home--passo { flex: 1 1 260px; min-width: 0; padding: var(--space-5); gap: var(--space-2); }
 .home--passo-numero {
   width: 36px;
