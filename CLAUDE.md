@@ -42,6 +42,14 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Cobrança: Asaas da Omva (conta compartilhada)
+
+Passo a passo e conferências em `docs/cobranca-asaas.md`; o servidor é ligado com `scripts/configurar-asaas.sh`
+(lê a chave sem mostrar, confere que é a conta do CNPJ da Omva e cadastra o webhook pela API). A conta é a
+mesma do omvazap e do omvalic, e o Asaas manda **todo evento para todos os webhooks**: o webhook do valtatcg
+ignora, **sem gravar**, o que não tem `usuario:ID`/`loja:ID` nem assinatura nossa (o corpo traz cliente de outro
+produto). Chave de API própria do valtatcg, nunca a de outro produto; token do webhook nunca é a chave.
+
 ## Esqueci minha senha
 
 `/esqueci-senha/` → `POST /api/senha/esqueci` → e-mail com `/redefinir-senha/?t=...` → `POST /api/senha/redefinir`.

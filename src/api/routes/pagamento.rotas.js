@@ -72,6 +72,18 @@ export function rotasPagamento() {
     */
     const usuarioId = candidata && assinaturas.dadosDeCobranca(candidata) ? candidata : null;
 
+    /*
+      A conta do Asaas é a da Omva, compartilhada com os outros produtos (omvazap, omvalic...), e o Asaas manda
+      TODO evento para TODOS os webhooks cadastrados nela. Cobrança que não é nossa — referência de outro produto e
+      assinatura que não conhecemos — é ignorada SEM gravar: o corpo traz dados de cliente de outro sistema, que não
+      têm por que ficar aqui. Referência no nosso formato ("usuario:9", "loja:9") mas sem dono segue para a
+      conferência abaixo, porque essa é nossa e algo deu errado.
+    */
+    if (!usuarioId && !lojaId && aviso.usuarioId === null && aviso.lojaId === null) {
+      log.debug(`cobrança ${aviso.referencia} não é do valtatcg — ignorada`);
+      return res.status(200).json({ ok: true, ignorado: true });
+    }
+
     let inedito;
     try {
       inedito = assinaturas.registrarWebhook({

@@ -59,4 +59,7 @@ echo.
 echo  --- redefinir-senha ---
 node testes/redefinir-senha.teste.js
 echo.
+echo  --- webhook-asaas ---
+node testes/webhook-asaas.teste.js
+echo.
 pause
