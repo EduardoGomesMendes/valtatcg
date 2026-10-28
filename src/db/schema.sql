@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS carta_cache (
   preco_mercado_usd REAL,
   preco_atualizado_em TEXT,
   dados_json TEXT,
+  visto_em TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

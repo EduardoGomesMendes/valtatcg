@@ -61,6 +61,23 @@ export function salvar(cartaApi) {
   return obter(cartaApi.id);
 }
 
+/** Registra que a carta apareceu para alguém agora (busca ou página da carta). */
+export function marcarVista(id) {
+  db.prepare('UPDATE carta_cache SET visto_em = ? WHERE id = ?').run(agora(), id);
+}
+
+/**
+ * Cartas vistas nos últimos `dias` dias que ninguém possui. As possuídas já têm o preço renovado todo dia pelo job;
+ * as só-vistas precisam disso também, senão a busca mostra "sem histórico" até alguém procurar a mesma carta de novo.
+ */
+export function vistasRecentementeSemDono(dias = 14) {
+  return db.prepare(`
+    SELECT id FROM carta_cache
+    WHERE visto_em >= datetime('now', ?)
+      AND id NOT IN (SELECT carta_id FROM colecao_item)
+  `).all(`-${dias} days`).map((l) => l.id);
+}
+
 export function atualizarPreco(id, preco) {
   db.prepare('UPDATE carta_cache SET preco_mercado_usd = ?, preco_atualizado_em = ? WHERE id = ?')
     .run(preco, agora(), id);

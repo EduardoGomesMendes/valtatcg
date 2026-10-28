@@ -33,6 +33,7 @@ export function rotasCartas() {
       const precos = {};
       for (const carta of cartas) {
         const salva = cartasRepo.salvar(carta);
+        cartasRepo.marcarVista(salva.id);
         if (salva.preco_mercado_usd !== null) {
           precos[salva.id] = salva.preco_mercado_usd;
           // O preço visto hoje vira histórico: é assim que a variação passa a existir para cartas que ninguém possui.
@@ -47,7 +48,10 @@ export function rotasCartas() {
 
   rotas.get('/cartas/:id', async (req, res) => {
     const cache = cartasRepo.obter(req.params.id);
-    if (cache) return res.json({ carta: cache, variacao: variacaoDe(cache) });
+    if (cache) {
+      cartasRepo.marcarVista(cache.id);
+      return res.json({ carta: cache, variacao: variacaoDe(cache) });
+    }
 
     try {
       const cartaApi = await obterCarta(req.params.id);

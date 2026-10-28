@@ -76,6 +76,16 @@ export async function buscarCartasPorNumero({ numero, totalImpresso, nome }) {
   return { cartas: dados.data ?? [], total: dados.totalCount ?? 0 };
 }
 
+/** Várias cartas numa chamada só (o job diário não pode gastar uma chamada por carta). Máximo 25 ids. */
+export async function obterCartasPorIds(ids) {
+  // Os ids vêm do nosso banco, mas entram numa consulta da API externa: só letras, dígitos, "-" e "." passam.
+  const validos = ids.filter((id) => /^[A-Za-z0-9.-]+$/.test(id)).slice(0, 25);
+  if (!validos.length) return [];
+  const consulta = validos.map((id) => `id:${id}`).join(' OR ');
+  const dados = await chamar(`/cards?q=${encodeURIComponent(consulta)}&pageSize=${validos.length}`);
+  return dados.data ?? [];
+}
+
 export async function obterCarta(id) {
   const dados = await chamar(`/cards/${encodeURIComponent(id)}`);
   return dados.data;

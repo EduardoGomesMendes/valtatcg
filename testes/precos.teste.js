@@ -66,6 +66,17 @@ ok(
   !precosRepo.serieDoPortfolio(usuario.id, 365).some((s) => s.data === '2026-08-15'),
 );
 
+// Carta só vista em busca: o job diário precisa acompanhá-la, senão a busca fica em "sem histórico".
+const { marcarVista, vistasRecentementeSemDono } = await import('../src/portfolio/cartas.repo.js');
+const vista = salvar({ id: 'teste-vista-1', name: 'Só Vista', tcgplayer: { prices: { normal: { market: 2 } } } });
+const antiga = salvar({ id: 'teste-vista-antiga', name: 'Vista Faz Tempo', tcgplayer: { prices: { normal: { market: 2 } } } });
+marcarVista(vista.id);
+db.prepare("UPDATE carta_cache SET visto_em = datetime('now', '-30 days') WHERE id = ?").run(antiga.id);
+const acompanhadas = vistasRecentementeSemDono();
+ok('carta vista agora entra no acompanhamento diário', acompanhadas.includes('teste-vista-1'));
+ok('carta vista há 30 dias sai do acompanhamento', !acompanhadas.includes('teste-vista-antiga'));
+ok('carta da coleção não entra (o job já cuida dela)', !acompanhadas.includes(carta.id));
+
 db.close();
 try {
   fs.rmSync(pastaTemp, { recursive: true, force: true });

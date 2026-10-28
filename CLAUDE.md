@@ -76,6 +76,12 @@ A API não tem endpoint de histórico. O gráfico de evolução é construído p
 (`portfolio/precos.job.js`) roda no boot e a cada 24h, e grava uma linha por dia em `preco_historico`
 só para as cartas que alguém realmente possui — não para o cache inteiro.
 
+A variação mostrada na busca ("sem histórico" quando não há) compara com o último dia anterior em que NÓS vimos
+o preço da carta. Por isso o job diário também renova, em lotes de 25 (`obterCartasPorIds`), as cartas que
+**só apareceram em buscas** nas últimas 2 semanas (`carta_cache.visto_em`, marcado por busca/página da carta;
+o job não o renova, então carta que ninguém volta a procurar sai do acompanhamento). Carta nunca vista antes
+continua "sem histórico" até o dia seguinte à primeira busca: a pokemontcg.io não tem preço retroativo.
+
 A busca da pokemontcg.io não aceita `*` dentro de aspas (`name:"pika*"` derruba a busca) — só
 wildcard sem aspas funciona. Por isso `pokemontcg/cliente.js` usa prefixo sem aspas para busca de uma
 palavra e frase exata entre aspas (sem wildcard) para nomes com espaço. A API também devolve 500/502
