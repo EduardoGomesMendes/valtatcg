@@ -203,7 +203,7 @@ function aplicar(aviso, usuarioId) {
   if (aviso.acao === 'estornou') {
     // Estorno é dinheiro que voltou: a assinatura para agora, sem esperar a
     // data de expiração que aquele pagamento tinha comprado.
-    assinaturas.cancelar(usuarioId, `${aviso.descricao} Assinatura suspensa.`, 'Asaas');
+    assinaturas.cancelar(usuarioId, `${aviso.descricao} Assinatura suspensa.`, 'Asaas', { imediato: true });
     log.warn(`usuário ${usuarioId}: ${aviso.descricao} — assinatura suspensa`);
   }
 }

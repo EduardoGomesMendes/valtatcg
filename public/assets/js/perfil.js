@@ -166,6 +166,7 @@ $formPerfil.addEventListener('submit', async (ev) => {
   try {
     await api('/perfil', { method: 'PATCH', body: JSON.stringify(dados) });
     avisar($avisoPerfil, 'Dados atualizados.', 'sucesso');
+    $formPerfil.senhaAtual.value = '';
   } catch (erro) {
     avisar($avisoPerfil, erro.message);
   } finally {

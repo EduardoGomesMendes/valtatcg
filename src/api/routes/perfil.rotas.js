@@ -38,6 +38,8 @@ export function rotasPerfil() {
     try {
       const { senhaAtual, senhaNova } = req.body ?? {};
       usuarios.trocarSenha(req.usuario.id, senhaNova, senhaAtual);
+      // Se a senha vazou, quem a tinha não pode continuar logado em outro lugar.
+      usuarios.encerrarOutrasSessoes(req.usuario.id, req.token);
       res.status(204).end();
     } catch (erro) {
       res.status(400).json({ erro: erro.message });
@@ -66,9 +68,10 @@ export function rotasPerfil() {
   });
 
   rotas.get('/perfil/avatar', (req, res) => {
-    if (!req.usuario.avatar_mime) return res.status(404).end();
+    // 204 (e não 404) quando não há foto: é o caso comum, e um 404 vira erro vermelho no console de toda página.
+    if (!req.usuario.avatar_mime) return res.status(204).end();
     fs.readFile(caminhoAvatar(req.usuario.id), (erro, buffer) => {
-      if (erro) return res.status(404).end();
+      if (erro) return res.status(204).end();
       res.setHeader('Content-Type', req.usuario.avatar_mime);
       res.setHeader('Cache-Control', 'private, max-age=300');
       res.send(buffer);

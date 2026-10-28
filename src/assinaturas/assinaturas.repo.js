@@ -77,6 +77,11 @@ export function estado(usuario) {
   const status = usuario.assinatura_status ?? 'teste';
 
   if (status === 'cancelada') {
+    // Quem cancela já pagou o período: continua usando até o fim dele (como a loja). Estorno zera a validade.
+    const restantes = diasAte(usuario.assinatura_expira_em);
+    if (restantes > 0) {
+      return { status: 'cancelada', plano: plano(), bloqueado: false, diasRestantes: restantes, avisar: true, motivo: null };
+    }
     return { status: 'cancelada', plano: null, bloqueado: true, diasRestantes: 0, motivo: 'Assinatura cancelada.' };
   }
 
@@ -121,7 +126,8 @@ export function ativar(usuarioId, { dias = 30, ator = 'sistema', descricao = nul
   // Renovação sem perder o saldo: se ainda há dias válidos, soma a partir deles.
   const atual = db.prepare('SELECT assinatura_expira_em, assinatura_status FROM usuarios WHERE id = ?')
     .get(Number(usuarioId));
-  const saldo = atual?.assinatura_status === 'ativa' ? Math.max(0, diasAte(atual.assinatura_expira_em)) : 0;
+  // Quem cancelou e voltou antes de acabar o período não perde os dias já pagos.
+  const saldo = ['ativa', 'cancelada'].includes(atual?.assinatura_status) ? Math.max(0, diasAte(atual.assinatura_expira_em)) : 0;
 
   db.prepare(
     `UPDATE usuarios SET assinatura_status = 'ativa', assinatura_expira_em = datetime('now', ?) WHERE id = ?`,
@@ -138,8 +144,13 @@ export function ativar(usuarioId, { dias = 30, ator = 'sistema', descricao = nul
   return estadoDoUsuario(usuarioId);
 }
 
-export function cancelar(usuarioId, motivo = null, ator = 'humano') {
-  db.prepare("UPDATE usuarios SET assinatura_status = 'cancelada' WHERE id = ?").run(Number(usuarioId));
+/**
+ * `imediato` (estorno, chargeback): o dinheiro voltou, então o acesso acaba agora. Sem ele, quem cancelou usa o que já pagou.
+ */
+export function cancelar(usuarioId, motivo = null, ator = 'humano', { imediato = false } = {}) {
+  db.prepare(
+    `UPDATE usuarios SET assinatura_status = 'cancelada'${imediato ? ", assinatura_expira_em = datetime('now')" : ''} WHERE id = ?`,
+  ).run(Number(usuarioId));
   registrarEvento({
     usuarioId,
     tipo: 'cancelamento',

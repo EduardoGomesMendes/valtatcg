@@ -71,8 +71,16 @@ ok('sessão encerrada não resolve mais', usuarioDaSessao(token) === null);
 
 ok('token inválido não resolve', usuarioDaSessao('token-que-nao-existe') === null);
 
-const perfilAtualizado = atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local' });
-ok('atualizarPerfil muda nome e e-mail', perfilAtualizado.nome === 'Ana Paula' && perfilAtualizado.email === 'ana2@teste.local');
+erro = null;
+try {
+  atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local' });
+} catch (e) {
+  erro = e;
+}
+ok('trocar o e-mail sem a senha atual é recusado', erro?.message.includes('senha atual') && buscarPorEmail('ana2@teste.local') === null);
+
+const perfilAtualizado = atualizarPerfil(usuario.id, { nome: 'Ana Paula', email: 'ana2@teste.local', senhaAtual: 'Senha1234' });
+ok('atualizarPerfil muda nome e e-mail (com a senha atual)', perfilAtualizado.nome === 'Ana Paula' && perfilAtualizado.email === 'ana2@teste.local');
 
 const outraConta = criar({ nome: 'Bia', email: 'bia@teste.local', usuario: 'bia', senha: 'Senha1234', nascimento: '1990-05-10', aceiteTermos: true });
 erro = null;

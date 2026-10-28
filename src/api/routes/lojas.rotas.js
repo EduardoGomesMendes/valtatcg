@@ -129,7 +129,14 @@ export function rotasMinhaLoja() {
       });
     }
 
-    const email = String(req.body?.email ?? req.usuario.email ?? '').trim();
+    // Mensalidade em dia e recorrente: assinar de novo cancelaria a atual e cobraria outra vez hoje.
+    const emDia = loja.assinatura_status === 'ativa' && loja.assinatura_expira_em
+      && new Date(`${loja.assinatura_expira_em.replace(' ', 'T')}Z`) > new Date();
+    if (emDia && loja.asaas_assinatura_id) {
+      return res.status(409).json({ erro: 'A mensalidade da loja já está ativa e renova sozinha. Não precisa assinar de novo.' });
+    }
+
+    const email =String(req.body?.email ?? req.usuario.email ?? '').trim();
     const referencia = `loja:${loja.id}`;
     try {
       // A cobrança sai no CNPJ da loja, não no CPF de quem a cadastrou.

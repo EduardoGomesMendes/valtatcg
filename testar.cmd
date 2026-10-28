@@ -62,4 +62,7 @@ echo.
 echo  --- webhook-asaas ---
 node testes/webhook-asaas.teste.js
 echo.
+echo  --- revisao-geral ---
+node testes/revisao-geral.teste.js
+echo.
 pause

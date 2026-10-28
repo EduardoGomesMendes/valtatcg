@@ -43,7 +43,17 @@ const renovada = assinaturas.ativar(usuario.id, { dias: 30, ator: 'teste' });
 ok('renovar antes de vencer soma ao saldo (não substitui)', renovada.diasRestantes >= 58);
 
 const cancelada = assinaturas.cancelar(usuario.id, 'pedido do cliente', 'teste');
-ok('cancelar bloqueia', cancelada.status === 'cancelada' && cancelada.bloqueado === true);
+ok('cancelar com dias pagos mantém o acesso até o fim do período', cancelada.status === 'cancelada' && cancelada.bloqueado === false && cancelada.diasRestantes >= 58);
+
+const voltou = assinaturas.ativar(usuario.id, { dias: 30, ator: 'teste' });
+ok('quem cancela e volta antes de acabar não perde os dias pagos', voltou.status === 'ativa' && voltou.diasRestantes >= 88);
+
+const estornada = assinaturas.cancelar(usuario.id, 'estorno', 'teste', { imediato: true });
+ok('cancelar por estorno bloqueia na hora', estornada.status === 'cancelada' && estornada.bloqueado === true && estornada.diasRestantes === 0);
+
+assinaturas.iniciarTeste(usuario.id);
+const testeCancelado = assinaturas.cancelar(usuario.id, 'desistiu no teste', 'teste');
+ok('cancelar durante o teste (sem nada pago) bloqueia', testeCancelado.bloqueado === true);
 
 // Idempotência do webhook: a mesma cobrança não pode liberar duas vezes.
 const primeira = assinaturas.registrarWebhook({

@@ -91,6 +91,12 @@ export function rotasAssinatura() {
     }
 
     const registro = assinaturas.dadosDeCobranca(req.usuario.id);
+
+    // Assinar de novo cancelaria a recorrência que já está valendo e abriria outra cobrança hoje: dupla cobrança.
+    if (assinaturas.estadoDoUsuario(req.usuario.id).status === 'ativa' && registro?.asaas_assinatura_id) {
+      return res.status(409).json({ erro: 'Sua assinatura já está ativa e renova sozinha todo mês. Não precisa assinar de novo.' });
+    }
+
     const documento = apenasDigitos(req.body?.documento ?? registro?.documento ?? '');
     const email = String(req.body?.email ?? registro?.email_cobranca ?? req.usuario.email ?? '').trim();
 

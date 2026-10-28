@@ -42,6 +42,19 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Assinatura do cliente: regras que a revisão de 28/10/2026 fixou
+
+- **Cancelar não corta o que já foi pago**: `cancelada` com `assinatura_expira_em` no futuro segue liberada até a data
+  (igual à loja); voltar a assinar soma os dias que sobraram. **Estorno/chargeback corta na hora**
+  (`cancelar(..., { imediato: true })`).
+- **Assinar com assinatura já ativa é 409** (usuário e loja): sem isso o clique duplo cancelava a recorrência em vigor e
+  abria outra cobrança no mesmo dia.
+- **Trocar a senha no perfil derruba as outras sessões**; **trocar o e-mail exige a senha atual** (o e-mail é o canal do
+  "esqueci minha senha", então sessão roubada + e-mail novo = conta tomada).
+- Coleção: quantidade até 100 mil, variante/condição até 40 caracteres, data AAAA-MM-DD existente e não futura, preço até
+  1 milhão; tudo validado **antes** de chamar a pokemontcg.io. Falha da API externa vira 404/502 com mensagem própria.
+- `GET /perfil/avatar` responde 204 (não 404) quando não há foto: o 404 virava erro vermelho no console de toda página.
+
 ## Cobrança: Asaas da Omva (conta compartilhada)
 
 Passo a passo e conferências em `docs/cobranca-asaas.md`; o servidor é ligado com `scripts/configurar-asaas.sh`

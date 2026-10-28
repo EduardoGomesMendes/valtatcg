@@ -33,6 +33,10 @@ function textoDoStatus(situacao) {
     case 'vencida':
       return ['Assinatura vencida.', situacao.motivo];
     case 'cancelada':
+      // Cancelou, mas já pagou o período: usa até o fim e pode assinar de novo antes disso sem perder dia.
+      if (!situacao.bloqueado) {
+        return ['Assinatura cancelada.', `Você continua com acesso por mais ${situacao.diasRestantes} dia(s), até o fim do período já pago.`];
+      }
       return ['Assinatura cancelada.', 'Assine de novo para voltar a editar sua coleção.'];
     default:
       return ['—', null];

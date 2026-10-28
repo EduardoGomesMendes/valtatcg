@@ -16,10 +16,14 @@ export function obter(id, usuarioId) {
     .get(Number(id), Number(usuarioId)) ?? null;
 }
 
-function validarQuantidade(quantidade) {
+const QUANTIDADE_MAXIMA = 100_000;
+
+export function validarQuantidade(quantidade) {
   if (!Number.isInteger(quantidade) || quantidade < 1) {
     throw new Error('quantidade precisa ser um número inteiro maior que zero');
   }
+  // Sem teto, uma quantidade absurda estoura o valor do portfólio e o gráfico.
+  if (quantidade > QUANTIDADE_MAXIMA) throw new Error(`quantidade máxima por item: ${QUANTIDADE_MAXIMA.toLocaleString('pt-BR')}`);
 }
 
 export function adicionar({ usuarioId, cartaId, quantidade, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm }) {

@@ -306,7 +306,11 @@ export function trocarSenha(usuarioId, novaSenha, senhaAtual) {
   return definirSenha(usuarioId, novaSenha);
 }
 
-export function atualizarPerfil(usuarioId, { nome, email, usuario } = {}) {
+/**
+ * `senhaAtual` só é exigida para TROCAR o e-mail: é por ele que chega o "esqueci minha senha", então quem pega uma sessão
+ * aberta (computador emprestado, cookie roubado) não pode virar dono da conta só trocando o endereço.
+ */
+export function atualizarPerfil(usuarioId, { nome, email, usuario, senhaAtual } = {}) {
   const alvo = buscarPorId(usuarioId);
   if (!alvo) throw new Error('usuário não encontrado');
 
@@ -324,8 +328,13 @@ export function atualizarPerfil(usuarioId, { nome, email, usuario } = {}) {
     if (!emailValido(novo)) throw new Error('informe um e-mail válido');
     const jaUsado = buscarPorEmail(novo);
     if (jaUsado && jaUsado.id !== alvo.id) throw new Error('este e-mail já está cadastrado');
-    sets.push('email = ?');
-    valores.push(novo);
+    if (novo !== normalizarEmail(alvo.email)) {
+      if (!conferirSenha(String(senhaAtual ?? ''), alvo.senha_hash, alvo.senha_salt)) {
+        throw new Error('para trocar o e-mail, informe a sua senha atual');
+      }
+      sets.push('email = ?');
+      valores.push(novo);
+    }
   }
 
   if (usuario !== undefined) {
@@ -414,6 +423,12 @@ export function usuarioDaSessao(token) {
   ).run(hash, `-${INTERVALO_REGISTRO_USO_SEG} seconds`);
 
   return semSegredos(usuario);
+}
+
+/** Derruba as sessões da conta, menos a que está em uso agora (a pessoa que trocou a senha segue logada). */
+export function encerrarOutrasSessoes(usuarioId, tokenAtual) {
+  db.prepare('DELETE FROM sessoes WHERE usuario_id = ? AND token_hash <> ?')
+    .run(Number(usuarioId), tokenAtual ? hashDoToken(tokenAtual) : '');
 }
 
 /** Derruba todas as sessões da conta (troca de senha: quem a tinha descoberto cai junto). */

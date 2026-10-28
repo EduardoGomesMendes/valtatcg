@@ -200,7 +200,8 @@ export async function carregarAvatarEm(imgEl, placeholderEl, nome) {
   if (!imgEl) return;
   try {
     const resposta = await fetch('/api/perfil/avatar', { credentials: 'same-origin' });
-    if (!resposta.ok) throw new Error('sem foto');
+    // 204 = conta sem foto (não é erro, só não há o que mostrar).
+    if (resposta.status !== 200) throw new Error('sem foto');
     const blob = await resposta.blob();
     imgEl.src = URL.createObjectURL(blob);
     imgEl.classList.remove('hidden');
