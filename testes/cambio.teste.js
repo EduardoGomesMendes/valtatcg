@@ -88,13 +88,30 @@ const serie = [{ data: '2026-10-20', valor: 10 }, { data: '2026-10-22', valor: 1
 const r = calcularResumo({ itens, taxa: 5, serie, taxaDoDia });
 ok('valor atual em reais = dólar × cotação de hoje', r.moeda === 'BRL' && perto(r.valorAtual, 45 * 5));
 ok('o custo pago em reais NÃO muda com o câmbio e o antigo em dólar usa a cotação de hoje', perto(r.custo, 60 + 4 * 5));
-ok('ganho = valor − custo', perto(r.ganho, 225 - 80));
+ok('ganho = valor − custo, só das cartas com preço pago (a sem preço não vira lucro de 100%)', perto(r.ganho, 200 - 80), String(r.ganho));
+ok('o resumo diz quantas cartas ficaram sem preço pago', r.itensSemCusto === 1 && r.totalItens === 3);
 const r2 = calcularResumo({ itens, taxa: 6, serie, taxaDoDia });
 ok('se o dólar sobe, o custo em reais pago fica igual (só o antigo e o valor mudam)', perto(r2.custo, 60 + 4 * 6) && perto(r2.valorAtual, 45 * 6));
 ok('o gráfico usa a cotação de cada dia', perto(r.serie[0].valor, 10 * 5.0) && perto(r.serie[1].valor, 12 * 5.2));
 ok('dia sem cotação guardada usa a de hoje', perto(r.serie[2].valor, 8 * 5));
 const sem = calcularResumo({ itens, taxa: null, serie, taxaDoDia });
 ok('sem cotação nenhuma, o resumo sai em dólar', sem.moeda === 'USD' && sem.taxa === null && perto(sem.valorAtual, 45) && perto(sem.custo, 4));
+ok('...e o ganho em dólar só compara o que tem custo em dólar', perto(sem.ganho, 20 - 4), String(sem.ganho));
+
+/* custo no gráfico: o que a pessoa já tinha investido em cada dia */
+const itensComData = [
+  { quantidade: 2, preco_mercado_usd: 10, preco_pago_brl: 30, preco_pago_usd: null, adquirido_em: '2026-10-21', criado_em: '2026-10-25 10:00:00' },
+  { quantidade: 1, preco_mercado_usd: 20, preco_pago_brl: 100, preco_pago_usd: null, adquirido_em: null, criado_em: '2026-10-22 08:00:00' },
+  { quantidade: 1, preco_mercado_usd: 5, preco_pago_brl: null, preco_pago_usd: null, adquirido_em: 'ontem à noite', criado_em: '2026-10-20 08:00:00' },
+];
+const serieDatas = [{ data: '2026-10-20', valor: 1 }, { data: '2026-10-21', valor: 2 }, { data: '2026-10-22', valor: 3 }, { data: '2026-10-25', valor: 4 }];
+const comDatas = calcularResumo({ itens: itensComData, taxa: 5, serie: serieDatas, taxaDoDia });
+ok('o custo do gráfico começa na data da compra informada (21/10: 2 × R$ 30)', perto(comDatas.serie[0].custo, 0) && perto(comDatas.serie[1].custo, 60));
+ok('sem data da compra, conta a partir do dia em que a carta entrou (22/10: + R$ 100)', perto(comDatas.serie[2].custo, 160) && perto(comDatas.serie[3].custo, 160));
+ok('carta sem preço pago não entra no custo do gráfico', comDatas.itensSemCusto === 1);
+ok('o resumo guarda o custo total igual ao último ponto do gráfico', perto(comDatas.custo, comDatas.serie[3].custo));
+const semCotacaoComDatas = calcularResumo({ itens: itensComData, taxa: null, serie: serieDatas, taxaDoDia });
+ok('sem cotação, o custo em reais não entra no gráfico em dólar', semCotacaoComDatas.serie.every((p) => p.custo === 0));
 
 /* ---------- variação de preço ---------- */
 const HOJE = '2026-10-27';

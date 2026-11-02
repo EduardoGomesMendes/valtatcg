@@ -159,6 +159,23 @@ const item = (await adiciona({})).j.item;
 ok('editar com variante enorme é recusado', (await dani.c.patch(`/colecao/${item.id}`, { variante: 'z'.repeat(100) })).s === 400);
 ok('editar a quantidade comum passa', (await dani.c.patch(`/colecao/${item.id}`, { quantidade: 7 })).j.item?.quantidade === 7);
 
+/* ---------- preço pago: o resumo avisa quem ficou sem preço, e dá para completar depois ---------- */
+const eva = await conta('Eva Costa', 'eva@exemplo.com.br', 'eva_rev');
+const comPreco = (await eva.c.post('/colecao', { cartaId: 'rev-1', quantidade: 2, precoPagoBrl: 10, adquiridoEm: '2026-10-01' })).j.item;
+const semPreco = (await eva.c.post('/colecao', { cartaId: 'rev-1', quantidade: 1 })).j.item;
+let resumo = (await eva.c.get('/colecao/resumo')).j;
+ok('o resumo conta as cartas sem preço pago (para a tela pedir o preço)', resumo.itensSemCusto === 1 && resumo.totalItens === 2, JSON.stringify({ s: resumo.itensSemCusto, t: resumo.totalItens }));
+ok('cada ponto do gráfico traz o custo (o que já tinha sido pago naquele dia)', resumo.serie.every((p) => 'custo' in p));
+ok('a listagem devolve preço pago e data da compra para a tela mostrar e editar', (await eva.c.get('/colecao')).j.itens.some((i) => i.id === comPreco.id && i.preco_pago_brl === 10 && i.adquirido_em === '2026-10-01'));
+r = await eva.c.patch(`/colecao/${semPreco.id}`, { precoPagoBrl: 12.5, precoPagoUsd: null, adquiridoEm: '2026-10-05' });
+ok('informar o preço depois, pela edição, funciona', r.s === 200 && r.j.item.preco_pago_brl === 12.5 && r.j.item.adquirido_em === '2026-10-05', JSON.stringify(r.j));
+resumo = (await eva.c.get('/colecao/resumo')).j;
+ok('...e a carta deixa de contar como "sem preço"', resumo.itensSemCusto === 0);
+r = await eva.c.patch(`/colecao/${semPreco.id}`, { precoPagoBrl: null, precoPagoUsd: null });
+ok('apagar o preço devolve a carta para "sem preço"', r.s === 200 && (await eva.c.get('/colecao/resumo')).j.itensSemCusto === 1);
+r = await eva.c.patch(`/colecao/${semPreco.id}`, { precoPagoBrl: -3 });
+ok('preço negativo na edição é recusado', r.s === 400);
+
 servidor.close();
 asaasFalso.close();
 db.close();

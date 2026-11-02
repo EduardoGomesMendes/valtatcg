@@ -19,15 +19,19 @@ export function historico(cartaId, dias = 90) {
 /*
   Série somada do valor do portfólio do usuário, dia a dia.
 
-  Só conta o preço de um dia a partir de quando a carta entrou na coleção da pessoa. Isso importa porque o histórico
-  também é gravado para cartas que apenas apareceram numa busca: sem o filtro, o gráfico mostraria valor de dias
-  em que a pessoa ainda nem tinha a carta.
+  Só conta o preço de um dia a partir de quando a carta passou a ser da pessoa: a data da compra, se ela informou
+  (e é uma data válida), senão o dia em que a carta entrou na coleção. Isso importa porque o histórico também é
+  gravado para cartas que apenas apareceram numa busca: sem o filtro, o gráfico mostraria valor de dias em que a
+  pessoa ainda nem tinha a carta. Com a data da compra, quem cadastra hoje uma carta comprada há duas semanas já vê
+  essas duas semanas (desde que tenhamos o preço daqueles dias).
 */
 export function serieDoPortfolio(usuarioId, dias = 90) {
   return db.prepare(`
     SELECT ph.data AS data, SUM(ph.preco_mercado_usd * ci.quantidade) AS valor
     FROM preco_historico ph
-    JOIN colecao_item ci ON ci.carta_id = ph.carta_id AND ci.usuario_id = ? AND ph.data >= date(ci.criado_em)
+    JOIN colecao_item ci ON ci.carta_id = ph.carta_id AND ci.usuario_id = ?
+      AND ph.data >= CASE WHEN ci.adquirido_em GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+                          THEN ci.adquirido_em ELSE date(ci.criado_em) END
     WHERE ph.data >= date('now', ?)
     GROUP BY ph.data
     ORDER BY ph.data ASC

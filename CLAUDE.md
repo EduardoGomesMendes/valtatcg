@@ -42,6 +42,18 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Preço pago e evolução da coleção
+
+O preço pago por carta (em reais, `preco_pago_brl`) e a data da compra (`adquirido_em`) são o que torna o ganho/perda e o
+gráfico reais. Regras que não podem se perder:
+- **Carta sem preço pago fica FORA do custo e do ganho** (`calcularResumo`): custo zero faria o valor inteiro virar lucro.
+  O resumo devolve `itensSemCusto` e a tela pede o preço ("Informar preço").
+- O gráfico tem duas linhas: valor (dólar × cotação do dia) e **custo** (o que já tinha sido pago em cada dia, em reais fixos).
+- A carta conta no gráfico **desde a data da compra** (se válida, AAAA-MM-DD), senão desde o dia em que entrou na coleção
+  (`serieDoPortfolio` e `inicioDoItem` usam a mesma regra). Preço anterior ao que temos gravado não existe: a API não tem histórico.
+- Dá para informar/corrigir o preço **depois** (Coleção → Editar): `PATCH /colecao/:id`. O formulário de adicionar (Buscar) e o de
+  editar usam os mesmos campos (`opcoes-carta.js`), com rótulo visível: só com placeholder o campo some quando se digita.
+
 ## Backup (guia completo em `docs/backup-e-restauracao.md`)
 
 `scripts/backup.mjs` faz, todo dia às 03:30, cópia **consistente** do banco (`VACUUM INTO`, com o site no ar) + logos,

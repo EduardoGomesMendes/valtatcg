@@ -66,6 +66,22 @@ ok(
   !precosRepo.serieDoPortfolio(usuario.id, 365).some((s) => s.data === '2026-08-15'),
 );
 
+// A data da compra define desde quando a carta conta no gráfico (se for válida); senão vale o dia em que entrou na coleção.
+const comprada = salvar({ id: 'teste-preco-compra', name: 'Comprada Antes', set: { id: 'teste', name: 'Set' }, tcgplayer: { prices: { normal: { market: 3 } } } });
+const dataInvalida = salvar({ id: 'teste-preco-invalida', name: 'Data Ruim', set: { id: 'teste', name: 'Set' }, tcgplayer: { prices: { normal: { market: 7 } } } });
+colecaoRepo.adicionar({ usuarioId: usuario.id, cartaId: comprada.id, quantidade: 2, adquiridoEm: '2026-09-10' });
+colecaoRepo.adicionar({ usuarioId: usuario.id, cartaId: dataInvalida.id, quantidade: 1, adquiridoEm: 'ontem à noite' });
+db.prepare("UPDATE colecao_item SET criado_em = '2026-09-12 09:00:00' WHERE carta_id IN ('teste-preco-compra', 'teste-preco-invalida')").run();
+for (const [id, valor] of [['teste-preco-compra', 3], ['teste-preco-invalida', 7]]) {
+  precosRepo.registrarSnapshot(id, valor, '2026-09-10');
+  precosRepo.registrarSnapshot(id, valor, '2026-09-12');
+}
+const serieComCompra = precosRepo.serieDoPortfolio(usuario.id, 365);
+const em10 = serieComCompra.find((s) => s.data === '2026-09-10');
+const em12 = serieComCompra.find((s) => s.data === '2026-09-12');
+ok('com data da compra anterior à entrada, o gráfico já conta aqueles dias (10/09: 2 × 3)', em10?.valor === 6, JSON.stringify(em10));
+ok('data da compra inválida cai para o dia em que a carta entrou (a carta só aparece em 12/09)', em12?.valor === 6 + 7, JSON.stringify(em12));
+
 // Carta só vista em busca: o job diário precisa acompanhá-la, senão a busca fica em "sem histórico".
 const { marcarVista, vistasRecentementeSemDono } = await import('../src/portfolio/cartas.repo.js');
 const vista = salvar({ id: 'teste-vista-1', name: 'Só Vista', tcgplayer: { prices: { normal: { market: 2 } } } });

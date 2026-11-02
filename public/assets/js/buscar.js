@@ -2,6 +2,7 @@ import { api, avisar, el, limpar, prepararCabecalho } from './api.js';
 import { carregarCambio, preco, elementoVariacao } from './moeda.js';
 import { icone } from './icones.js';
 import { interpretarBusca, ordenarPorNome, pontuarNome } from './leitura-carta.js';
+import { VARIANTES, CONDICOES, campoSelect, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
 
 prepararCabecalho();
 
@@ -17,17 +18,6 @@ $btnSair.addEventListener('click', async () => {
   window.location.href = '/entrar/';
 });
 
-const VARIANTES = [
-  ['', 'Não sei'],
-  ['normal', 'Normal'],
-  ['holofoil', 'Holofoil'],
-  ['reverseHolofoil', 'Reverse Holofoil'],
-  ['1stEditionHolofoil', '1st Edition Holofoil'],
-  ['1stEditionNormal', '1st Edition Normal'],
-];
-
-const CONDICOES = ['Lacrado', 'Mint', 'Near Mint', 'Excelente', 'Jogado', 'Danificado'];
-
 /** Quantas de cada carta a pessoa já tem (id da carta → quantidade), para mostrar "Qtd" nos resultados. */
 let possuidas = new Map();
 
@@ -39,26 +29,6 @@ async function carregarPossuidas() {
   } catch {
     possuidas = new Map(); // sem a lista, a busca funciona do mesmo jeito, só sem o "Qtd".
   }
-}
-
-function campoSelect(nome, opcoes, comEspacoVazio, textoVazio) {
-  const campo = document.createElement('select');
-  campo.className = 'campo';
-  campo.name = nome;
-  if (comEspacoVazio) {
-    const opcaoVazia = document.createElement('option');
-    opcaoVazia.value = '';
-    opcaoVazia.textContent = textoVazio;
-    campo.append(opcaoVazia);
-  }
-  opcoes.forEach((item) => {
-    const [valor, rotulo] = Array.isArray(item) ? item : [item, item];
-    const opcao = document.createElement('option');
-    opcao.value = valor;
-    opcao.textContent = rotulo;
-    campo.append(opcao);
-  });
-  return campo;
 }
 
 /** @param {(quantidade: number) => void} aoAdicionar chamado depois de a carta entrar na coleção */
@@ -80,23 +50,12 @@ function formularioAdicionar(carta, aoAdicionar) {
 
   form.append(campoSelect('condicao', CONDICOES, true, 'Condição (opcional)'));
 
+  // O preço pago é o que torna o ganho/perda e o gráfico da coleção reais: por isso fica à vista, com rótulo e explicação.
   const linhaPrecoData = el('div', 'flex gap--2', '');
-  const campoPreco = document.createElement('input');
-  campoPreco.className = 'campo';
-  campoPreco.type = 'number';
-  campoPreco.step = '0.01';
-  campoPreco.min = '0';
-  campoPreco.name = 'precoPagoBrl';
-  campoPreco.placeholder = 'Preço pago por carta (R$)';
-  linhaPrecoData.append(campoPreco);
-
-  const campoData = document.createElement('input');
-  campoData.className = 'campo';
-  campoData.type = 'date';
-  campoData.name = 'adquiridoEm';
-  campoData.setAttribute('aria-label', 'Data da compra');
-  linhaPrecoData.append(campoData);
+  linhaPrecoData.append(campoComRotulo('Preço pago por carta (R$)', campoPreco()));
+  linhaPrecoData.append(campoComRotulo('Data da compra', campoData()));
   form.append(linhaPrecoData);
+  form.append(el('span', 'text--xs text--muted', 'Opcional, mas é com o preço e a data que calculamos o seu ganho ou perda e a evolução da coleção. Você pode preencher depois, na sua coleção.'));
 
   const avisoForm = el('p', 'hidden text--xs', '');
   form.append(avisoForm);
