@@ -1,4 +1,6 @@
 import { db } from '../db/index.js';
+import { listar as listarColecao } from './colecao.repo.js';
+import { inicioDoItem } from './resumo.js';
 
 export function registrarSnapshot(cartaId, precoUsd, data = new Date().toISOString().slice(0, 10)) {
   db.prepare(`
@@ -26,16 +28,37 @@ export function historico(cartaId, dias = 90) {
   essas duas semanas (desde que tenhamos o preço daqueles dias).
 */
 export function serieDoPortfolio(usuarioId, dias = 90) {
-  return db.prepare(`
-    SELECT ph.data AS data, SUM(ph.preco_mercado_usd * ci.quantidade) AS valor
-    FROM preco_historico ph
-    JOIN colecao_item ci ON ci.carta_id = ph.carta_id AND ci.usuario_id = ?
-      AND ph.data >= CASE WHEN ci.adquirido_em GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
-                          THEN ci.adquirido_em ELSE date(ci.criado_em) END
-    WHERE ph.data >= date('now', ?)
-    GROUP BY ph.data
-    ORDER BY ph.data ASC
-  `).all(Number(usuarioId), `-${dias} days`);
+  const itens = listarColecao(usuarioId);
+  if (!itens.length) return [];
+
+  const desde = db.prepare("SELECT date('now', ?) AS d").get(`-${Number(dias)} days`).d;
+  const historico = new Map();
+  for (const l of db.prepare(`
+    SELECT carta_id, data, preco_mercado_usd FROM preco_historico
+    WHERE data >= ? AND preco_mercado_usd IS NOT NULL
+      AND carta_id IN (SELECT carta_id FROM colecao_item WHERE usuario_id = ?)
+  `).all(desde, Number(usuarioId))) {
+    if (!historico.has(l.carta_id)) historico.set(l.carta_id, []);
+    historico.get(l.carta_id).push(l);
+  }
+
+  /*
+    O histórico guarda UM preço por carta por dia (o padrão, a variante comum). Para a variante e o estado que a pessoa
+    marcou, cada dia vale: preço do dia × (preço da variante hoje ÷ preço padrão hoje) × fator do estado. Assume que o
+    prêmio da variante se mantém ao longo do tempo (não temos o histórico de cada variante), e faz o último ponto do
+    gráfico bater com o "valor atual" da coleção. Sem variante nem estado marcados, a conta é a de sempre: preço × quantidade.
+  */
+  const total = new Map();
+  for (const item of itens) {
+    const padrao = item.preco_mercado_usd;
+    const proporcao = padrao > 0 && item.preco_variante_usd !== null && item.preco_variante_usd !== undefined ? item.preco_variante_usd / padrao : 1;
+    const inicio = inicioDoItem(item);
+    for (const p of historico.get(item.carta_id) ?? []) {
+      if (p.data < inicio) continue;
+      total.set(p.data, (total.get(p.data) ?? 0) + p.preco_mercado_usd * item.quantidade * proporcao * item.fator_estado);
+    }
+  }
+  return [...total.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([data, valor]) => ({ data, valor }));
 }
 
 /**

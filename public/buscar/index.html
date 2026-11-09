@@ -53,6 +53,12 @@
     <p class="hidden" id="aviso"></p>
 
     <div class="grade--cartas" id="resultados"></div>
+
+    <!-- A busca por nome devolve 20 cartas por vez; sem este botão só as 20 mais novas apareciam. -->
+    <div class="hidden flex flex--col items--center gap--2" id="mais-resultados">
+      <span class="text--xs text--muted" id="contagem"></span>
+      <button class="botao botao--secundario" type="button" id="btn-mais">Ver mais cartas</button>
+    </div>
   </main>
 
   <footer class="rodape flex flex--col items--center gap--1">

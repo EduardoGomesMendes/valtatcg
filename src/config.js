@@ -93,6 +93,15 @@ export const config = {
     menoresEscrevem: bool(process.env.FORUM_MENORES_ESCREVEM, true),
   },
 
+  // Estimativa de valor por estado de conservação, como fração do preço Near Mint (ver portfolio/estados.js).
+  // Aproximações (pontos médios das faixas dos guias de mercado), ajustáveis sem mexer no código.
+  estados: {
+    lightlyPlayed: num(process.env.FATOR_LIGHTLY_PLAYED, 0.8),
+    moderatelyPlayed: num(process.env.FATOR_MODERATELY_PLAYED, 0.6),
+    heavilyPlayed: num(process.env.FATOR_HEAVILY_PLAYED, 0.35),
+    damaged: num(process.env.FATOR_DAMAGED, 0.15),
+  },
+
   lojas: {
     // Mensalidade da loja: cadastro atualizado no diretório + marca (logo e link do site) em destaque.
     // 0 fecha o botão de assinar (ex.: para negociar um valor à parte).

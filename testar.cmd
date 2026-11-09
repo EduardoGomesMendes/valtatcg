@@ -77,4 +77,7 @@ echo.
 echo  --- plano-gratis ---
 node testes/plano-gratis.teste.js
 echo.
+echo  --- estados-precos ---
+node testes/estados-precos.teste.js
+echo.
 pause

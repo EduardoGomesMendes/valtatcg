@@ -1,14 +1,37 @@
 import { db } from '../db/index.js';
+import { precoDaVariante } from './cartas.repo.js';
+import { fatorDoEstado, estadoCanonico } from './estados.js';
 
+/**
+ * Os itens da coleção, já com o valor de CADA UM:
+ *   preco_mercado_usd  preço padrão da carta (a variante comum, estado quase perfeito)
+ *   preco_variante_usd preço da variante que a pessoa marcou (sem marcar, o padrão)
+ *   fator_estado       fração do preço Near Mint que o estado da carta vale (1 = sem desconto)
+ *   preco_estimado_usd preço da variante × fator do estado: é o que entra no valor da coleção (uma ESTIMATIVA)
+ *   preco_data         dia em que a API atualizou o preço
+ */
 export function listar(usuarioId) {
-  return db.prepare(`
+  const linhas = db.prepare(`
     SELECT ci.*, cc.nome, cc.set_nome, cc.numero, cc.raridade,
-           cc.imagem_pequena, cc.imagem_grande, cc.preco_mercado_usd
+           cc.imagem_pequena, cc.imagem_grande, cc.preco_mercado_usd,
+           cc.precos_variantes, cc.preco_data_api AS preco_data
     FROM colecao_item ci
     JOIN carta_cache cc ON cc.id = ci.carta_id
     WHERE ci.usuario_id = ?
     ORDER BY ci.criado_em DESC
   `).all(Number(usuarioId));
+
+  return linhas.map(({ precos_variantes: variantes, ...item }) => {
+    const unitario = precoDaVariante({ precos_variantes: variantes, preco_mercado_usd: item.preco_mercado_usd }, item.variante);
+    const fator = fatorDoEstado(item.condicao);
+    return {
+      ...item,
+      condicao: estadoCanonico(item.condicao) ?? item.condicao,
+      preco_variante_usd: unitario,
+      fator_estado: fator,
+      preco_estimado_usd: unitario === null || unitario === undefined ? null : unitario * fator,
+    };
+  });
 }
 
 export function obter(id, usuarioId) {

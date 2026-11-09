@@ -72,6 +72,14 @@ adicionarColunaSeFaltando('pagamento_eventos', 'loja_id', 'INTEGER');
 // Termo de aceite do fórum: quando a pessoa aceitou e qual versão das regras ela leu.
 adicionarColunaSeFaltando('usuarios', 'aceite_forum_em', 'TEXT');
 adicionarColunaSeFaltando('usuarios', 'aceite_forum_versao', 'TEXT');
+// Preços de TODAS as variantes da carta (para avaliar a variante que a pessoa tem) e a data do preço na API.
+adicionarColunaSeFaltando('carta_cache', 'precos_variantes', 'TEXT');
+adicionarColunaSeFaltando('carta_cache', 'preco_data_api', 'TEXT');
+// Estados de conservação: os nomes antigos viram os da escala padrão (Mint, Near Mint, Lightly Played, ...).
+db.exec(`UPDATE colecao_item SET condicao = CASE condicao
+    WHEN 'Lacrado' THEN 'Mint' WHEN 'Excelente' THEN 'Near Mint' WHEN 'Jogado' THEN 'Moderately Played' WHEN 'Danificado' THEN 'Damaged'
+    ELSE condicao END
+  WHERE condicao IN ('Lacrado', 'Excelente', 'Jogado', 'Danificado')`);
 // Última vez que a carta apareceu numa busca/tela: o job diário só acompanha o preço de quem foi visto há pouco.
 adicionarColunaSeFaltando('carta_cache', 'visto_em', 'TEXT');
 db.exec("UPDATE carta_cache SET visto_em = COALESCE(preco_atualizado_em, criado_em) WHERE visto_em IS NULL");

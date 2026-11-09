@@ -878,3 +878,17 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   padding-left: var(--space-5);
   list-style: disc;
 }
+
+/* Campos de formulário que dividem uma linha: sem isto o texto da opção mais comprida (ex.: "Moderately Played")
+   empurra o campo para fora do cartão, porque um item flex não encolhe abaixo do conteúdo. */
+.campo--seguro {
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.campo--caixa { min-width: 0; }
+/* Os campos que dividem a linha ficam lado a lado; em tela estreita quebram para uma coluna em vez de espremer. */
+.linha--campos { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.linha--campos > * { flex: 1 1 140px; min-width: 0; }

@@ -33,7 +33,8 @@ export function calcularResumo({ itens, taxa, serie, taxaDoDia = () => null }) {
   const comCusto = [];
 
   for (const item of itens) {
-    const valorDoItem = (item.preco_mercado_usd ?? 0) * item.quantidade;
+    // O valor do item é a ESTIMATIVA: preço da variante que a pessoa marcou × fator do estado (sem eles, o preço padrão).
+    const valorDoItem = (item.preco_estimado_usd ?? item.preco_mercado_usd ?? 0) * item.quantidade;
     valorUsd += valorDoItem;
     if (item.preco_pago_brl !== null && item.preco_pago_brl !== undefined) {
       custoBrl += item.preco_pago_brl * item.quantidade;

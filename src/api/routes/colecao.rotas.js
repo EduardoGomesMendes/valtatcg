@@ -6,6 +6,8 @@ import { obterCarta } from '../../pokemontcg/cliente.js';
 import { obterTaxa, taxaDoDia } from '../../cambio/cambio.js';
 import { calcularResumo } from '../../portfolio/resumo.js';
 import * as cota from '../../portfolio/cota.repo.js';
+import { ORDEM_VARIANTES } from '../../portfolio/cartas.repo.js';
+import { estadoCanonico, listarEstados } from '../../portfolio/estados.js';
 
 /** Limite do plano grátis é 429 com o sinal para a tela oferecer a assinatura; o resto é erro de validação (400). */
 function respostaDeErro(res, erro) {
@@ -24,13 +26,21 @@ function dinheiroOuNulo(valor) {
   return n;
 }
 
-/** Variante e condição são texto livre da tela: vazio vira null, e o tamanho tem teto (o banco não é depósito de texto). */
-function textoCurtoOuNulo(valor, campo) {
+/** Variante: uma das que a API de preços conhece (ou vazia = "não sei"). */
+function varianteOuNula(valor) {
   if (valor === undefined) return undefined;
   if (valor === null || valor === '') return null;
-  const t = String(valor).trim();
-  if (t.length > 40) throw new Error(`${campo} longa demais (máximo 40 caracteres)`);
-  return t || null;
+  if (!ORDEM_VARIANTES.includes(valor)) throw new Error('variante inválida');
+  return valor;
+}
+
+/** Estado de conservação: um da escala oficial (Mint ... Damaged), os nomes antigos viram os novos, vazio = sem estado. */
+function estadoOuNulo(valor) {
+  if (valor === undefined) return undefined;
+  if (valor === null || valor === '') return null;
+  const canonico = estadoCanonico(valor);
+  if (!canonico) throw new Error('estado da carta inválido — escolha um da lista');
+  return canonico;
 }
 
 /** Data de aquisição no formato AAAA-MM-DD, existente e que não seja do futuro. */
@@ -48,6 +58,11 @@ function dataOuNula(valor) {
 
 export function rotasColecao() {
   const rotas = Router();
+
+  /** A escala de estados com a explicação e o fator da estimativa: a tela monta o campo a partir daqui. */
+  rotas.get('/colecao/estados', (req, res) => {
+    res.json({ estados: listarEstados() });
+  });
 
   rotas.get('/colecao', (req, res) => {
     const itens = colecaoRepo.listar(req.usuario.id);
@@ -79,8 +94,8 @@ export function rotasColecao() {
         usuarioId: req.usuario.id,
         cartaId,
         quantidade: Number(quantidade),
-        variante: textoCurtoOuNulo(variante, 'variante'),
-        condicao: textoCurtoOuNulo(condicao, 'condição'),
+        variante: varianteOuNula(variante),
+        condicao: estadoOuNulo(condicao),
         precoPagoUsd: dinheiroOuNulo(precoPagoUsd),
         precoPagoBrl: dinheiroOuNulo(precoPagoBrl),
         adquiridoEm: dataOuNula(adquiridoEm),
@@ -133,8 +148,8 @@ export function rotasColecao() {
 
       const item = colecaoRepo.atualizar(req.params.id, req.usuario.id, {
         quantidade: novaQuantidade,
-        variante: textoCurtoOuNulo(variante, 'variante'),
-        condicao: textoCurtoOuNulo(condicao, 'condição'),
+        variante: varianteOuNula(variante),
+        condicao: estadoOuNulo(condicao),
         precoPagoUsd: precoPagoUsd !== undefined ? dinheiroOuNulo(precoPagoUsd) : undefined,
         precoPagoBrl: precoPagoBrl !== undefined ? dinheiroOuNulo(precoPagoBrl) : undefined,
         adquiridoEm: dataOuNula(adquiridoEm),

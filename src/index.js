@@ -10,6 +10,7 @@ import { apagarHistoricoDeCartasNaoPossuidas } from './portfolio/precos.repo.js'
 import { limparAntigos as limparPedidosDeCadastro } from './auth/cadastros.repo.js';
 import { limparAntigos as limparPedidosDeSenha } from './auth/redefinicoes.repo.js';
 import { limparAntigas as limparCotasAntigas } from './portfolio/cota.repo.js';
+import { migrarPrecosDoCache } from './portfolio/cartas.repo.js';
 
 const log = criarLog('sistema');
 
@@ -73,6 +74,14 @@ async function iniciar() {
     descobrir num evento de webhook.
   */
   pagamento();
+
+  // Cartas que já estavam em cache ganham os preços por variante e o preço padrão novo (versão comum, não a mais cara).
+  try {
+    const m = migrarPrecosDoCache();
+    if (m.conferidas) log.info(`preços do cache atualizados: ${m.conferidas} carta(s), ${m.padraoMudou} com preço padrão diferente (histórico dessas reiniciado)`);
+  } catch (erro) {
+    log.error(`falha ao atualizar os preços do cache: ${erro.message}`);
+  }
 
   const app = criarServidor();
   const servidor = await abrirPorta(app);

@@ -1,8 +1,8 @@
-import { api, avisar, avisarComAssinatura, frasePlanoGratis, el, limpar, prepararCabecalho } from './api.js';
+import { api, avisar, avisarComAssinatura, frasePlanoGratis, el, limpar, dataSimples, prepararCabecalho } from './api.js';
 import { carregarCambio, preco, elementoVariacao } from './moeda.js';
 import { icone } from './icones.js';
 import { interpretarBusca, ordenarPorNome, pontuarNome } from './leitura-carta.js';
-import { VARIANTES, CONDICOES, campoSelect, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
+import { VARIANTES, rotuloDaVariante, carregarEstados, campoSelect, campoEstado, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
 
 prepararCabecalho();
 
@@ -46,23 +46,23 @@ async function carregarPossuidas() {
 function formularioAdicionar(carta, aoAdicionar) {
   const form = el('form', 'flex flex--col gap--2 mt--2', '');
 
-  const linhaQtdVariante = el('div', 'flex gap--2', '');
+  const linhaQtdVariante = el('div', 'linha--campos', '');
   const campoQtd = document.createElement('input');
-  campoQtd.className = 'campo campo--curto';
+  campoQtd.className = 'campo campo--seguro';
   campoQtd.type = 'number';
   campoQtd.name = 'quantidade';
   campoQtd.min = '1';
   campoQtd.value = '1';
   campoQtd.required = true;
   campoQtd.setAttribute('aria-label', 'Quantidade');
-  linhaQtdVariante.append(campoQtd);
-  linhaQtdVariante.append(campoSelect('variante', VARIANTES, false));
+  linhaQtdVariante.append(campoComRotulo('Quantidade', campoQtd));
+  linhaQtdVariante.append(campoComRotulo('Variante', campoSelect('variante', VARIANTES, false), 'A versão que você tem muda o preço. Não sabe? Deixe "Não sei".'));
   form.append(linhaQtdVariante);
 
-  form.append(campoSelect('condicao', CONDICOES, true, 'Condição (opcional)'));
+  form.append(campoEstado());
 
   // O preço pago é o que torna o ganho/perda e o gráfico da coleção reais: por isso fica à vista, com rótulo e explicação.
-  const linhaPrecoData = el('div', 'flex gap--2', '');
+  const linhaPrecoData = el('div', 'linha--campos', '');
   linhaPrecoData.append(campoComRotulo('Preço pago por carta (R$)', campoPreco()));
   linhaPrecoData.append(campoComRotulo('Data da compra', campoData()));
   form.append(linhaPrecoData);
@@ -123,14 +123,16 @@ function formularioAdicionar(carta, aoAdicionar) {
   return form;
 }
 
+/** O preço padrão vem calculado do servidor (a versão comum): é o mesmo da coleção. */
 function precoDeExibicao(carta) {
-  const precos = carta.tcgplayer?.prices;
-  if (!precos) return null;
-  for (const chave of ['holofoil', 'reverseHolofoil', 'normal', '1stEditionHolofoil', '1stEditionNormal']) {
-    const valor = precos[chave]?.market;
-    if (typeof valor === 'number') return valor;
-  }
-  return null;
+  return carta.valtatcg?.padrao ?? null;
+}
+
+/** "Holofoil R$ 40,00 · Reverse Holofoil R$ 1.574,99": as outras versões, para o preço padrão não parecer errado. */
+function linhaDasVariantes(carta) {
+  const variantes = Object.entries(carta.valtatcg?.variantes ?? {});
+  if (variantes.length < 2) return null;
+  return variantes.map(([nome, valor]) => `${rotuloDaVariante(nome)} ${preco(valor)}`).join(' · ');
 }
 
 function cartaoResultado(carta, variacao) {
@@ -153,6 +155,13 @@ function cartaoResultado(carta, variacao) {
   cartao.append(el('span', 'text--xs text--muted', `${carta.rarity ? `${carta.rarity} · ` : ''}#${carta.number ?? '?'}`));
 
   cartao.append(el('span', 'text--md weight--semibold', preco(precoDeExibicao(carta))));
+  const outras = linhaDasVariantes(carta);
+  if (outras) {
+    const linhaVariantes = el('span', 'text--xs text--muted', outras);
+    linhaVariantes.title = 'O preço grande é o da versão comum. Ao adicionar, marque a versão que você tem para valorizar certo.';
+    cartao.append(linhaVariantes);
+  }
+  if (carta.valtatcg?.data) cartao.append(el('span', 'text--xs text--muted', `Preço de ${dataSimples(carta.valtatcg.data)}`));
   cartao.append(elementoVariacao(variacao));
 
   const rotuloQtd = () => `Qtd: ${possuidas.get(carta.id) ?? 0}`;
@@ -197,24 +206,57 @@ function cartaoResultado(carta, variacao) {
 // No celular o foco automático abre o teclado e esconde os resultados: só foca onde há mouse.
 if (window.matchMedia('(hover: hover)').matches) $form.nome.focus();
 
-const prontos = Promise.all([carregarCambio(), carregarPossuidas(), carregarCota()]);
+const prontos = Promise.all([carregarCambio(), carregarPossuidas(), carregarCota(), carregarEstados()]);
 
 /** Consulta a busca do servidor (por nome, ou por número impresso quando vem da foto). */
 async function consultar(parametros) {
-  const [{ cartas, variacoes }] = await Promise.all([api(`/cartas/buscar?${parametros}`), prontos]);
-  return { cartas, variacoes };
+  const [{ cartas, variacoes, total, pagina }] = await Promise.all([api(`/cartas/buscar?${parametros}`), prontos]);
+  return { cartas, variacoes, total, pagina };
 }
 
-function mostrarCartas({ cartas, variacoes }) {
-  limpar($resultados);
+/** A busca por nome em andamento, para o "Ver mais" pedir a próxima página dela. */
+let buscaPorNome = null;
+const $maisResultados = document.getElementById('mais-resultados');
+const $btnMais = document.getElementById('btn-mais');
+const $contagem = document.getElementById('contagem');
+
+function atualizarVerMais() {
+  const mostradas = $resultados.children.length;
+  const tem = Boolean(buscaPorNome) && mostradas < buscaPorNome.total;
+  $maisResultados.classList.toggle('hidden', !buscaPorNome || buscaPorNome.total <= 0);
+  $btnMais.classList.toggle('hidden', !tem);
+  if (buscaPorNome) $contagem.textContent = `Mostrando ${mostradas} de ${buscaPorNome.total.toLocaleString('pt-BR')} cartas`;
+}
+
+function mostrarCartas({ cartas, variacoes }, { anexar = false } = {}) {
+  if (!anexar) limpar($resultados);
   cartas.forEach((carta) => $resultados.append(cartaoResultado(carta, variacoes?.[carta.id] ?? null)));
 }
+
+$btnMais.addEventListener('click', async () => {
+  if (!buscaPorNome) return;
+  $btnMais.disabled = true;
+  $btnMais.textContent = 'Carregando…';
+  try {
+    const proxima = await consultar(`nome=${encodeURIComponent(buscaPorNome.texto)}&pagina=${buscaPorNome.pagina + 1}`);
+    buscaPorNome.pagina = proxima.pagina;
+    mostrarCartas(proxima, { anexar: true });
+  } catch (erro) {
+    avisar($aviso, erro.message);
+  } finally {
+    $btnMais.disabled = false;
+    $btnMais.textContent = 'Ver mais cartas';
+    atualizarVerMais();
+  }
+});
 
 $form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   avisar($aviso, null);
   const texto = String(new FormData($form).get('nome') ?? '').trim();
   limpar($resultados);
+  buscaPorNome = null;
+  atualizarVerMais();
   try {
     // O campo aceita nome, número ("25", "025/165", "SWSH123") ou os dois ("pikachu 25").
     const { nome, numero, total } = interpretarBusca(texto);
@@ -224,10 +266,13 @@ $form.addEventListener('submit', async (ev) => {
     // Texto que parecia número mas era nome (ex.: "Pokémon 151"): tenta de novo como nome.
     if (numero && !achadas.cartas.length) achadas = await consultar(`nome=${encodeURIComponent(texto)}`);
     if (!achadas.cartas.length) {
-      avisar($aviso, 'Nenhuma carta encontrada.', 'info');
+      avisar($aviso, 'Carta não encontrada. Os nomes das cartas estão em inglês (ex.: "Charizard"); você também pode buscar pelo número, como "25/165".', 'info');
       return;
     }
     mostrarCartas(achadas);
+    // Só a busca por nome tem páginas; a por número (da foto ou "25/165") já traz tudo que cabe.
+    if (!numero || !achadas.cartas.length) buscaPorNome = { texto, pagina: achadas.pagina ?? 1, total: achadas.total ?? achadas.cartas.length };
+    atualizarVerMais();
     if (numero && !total && !nome) {
       avisar($aviso, `Cartas de número ${numero} de várias coleções. Acrescente o nome (ex.: "pikachu ${numero}") ou o total ("${numero}/165") para filtrar.`, 'info');
     }
@@ -289,6 +334,8 @@ $entradaFoto.addEventListener('change', async () => {
 /** @param {File | HTMLCanvasElement} origem foto escolhida na galeria ou carta recortada pela câmera */
 async function lerEBuscar(origem) {
   limpar($resultados);
+  buscaPorNome = null;
+  atualizarVerMais();
   $btnFoto.disabled = true;
   try {
     // Import dinâmico: o leitor de texto é pesado e só quem usa a câmera paga por ele.

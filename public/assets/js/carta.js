@@ -1,5 +1,6 @@
-import { api, avisar, el, prepararCabecalho } from './api.js';
+import { api, avisar, el, dataSimples, prepararCabecalho } from './api.js';
 import { carregarCambio, preco, elementoVariacao } from './moeda.js';
+import { rotuloDaVariante } from './opcoes-carta.js';
 
 prepararCabecalho();
 
@@ -74,6 +75,13 @@ async function carregar() {
     const temPreco = carta.preco_mercado_usd !== null && carta.preco_mercado_usd !== undefined;
     info.append(el('p', 'text--2xl weight--bold text--primary', temPreco ? preco(carta.preco_mercado_usd) : 'Preço indisponível'));
     if (temPreco) info.append(elementoVariacao(variacao));
+    // As outras versões da carta (holo, reverse...) e a data do preço: o preço grande é o da versão comum.
+    let variantes = {};
+    try { variantes = JSON.parse(carta.precos_variantes ?? '{}'); } catch { variantes = {}; }
+    if (Object.keys(variantes).length > 1) {
+      info.append(el('p', 'text--sm text--muted', Object.entries(variantes).map(([nome, valor]) => `${rotuloDaVariante(nome)} ${preco(valor)}`).join(' · ')));
+    }
+    if (carta.preco_data_api) info.append(el('p', 'text--xs text--muted', `Preço de ${dataSimples(carta.preco_data_api)}, do mercado americano (TCGplayer).`));
     $detalhe.append(info);
 
     const { historico } = await api(`/cartas/${encodeURIComponent(cartaId)}/historico`);

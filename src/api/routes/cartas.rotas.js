@@ -3,6 +3,9 @@ import { buscarCartas, buscarCartasPorNumero, obterCarta } from '../../pokemontc
 import * as cartasRepo from '../../portfolio/cartas.repo.js';
 import * as precosRepo from '../../portfolio/precos.repo.js';
 import { obterTaxa } from '../../cambio/cambio.js';
+import { criarLog } from '../../logger.js';
+
+const log = criarLog('cartas');
 
 function variacaoDe(carta) {
   if (carta.preco_mercado_usd === null || carta.preco_mercado_usd === undefined) return null;
@@ -40,9 +43,17 @@ export function rotasCartas() {
           precosRepo.registrarSnapshot(salva.id, salva.preco_mercado_usd);
         }
       }
-      res.json({ cartas, total, variacoes: precosRepo.variacoes(precos) });
+      // A tela mostra o preço padrão, o de cada variante e a data do preço: calculados AQUI, pelas mesmas funções da coleção,
+      // para a busca e a coleção nunca discordarem (antes a tela tinha a própria conta e pegava a variante mais cara).
+      const comPrecos = cartas.map((carta) => {
+        const variantes = cartasRepo.precosPorVariante(carta);
+        return { ...carta, valtatcg: { variantes, padrao: cartasRepo.escolherPrecoPadrao(variantes), data: cartasRepo.dataDoPreco(carta) } };
+      });
+      res.json({ cartas: comPrecos, total, pagina, porPagina: 20, variacoes: precosRepo.variacoes(precos) });
     } catch (erro) {
-      res.status(502).json({ erro: `não consegui buscar na pokemontcg.io: ${erro.message}` });
+      // O texto técnico (endereço da API, código HTTP) é para o log: quem está procurando carta só precisa saber que deu errado e o que fazer.
+      log.warn(`busca de cartas falhou: ${erro.message}`);
+      res.status(502).json({ erro: 'A busca de cartas está instável agora. Tente de novo em instantes.' });
     }
   });
 

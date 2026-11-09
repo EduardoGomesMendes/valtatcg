@@ -1,6 +1,6 @@
-import { api, avisar, avisarComAssinatura, el, limpar, dolar, prepararCabecalho } from './api.js';
+import { api, avisar, avisarComAssinatura, el, limpar, dolar, dataSimples, prepararCabecalho } from './api.js';
 import { carregarCambio, cambioAtual, preco, formatarReais, elementoVariacao, notaDoCambio } from './moeda.js';
-import { VARIANTES, CONDICOES, rotuloDaVariante, campoSelect, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
+import { VARIANTES, rotuloDaVariante, carregarEstados, campoSelect, campoEstado, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
 
 prepararCabecalho();
 
@@ -94,9 +94,10 @@ function pagoPorCartaBrl(item) {
 function linhaDoGanho(item) {
   const cotacao = cambioAtual();
   const pago = pagoPorCartaBrl(item);
-  if (pago === null || !cotacao || item.preco_mercado_usd === null || item.preco_mercado_usd === undefined) return null;
+  const unitario = item.preco_estimado_usd ?? item.preco_mercado_usd;
+  if (pago === null || !cotacao || unitario === null || unitario === undefined) return null;
   const custo = pago * item.quantidade;
-  const valor = item.preco_mercado_usd * cotacao.usdBrl * item.quantidade;
+  const valor = unitario * cotacao.usdBrl * item.quantidade;
   const delta = valor - custo;
   const sinal = delta > 0 ? '+' : delta < 0 ? '−' : '';
   const pct = custo > 0 ? ` (${sinal}${Math.abs((delta / custo) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)` : '';
@@ -120,11 +121,9 @@ function formularioEdicao(item, aoSalvar) {
 
   const variante = campoSelect('variante', VARIANTES, false);
   variante.value = item.variante ?? '';
-  form.append(campoComRotulo('Variante', variante));
+  form.append(campoComRotulo('Variante', variante, 'A versão que você tem muda o preço da carta.'));
 
-  const condicao = campoSelect('condicao', CONDICOES, true, 'Sem condição');
-  condicao.value = item.condicao ?? '';
-  form.append(campoComRotulo('Condição', condicao));
+  form.append(campoEstado(item.condicao ?? ''));
 
   const pago = pagoPorCartaBrl(item);
   form.append(campoComRotulo('Preço pago por carta (R$)', campoPreco(pago === null ? null : Number(pago.toFixed(2))), 'Com ele calculamos o seu ganho ou perda.'));
@@ -185,8 +184,15 @@ function cartaoItem(item) {
   cartao.append(link);
   cartao.append(el('span', 'carta--meta text--xs text--muted', item.set_nome ?? ''));
   cartao.append(el('span', 'text--xs text--muted', `#${item.numero ?? '?'}`));
-  cartao.append(el('span', 'text--md weight--semibold', preco(item.preco_mercado_usd)));
+  // O valor da carta que a pessoa TEM: preço da variante marcada, ajustado pelo estado (uma estimativa).
+  cartao.append(el('span', 'text--md weight--semibold', preco(item.preco_estimado_usd ?? item.preco_mercado_usd)));
+  if (item.fator_estado < 1) {
+    const estimativa = el('span', 'text--xs text--muted', `Estimado: ${item.condicao} ≈ ${Math.round(item.fator_estado * 100)}% do preço Near Mint`);
+    estimativa.title = 'O preço de mercado é o de uma carta quase perfeita. Para os outros estados usamos uma estimativa, não um preço de venda real.';
+    cartao.append(estimativa);
+  }
   cartao.append(elementoVariacao(item.variacao));
+  if (item.preco_data) cartao.append(el('span', 'text--xs text--muted', `Preço de ${dataSimples(item.preco_data)}`));
 
   const detalhes = [`Qtd: ${item.quantidade}`];
   if (item.variante) detalhes.push(rotuloDaVariante(item.variante));
@@ -238,7 +244,7 @@ function cartaoItem(item) {
 async function carregar() {
   try {
     // A cotação precisa estar carregada antes de desenhar os cartões (o preço de cada carta é convertido na tela).
-    const [resumo, colecao] = await Promise.all([api('/colecao/resumo'), api('/colecao'), carregarCambio()]);
+    const [resumo, colecao] = await Promise.all([api('/colecao/resumo'), api('/colecao'), carregarCambio(), carregarEstados()]);
 
     const formatar = resumo.moeda === 'BRL' ? formatarReais : dolar;
     $valorAtual.textContent = formatar(resumo.valorAtual);

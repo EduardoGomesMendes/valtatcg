@@ -20,11 +20,15 @@ function ok(nome, condicao, detalhe = '') {
 console.log('\n--- preços ---');
 
 ok(
-  'prefere holofoil sobre normal, na ordem documentada',
-  extrairPrecoMercado({ tcgplayer: { prices: { normal: { market: 1 }, holofoil: { market: 2 } } } }) === 2,
+  'o preço padrão é o da versão comum (normal), não o da premium: a premium só vale quando a pessoa a marca',
+  extrairPrecoMercado({ tcgplayer: { prices: { normal: { market: 1 }, holofoil: { market: 2 } } } }) === 1,
 );
 ok(
-  'cai para reverseHolofoil quando não há holofoil',
+  'sem normal, a holofoil vem antes da reverse holo',
+  extrairPrecoMercado({ tcgplayer: { prices: { holofoil: { market: 2 }, reverseHolofoil: { market: 9 } } } }) === 2,
+);
+ok(
+  'só com reverseHolofoil, usa ela',
   extrairPrecoMercado({ tcgplayer: { prices: { reverseHolofoil: { market: 3 } } } }) === 3,
 );
 ok('sem tcgplayer.prices retorna null (não usa cardmarket, é outra moeda)', extrairPrecoMercado({}) === null);
