@@ -5,7 +5,7 @@ Cada produto tem a **sua** chave de integração e o **seu** webhook (com token 
 evento para todos os webhooks da conta; o valtatcg só age no que tem referência `usuario:ID` ou `loja:ID`
 (ou assinatura dele) e ignora o resto **sem gravar**.
 
-O que é cobrado: plano do usuário (`PRECO_MENSAL`, hoje R$ 9,97/mês, depois dos 7 dias de teste) e mensalidade
+O que é cobrado: plano do usuário (`PRECO_MENSAL`, hoje R$ 9,97/mês; sem teste: toda conta nasce no plano grátis) e mensalidade
 da loja (`PRECO_LOJA_MENSAL`, R$ 49,77/mês). O cliente escolhe Pix, boleto ou cartão na página do Asaas.
 
 ## Ligar (uma vez)

@@ -7,6 +7,8 @@ const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'valtatcg-teste-'));
 Object.assign(process.env, {
   DATA_DIR: pastaTemp, PORT: '0', EMAIL_MODO: 'memoria', URL_PUBLICA: 'https://valtatcg.teste',
   CADASTRO_CHECAR_DOMINIO: 'nao', CADASTRO_PEDIDOS_POR_IP_HORA: '1000',
+  // Estas verificações são de outras regras e cadastram várias cartas: as contas daqui têm período de teste (sem limite diário).
+  DIAS_DE_TESTE: '7',
   ASAAS_API_KEY: '$aact_chave_falsa_de_teste', ASAAS_AMBIENTE: 'sandbox', ASAAS_WEBHOOK_TOKEN: 'token-de-teste',
 });
 

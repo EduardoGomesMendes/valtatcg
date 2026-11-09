@@ -30,6 +30,8 @@ function textoDoStatus(situacao) {
       return [`Período de teste — ${situacao.diasRestantes} dia(s) restante(s).`, null];
     case 'ativa':
       return ['Assinatura ativa.', `Renova em ${situacao.diasRestantes} dia(s).`];
+    case 'gratis':
+      return ['Plano grátis.', `${frasePlanoGratis(situacao.cota)} Para ter mais funcionalidades, assine.`];
     case 'vencida':
       return ['Plano grátis.', `${situacao.motivo ?? ''} ${frasePlanoGratis(situacao.cota)} Assine para cadastrar sem limite.`.trim()];
     case 'cancelada':

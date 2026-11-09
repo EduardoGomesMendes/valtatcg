@@ -71,7 +71,7 @@ r = await chamar('POST', '/cadastro/concluir', { token, senha: 'Senha1234' });
 ok('com a senha boa a conta nasce e a pessoa já entra', r.status === 201 && Boolean(r.cookie) && r.json.usuario?.usuario === 'carla_tcg', `${r.status}`);
 const criada = usuarios.buscarPorEmail('carla@exemplo.com.br');
 ok('a conta tem a data de nascimento e o aceite dos termos do pedido', criada?.nascimento === '1990-05-10' && Boolean(criada.aceite_termos_em));
-ok('o teste grátis começa na criação da conta', criada?.assinatura_status === 'teste' && Boolean(criada.teste_termina_em));
+ok('a conta nasce no plano grátis (sem período de teste)', criada?.assinatura_status === 'gratis' && criada.teste_termina_em === null);
 ok('o pedido não guarda mais a data de nascimento', db.prepare('SELECT nascimento, usuario_id FROM cadastros_pendentes').get().nascimento === null);
 r = await chamar('POST', '/entrar', { identificador: 'carla@exemplo.com.br', senha: 'Senha1234' });
 ok('o login funciona com a senha escolhida', r.status === 200);

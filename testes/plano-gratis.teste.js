@@ -5,6 +5,7 @@ import path from 'node:path';
 const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'valtatcg-teste-'));
 Object.assign(process.env, {
   DATA_DIR: pastaTemp, PORT: '0', EMAIL_MODO: 'memoria', CADASTRO_CHECAR_DOMINIO: 'nao', CADASTRO_PEDIDOS_POR_IP_HORA: '1000',
+  DIAS_DE_TESTE: '7', // a primeira conta usa o teste (legado); o padrão SEM teste é conferido mais abaixo
   ASAAS_API_KEY: '$aact_chave_falsa_de_teste', ASAAS_AMBIENTE: 'sandbox', ASAAS_WEBHOOK_TOKEN: 'token-de-teste',
 });
 
@@ -113,6 +114,16 @@ ok('...mas só uma', (await add(ana.c, 'gr-4')).s === 429);
 /* ---------- virou o dia ---------- */
 db.prepare("UPDATE colecao_cota SET dia = date(dia, '-1 day') WHERE usuario_id = ?").run(ana.id);
 ok('no dia seguinte a cota volta', cota.restantesHoje(ana.id) === 1 && (await add(ana.c, 'gr-4')).s === 201);
+
+/* ---------- padrão do sistema: SEM teste, a conta já nasce no plano grátis ---------- */
+config.assinatura.diasDeTeste = 0;
+const nova = await conta('Nina Lopes', 'nina@exemplo.com.br', 'nina_gratis');
+r = await nova.c.get('/assinatura');
+ok('conta nova (sem teste) já nasce no plano grátis, com a cota do dia', r.j.status === 'gratis' && r.j.gratis === true && r.j.cota?.restantesHoje === 1, JSON.stringify({ s: r.j.status, c: r.j.cota }));
+ok('...cadastra a primeira carta do dia', (await add(nova.c, 'gr-1')).s === 201);
+ok('...e a segunda é barrada, sem que a conta tenha algum dia de teste', (await add(nova.c, 'gr-2')).s === 429);
+ok('...o administrador a enxerga como "Grátis"', db.prepare('SELECT assinatura_status AS s FROM usuarios WHERE id = ?').get(nova.id).s === 'gratis');
+config.assinatura.diasDeTeste = 7;
 
 /* ---------- quantidade maior que a cota ---------- */
 const beto = await conta('Beto Dias', 'beto@exemplo.com.br', 'beto_gratis');

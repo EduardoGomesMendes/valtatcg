@@ -10,7 +10,7 @@ $btnSair.addEventListener('click', async () => {
 });
 
 const ROTULOS_STATUS = {
-  teste: 'Teste', ativa: 'Ativa', vencida: 'Vencida', cancelada: 'Cancelada',
+  gratis: 'Grátis', teste: 'Teste', ativa: 'Ativa', vencida: 'Grátis', cancelada: 'Cancelada',
 };
 
 function seloAssinatura(usuario) {

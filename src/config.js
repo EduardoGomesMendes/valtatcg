@@ -103,7 +103,9 @@ export const config = {
 
   assinatura: {
     // Dias de uso grátis desde o cadastro, antes de exigir pagamento.
-    diasDeTeste: num(process.env.DIAS_DE_TESTE, 7),
+    // Sem período de teste (decisão de 2026-11): a conta nasce no plano grátis e assina quando quiser mais funcionalidades.
+    // Um número maior que 0 volta a dar esse tanto de dias com tudo liberado para as contas NOVAS (quem já está em teste termina o seu).
+    diasDeTeste: num(process.env.DIAS_DE_TESTE, 0),
     // Depois do teste, quem não assina continua no plano grátis: pode cadastrar até este número de cartas POR DIA
     // (Brasília). Assinante não tem limite — esse é o gancho do plano. 0 = o grátis só consulta, não cadastra.
     limiteDiarioGratis: num(process.env.LIMITE_DIARIO_GRATIS, 1),

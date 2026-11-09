@@ -357,7 +357,7 @@ export async function prepararCabecalho() {
     const situacao = await api('/assinatura');
     if (situacao.gratis) {
       // Plano grátis não é bloqueio: a pessoa segue usando, só com limite de cadastro. O tom é de convite, não de erro.
-      mostrarAvisoAssinatura($aviso, `${frasePlanoGratis(situacao.cota)} Assine para cadastrar sem limite.`, 'aviso--atencao', 'Assinar');
+      mostrarAvisoAssinatura($aviso, `${frasePlanoGratis(situacao.cota)} Para ter mais funcionalidades, assine.`, 'aviso--atencao', 'Assinar');
     } else if (situacao.status === 'teste' && situacao.avisar) {
       mostrarAvisoAssinatura($aviso, `Período de teste — ${situacao.diasRestantes} dia(s) restante(s).`, 'aviso--atencao');
     }

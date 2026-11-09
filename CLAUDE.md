@@ -30,7 +30,7 @@ feed social, app mobile nativo, outros jogos de cartas.
 Igual ao omvazap e ao omvalic. O formulário de cadastro **não pede senha**: `POST /api/cadastro` valida os dados
 e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta ainda). O e-mail leva a
 `/confirmar/?t=...`, onde a pessoa escolhe a senha; só então `POST /api/cadastro/concluir` cria o usuário
-(`usuarios.criar`), inicia o teste grátis e abre a sessão. Regras que não podem se perder:
+(`usuarios.criar`), coloca a conta no plano grátis e abre a sessão. Regras que não podem se perder:
 - A consulta do link (`GET /cadastro/confirmar`) **só lê**: leitores de e-mail abrem links sozinhos e não podem gastá-lo.
   O link vale `CADASTRO_VALIDADE_HORAS` (24 h) e uma vez; reenviar troca o link (o anterior morre).
 - A resposta do pedido é a mesma haja ou não conta para o e-mail (não entrega quem é usuário); quem já tem conta
@@ -44,9 +44,11 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
 
 ## Plano grátis e assinatura (o gancho do site)
 
-Quem não assina (teste acabou, venceu ou cancelou sem dias pagos) **não é bloqueado**: cai no **plano grátis** e continua
-usando o site. Só o **cadastro de cartas novas** é limitado: `LIMITE_DIARIO_GRATIS` (1) por dia de **Brasília** (UTC−3);
-assinante, administrador e quem está nos 7 dias de teste não têm limite. Isso alimenta a base de usuários (e uma futura
+**Não existe período de teste** (`DIAS_DE_TESTE=0`, decisão de 2026-11): toda conta nasce no **plano grátis** (`assinatura_status =
+'gratis'`) e, "para ter mais funcionalidades, assina". Quem não assina (nunca assinou, venceu ou cancelou sem dias pagos)
+**não é bloqueado**: usa o site com limite. `DIAS_DE_TESTE=N` (>0) volta a dar N dias liberados às contas NOVAS; quem já estava em
+teste termina o seu. Só o **cadastro de cartas novas** é limitado: `LIMITE_DIARIO_GRATIS` (1) por dia de **Brasília** (UTC−3);
+assinante, administrador e quem ainda está em teste (só contas antigas) não têm limite. Isso alimenta a base de usuários (e uma futura
 prospecção ativa) e faz do limite o motivo para assinar. Regras que não podem se perder:
 - `req.gratis` vem do `exigirAssinatura` (que não devolve mais 402); quem aplica o limite são as rotas da coleção
   (`cota.repo.js`, tabela `colecao_cota`, um contador por usuário/dia). Estourou: **429** com `limiteDiario: true`.

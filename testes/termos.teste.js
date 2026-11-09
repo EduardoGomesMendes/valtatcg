@@ -45,7 +45,10 @@ const tPriv = semTags(privacidade.texto);
 /* ---------- os números do texto são os do sistema ---------- */
 ok(`os Termos citam o plano em vigor (${reais(config.assinatura.precoMensal)})`, tTermos.includes(reais(config.assinatura.precoMensal)));
 ok(`os Termos citam a mensalidade da loja em vigor (${reais(config.lojas.precoMensal)})`, tTermos.includes(reais(config.lojas.precoMensal)));
-ok(`os Termos citam os ${config.assinatura.diasDeTeste} dias de teste`, tTermos.includes(`${config.assinatura.diasDeTeste} dias de teste`));
+// Sem período de teste (padrão): o texto não pode prometer dias grátis que o sistema não dá. Com teste ligado, tem de citar os dias.
+ok(config.assinatura.diasDeTeste > 0 ? `os Termos citam os ${config.assinatura.diasDeTeste} dias de teste` : 'os Termos NÃO prometem período de teste (o sistema não tem)',
+  config.assinatura.diasDeTeste > 0 ? tTermos.includes(`${config.assinatura.diasDeTeste} dias de teste`) : !/dias de teste|período de teste/i.test(tTermos));
+ok('os Termos dizem que, para ter mais funcionalidades, é preciso assinar', /para ter mais funcionalidades é preciso assinar/.test(tTermos));
 ok(`os Termos descrevem o plano grátis com o limite em vigor (${config.assinatura.limiteDiarioGratis} carta por dia)`,
   config.assinatura.limiteDiarioGratis === 1 && tTermos.includes('Plano grátis:') && tTermos.includes('até 1 carta por dia') && /cadastra sem limite/.test(tTermos));
 ok(`os Termos citam o prazo de ${config.lojas.prazoRevisaoHoras} horas para liberar a loja`, tTermos.includes(`em até ${config.lojas.prazoRevisaoHoras} horas`));

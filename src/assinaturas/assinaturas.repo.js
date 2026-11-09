@@ -9,7 +9,8 @@ import { config } from '../config.js';
   começou o teste, quando pagou, quando venceu, quem liberou na mão.
 
   Situações possíveis:
-    teste     — dias grátis desde o cadastro, tudo liberado
+    gratis    — nunca assinou e não tem teste: PLANO GRÁTIS (é como toda conta nova nasce)
+    teste     — dias grátis desde o cadastro, tudo liberado (só se config.assinatura.diasDeTeste > 0, ou conta antiga)
     ativa     — assinatura paga e dentro da validade
     vencida   — o teste acabou ou a assinatura expirou: PLANO GRÁTIS (`gratis: true`)
     cancelada — a pessoa cancelou (grátis também, quando acaba o período já pago)
@@ -59,9 +60,17 @@ export function listarEventos(usuarioId, limite = 50) {
   ).all(Number(usuarioId), Number(limite));
 }
 
-/** Começa o teste gratuito. Chamado quando a conta é criada. */
+/**
+ * Define como a conta nova começa: com dias de teste (se config.assinatura.diasDeTeste > 0) ou direto no plano grátis.
+ * Chamado quando a conta é criada. O nome é antigo; hoje o padrão é NÃO ter teste.
+ */
 export function iniciarTeste(usuarioId) {
   const dias = config.assinatura.diasDeTeste;
+  if (!(dias > 0)) {
+    db.prepare("UPDATE usuarios SET assinatura_status = 'gratis', teste_termina_em = NULL WHERE id = ?").run(Number(usuarioId));
+    registrarEvento({ usuarioId, tipo: 'teste', descricao: 'Conta criada no plano grátis.' });
+    return;
+  }
   db.prepare(
     `UPDATE usuarios
         SET assinatura_status = 'teste', teste_termina_em = datetime('now', ?)
@@ -107,6 +116,11 @@ function resolverEstado(usuario) {
       };
     }
     return { status: 'vencida', plano: plano(), bloqueado: true, diasRestantes: 0, motivo: 'A assinatura venceu.' };
+  }
+
+  // Nunca assinou e não tem teste (conta nova, ou 'teste' sem data): plano grátis, sem aviso de "venceu".
+  if (status === 'gratis' || !usuario.teste_termina_em) {
+    return { status: 'gratis', plano: null, bloqueado: true, diasRestantes: 0, motivo: null };
   }
 
   // Em teste

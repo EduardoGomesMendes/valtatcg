@@ -98,10 +98,13 @@ db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario_nocase ON usuari
   restantes trataria como teste já vencido e bloquearia todo mundo que já
   estava cadastrado, do nada, no dia em que este código subiu.
 */
-db.prepare(
-  `UPDATE usuarios SET teste_termina_em = datetime('now', ?)
-    WHERE assinatura_status = 'teste' AND teste_termina_em IS NULL`,
-).run(`+${config.assinatura.diasDeTeste} days`);
+// Só vale com período de teste: sem teste, 'teste' sem data é conta no plano grátis (que nunca foi bloqueada).
+if (config.assinatura.diasDeTeste > 0) {
+  db.prepare(
+    `UPDATE usuarios SET teste_termina_em = datetime('now', ?)
+      WHERE assinatura_status = 'teste' AND teste_termina_em IS NULL`,
+  ).run(`+${config.assinatura.diasDeTeste} days`);
+}
 
 log.info(`banco pronto em ${caminhoBanco}`);
 

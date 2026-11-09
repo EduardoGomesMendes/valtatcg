@@ -4,10 +4,11 @@ import path from 'node:path';
 
 const pastaTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'valtatcg-teste-'));
 process.env.DATA_DIR = pastaTemp;
-process.env.DIAS_DE_TESTE = '7';
+// (sem DIAS_DE_TESTE: o teste confere o padrão do sistema, que é NÃO ter período de teste)
 process.env.PRECO_MENSAL = '9.97';
 
 const { db } = await import('../src/db/index.js');
+const { config } = await import('../src/config.js');
 const { criar } = await import('../src/auth/usuarios.repo.js');
 const assinaturas = await import('../src/assinaturas/assinaturas.repo.js');
 
@@ -24,14 +25,24 @@ const usuario = criar({ nome: 'Dan', email: 'dan@teste.local', usuario: 'dan', s
 // Conta recém-criada, sem iniciarTeste() chamado ainda: nasce com o DEFAULT
 // da coluna ('teste') mas sem data — o resto do sistema não deveria travar.
 const estadoBruto = assinaturas.estadoDoUsuario(usuario.id);
-ok('sem teste_termina_em, trata como vencido (seguro por padrão)', estadoBruto.status === 'vencida' && estadoBruto.bloqueado === true);
+ok('sem teste_termina_em, a conta está no plano grátis (seguro por padrão: sem acesso pago)', estadoBruto.status === 'gratis' && estadoBruto.gratis === true && estadoBruto.motivo === null);
 
+// Padrão do sistema: SEM período de teste. A conta nova nasce direto no plano grátis.
+ok('o padrão é não ter período de teste', config.assinatura.diasDeTeste === 0);
+assinaturas.iniciarTeste(usuario.id);
+const nasceuGratis = assinaturas.estadoDoUsuario(usuario.id);
+ok('conta nova nasce no plano grátis, sem dias de teste', nasceuGratis.status === 'gratis' && nasceuGratis.gratis === true && nasceuGratis.diasRestantes === 0);
+ok('...e isso fica no histórico', assinaturas.listarEventos(usuario.id).some((e) => e.tipo === 'teste' && /plano grátis/.test(e.descricao)));
+
+// Com DIAS_DE_TESTE ligado, contas novas voltam a ter teste com tudo liberado.
+config.assinatura.diasDeTeste = 7;
 assinaturas.iniciarTeste(usuario.id);
 const emTeste = assinaturas.estadoDoUsuario(usuario.id);
-ok('iniciarTeste libera por 7 dias', emTeste.status === 'teste' && emTeste.bloqueado === false && emTeste.diasRestantes === 7);
+ok('com DIAS_DE_TESTE=7, a conta nova tem 7 dias de teste liberados', emTeste.status === 'teste' && emTeste.bloqueado === false && emTeste.gratis === false && emTeste.diasRestantes === 7);
+config.assinatura.diasDeTeste = 0;
 
 const eventos = assinaturas.listarEventos(usuario.id);
-ok('início do teste vira evento no histórico', eventos.some((e) => e.tipo === 'teste'));
+ok('início do teste vira evento no histórico', eventos.some((e) => e.tipo === 'teste' && /Teste gratuito/.test(e.descricao)));
 
 const ativada = assinaturas.ativar(usuario.id, { dias: 30, ator: 'teste' });
 ok('ativar muda o status para ativa', ativada.status === 'ativa' && ativada.bloqueado === false);
