@@ -1,4 +1,4 @@
-import { api, avisar, dolar, prepararCabecalho } from './api.js';
+import { api, avisar, dolar, prepararCabecalho, frasePlanoGratis } from './api.js';
 
 const $statusTexto = document.getElementById('status-texto');
 const $statusDetalhe = document.getElementById('status-detalhe');
@@ -31,13 +31,13 @@ function textoDoStatus(situacao) {
     case 'ativa':
       return ['Assinatura ativa.', `Renova em ${situacao.diasRestantes} dia(s).`];
     case 'vencida':
-      return ['Assinatura vencida.', situacao.motivo];
+      return ['Plano grátis.', `${situacao.motivo ?? ''} ${frasePlanoGratis(situacao.cota)} Assine para cadastrar sem limite.`.trim()];
     case 'cancelada':
       // Cancelou, mas já pagou o período: usa até o fim e pode assinar de novo antes disso sem perder dia.
       if (!situacao.bloqueado) {
         return ['Assinatura cancelada.', `Você continua com acesso por mais ${situacao.diasRestantes} dia(s), até o fim do período já pago.`];
       }
-      return ['Assinatura cancelada.', 'Assine de novo para voltar a editar sua coleção.'];
+      return ['Plano grátis.', `Sua assinatura foi cancelada. ${frasePlanoGratis(situacao.cota)} Assine de novo para cadastrar sem limite.`];
     default:
       return ['—', null];
   }
@@ -51,11 +51,12 @@ async function carregar() {
 
     const [texto, detalhe] = textoDoStatus(situacao);
     $statusTexto.textContent = texto;
-    $statusTexto.className = `text--lg weight--semibold ${situacao.bloqueado ? 'text--danger' : ''}`.trim();
+    $statusTexto.className = 'text--lg weight--semibold';
     $statusDetalhe.textContent = detalhe ?? '';
 
     // Formulário de assinar só faz sentido para quem não está com ela ativa.
     $cartaoAssinar.classList.toggle('hidden', situacao.status === 'ativa');
+    document.getElementById('cartao-planos').classList.toggle('hidden', situacao.status === 'ativa');
     $cartaoCancelar.classList.toggle('hidden', situacao.status !== 'ativa');
 
     if (situacao.cobranca.documento) {

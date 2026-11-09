@@ -5,6 +5,15 @@ import * as cartasRepo from '../../portfolio/cartas.repo.js';
 import { obterCarta } from '../../pokemontcg/cliente.js';
 import { obterTaxa, taxaDoDia } from '../../cambio/cambio.js';
 import { calcularResumo } from '../../portfolio/resumo.js';
+import * as cota from '../../portfolio/cota.repo.js';
+
+/** Limite do plano grátis é 429 com o sinal para a tela oferecer a assinatura; o resto é erro de validação (400). */
+function respostaDeErro(res, erro) {
+  if (erro instanceof cota.ErroDeCota) {
+    return res.status(429).json({ erro: erro.message, limiteDiario: true, cota: erro.cota });
+  }
+  return res.status(400).json({ erro: erro.message });
+}
 
 /** Valor em dinheiro vindo do formulário: vazio vira null; negativo, texto ou valor absurdo vira erro. */
 function dinheiroOuNulo(valor) {
@@ -92,17 +101,38 @@ export function rotasColecao() {
         cartasRepo.salvar(cartaApi);
       }
 
-      res.status(201).json({ item: colecaoRepo.adicionar(dados) });
+      // Plano grátis: gasta a cota do dia AGORA (depois da espera pela API externa, no mesmo bloco síncrono do cadastro),
+      // para dois pedidos ao mesmo tempo não passarem juntos pelo limite. Se o cadastro falhar, devolve.
+      if (req.gratis) cota.reservar(req.usuario.id, dados.quantidade);
+      try {
+        res.status(201).json({ item: colecaoRepo.adicionar(dados) });
+      } catch (erro) {
+        if (req.gratis) cota.devolver(req.usuario.id, dados.quantidade);
+        throw erro;
+      }
     } catch (erro) {
-      res.status(400).json({ erro: erro.message });
+      respostaDeErro(res, erro);
     }
   });
 
   rotas.patch('/colecao/:id', (req, res) => {
+    let reservado = 0;
     try {
       const { quantidade, variante, condicao, precoPagoUsd, precoPagoBrl, adquiridoEm } = req.body ?? {};
+      const atual = colecaoRepo.obter(req.params.id, req.usuario.id);
+      const novaQuantidade = quantidade !== undefined ? Number(quantidade) : undefined;
+
+      // Aumentar a quantidade de uma carta que já existe também é cadastrar cartas novas: gasta a cota do grátis.
+      // Corrigir preço, condição, data ou diminuir a quantidade é livre (o preço pago é o que torna o ganho real).
+      if (req.gratis && atual && novaQuantidade !== undefined && novaQuantidade > atual.quantidade) {
+        colecaoRepo.validarQuantidade(novaQuantidade);
+        const aMais = novaQuantidade - atual.quantidade;
+        cota.reservar(req.usuario.id, aMais);
+        reservado = aMais; // só depois de reservar de verdade: se reservar falhar, não há o que devolver no catch
+      }
+
       const item = colecaoRepo.atualizar(req.params.id, req.usuario.id, {
-        quantidade: quantidade !== undefined ? Number(quantidade) : undefined,
+        quantidade: novaQuantidade,
         variante: textoCurtoOuNulo(variante, 'variante'),
         condicao: textoCurtoOuNulo(condicao, 'condição'),
         precoPagoUsd: precoPagoUsd !== undefined ? dinheiroOuNulo(precoPagoUsd) : undefined,
@@ -111,11 +141,15 @@ export function rotasColecao() {
       });
       res.json({ item });
     } catch (erro) {
-      res.status(400).json({ erro: erro.message });
+      if (reservado) cota.devolver(req.usuario.id, reservado);
+      respostaDeErro(res, erro);
     }
   });
 
   rotas.delete('/colecao/:id', (req, res) => {
+    // Cadastrou a carta errada hoje e a tirou no mesmo dia? A cota volta (senão um engano custaria o dia inteiro).
+    const item = colecaoRepo.obter(req.params.id, req.usuario.id);
+    if (item && cota.itemDeHoje(item.id, req.usuario.id)) cota.devolver(req.usuario.id, item.quantidade);
     colecaoRepo.remover(req.params.id, req.usuario.id);
     res.status(204).end();
   });

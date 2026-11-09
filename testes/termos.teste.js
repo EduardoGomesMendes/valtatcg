@@ -46,6 +46,8 @@ const tPriv = semTags(privacidade.texto);
 ok(`os Termos citam o plano em vigor (${reais(config.assinatura.precoMensal)})`, tTermos.includes(reais(config.assinatura.precoMensal)));
 ok(`os Termos citam a mensalidade da loja em vigor (${reais(config.lojas.precoMensal)})`, tTermos.includes(reais(config.lojas.precoMensal)));
 ok(`os Termos citam os ${config.assinatura.diasDeTeste} dias de teste`, tTermos.includes(`${config.assinatura.diasDeTeste} dias de teste`));
+ok(`os Termos descrevem o plano grátis com o limite em vigor (${config.assinatura.limiteDiarioGratis} carta por dia)`,
+  config.assinatura.limiteDiarioGratis === 1 && tTermos.includes('Plano grátis:') && tTermos.includes('até 1 carta por dia') && /cadastra sem limite/.test(tTermos));
 ok(`os Termos citam o prazo de ${config.lojas.prazoRevisaoHoras} horas para liberar a loja`, tTermos.includes(`em até ${config.lojas.prazoRevisaoHoras} horas`));
 ok(`os Termos citam a idade mínima (${config.idade.minima} anos) e a maioridade (${config.idade.maioridade})`, tTermos.includes(`${config.idade.minima} anos`) && tTermos.includes(`${config.idade.maioridade} anos`));
 ok(`os Termos citam a suspensão automática (${LIMITES.gravesEm24h} em 24 horas)`, tTermos.includes('Três delas em 24 horas') && LIMITES.gravesEm24h === 3);

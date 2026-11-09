@@ -74,4 +74,7 @@ echo.
 echo  --- backup ---
 node testes/backup.teste.js
 echo.
+echo  --- plano-gratis ---
+node testes/plano-gratis.teste.js
+echo.
 pause

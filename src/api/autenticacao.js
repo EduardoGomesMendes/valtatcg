@@ -75,12 +75,12 @@ export function exigirResponsavel(req, res, next) {
 }
 
 /**
- * Assinatura vencida: bloqueia as ESCRITAS, deixa a leitura passar.
+ * Sem assinatura (teste acabou, venceu ou foi cancelada): a pessoa cai no PLANO GRÁTIS, e não fica trancada.
  *
- * A pessoa continua entrando, vendo a própria coleção e conferindo o preço
- * das cartas — o que corta é adicionar/editar/remover até regularizar.
- * Sequestrar o dado para forçar pagamento gera atrito e problema de LGPD;
- * parar o serviço não.
+ * Ela continua entrando, vendo e organizando a própria coleção e conferindo o preço das cartas. O que o grátis limita
+ * é o CADASTRO de cartas novas (N por dia, ver portfolio/cota.repo.js): quem decide isso são as rotas da coleção, que
+ * leem `req.gratis`. Assinante não tem limite. Sequestrar o dado para forçar pagamento gera atrito e problema de LGPD;
+ * limitar o volume diário não.
  */
 export function exigirAssinatura(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
@@ -91,14 +91,7 @@ export function exigirAssinatura(req, res, next) {
   // O admin não paga assinatura própria — ele é quem cobra, não quem é cobrado.
   if (req.usuario.admin) return next();
 
-  const situacao = estadoDoUsuario(req.usuario.id);
-  if (situacao.bloqueado) {
-    return res.status(402).json({
-      erro: situacao.motivo ?? 'assinatura inativa',
-      bloqueado: true,
-      assinatura: situacao,
-    });
-  }
+  req.gratis = estadoDoUsuario(req.usuario.id).gratis;
   next();
 }
 

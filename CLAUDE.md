@@ -42,6 +42,22 @@ e grava um pedido em `cadastros_pendentes` (só o **hash** do token; sem conta a
   esquece nascimento e responsável (passam a viver só em `usuarios`).
 - Contas antigas não mudam.
 
+## Plano grátis e assinatura (o gancho do site)
+
+Quem não assina (teste acabou, venceu ou cancelou sem dias pagos) **não é bloqueado**: cai no **plano grátis** e continua
+usando o site. Só o **cadastro de cartas novas** é limitado: `LIMITE_DIARIO_GRATIS` (1) por dia de **Brasília** (UTC−3);
+assinante, administrador e quem está nos 7 dias de teste não têm limite. Isso alimenta a base de usuários (e uma futura
+prospecção ativa) e faz do limite o motivo para assinar. Regras que não podem se perder:
+- `req.gratis` vem do `exigirAssinatura` (que não devolve mais 402); quem aplica o limite são as rotas da coleção
+  (`cota.repo.js`, tabela `colecao_cota`, um contador por usuário/dia). Estourou: **429** com `limiteDiario: true`.
+- **Gastam cota:** cadastrar carta (a quantidade conta: 3 de uma vez = 3) e **aumentar a quantidade** de carta que já existe
+  (senão bastava editar). **São livres:** ver tudo, corrigir preço/condição/data, diminuir quantidade, remover.
+- Remover no mesmo dia uma carta cadastrada hoje **devolve** a cota (engano); remover carta de dias anteriores não devolve.
+  Pedido barrado nunca devolve cota (houve um bug assim, preso em `plano-gratis.teste.js`).
+- `/assinatura` devolve `gratis` e `cota` (`null` para quem não tem limite); as telas (Buscar, Coleção, Assinatura, banner do
+  topo) mostram "cadastre mais N hoje" e o caminho para assinar. **Mudou o limite? Mude os Termos (seção 5) e a página inicial**
+  (`termos.teste.js` confere o "1 carta por dia").
+
 ## Preço pago e evolução da coleção
 
 O preço pago por carta (em reais, `preco_pago_brl`) e a data da compra (`adquirido_em`) são o que torna o ganho/perda e o

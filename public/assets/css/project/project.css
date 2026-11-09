@@ -869,3 +869,12 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 
 /* Âncoras do índice não ficam coladas no topo nem escondidas atrás do cabeçalho */
 .documento section[id] { scroll-margin-top: var(--space-6); }
+
+/* Lista com marcador para cartões (o reset do projeto tira os marcadores das listas) */
+.lista--marcada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  list-style: disc;
+}

@@ -11,8 +11,12 @@ import { config } from '../config.js';
   Situações possíveis:
     teste     — dias grátis desde o cadastro, tudo liberado
     ativa     — assinatura paga e dentro da validade
-    vencida   — o teste acabou ou a assinatura expirou: escrita bloqueada
-    cancelada — a pessoa cancelou
+    vencida   — o teste acabou ou a assinatura expirou: PLANO GRÁTIS (`gratis: true`)
+    cancelada — a pessoa cancelou (grátis também, quando acaba o período já pago)
+
+  Plano grátis: a pessoa continua usando o site, mas só cadastra N cartas por dia (config.assinatura.limiteDiarioGratis,
+  ver portfolio/cota.repo.js). Quem assina não tem limite: esse é o gancho da assinatura. `bloqueado` é o nome antigo
+  da mesma coisa ("sem plano pago") e continua existindo; `gratis` é o nome que as telas e as regras novas usam.
 
   Administrador nunca é bloqueado — essa checagem é feita por quem chama
   (ver exigirAssinatura em src/api/autenticacao.js), não aqui: esta função só
@@ -72,6 +76,11 @@ export function iniciarTeste(usuarioId) {
  * consulta, em vez de interpretar colunas soltas.
  */
 export function estado(usuario) {
+  const e = resolverEstado(usuario);
+  return { ...e, gratis: Boolean(e.bloqueado) };
+}
+
+function resolverEstado(usuario) {
   if (!usuario) return { status: 'vencida', bloqueado: true, motivo: 'usuário não encontrado' };
 
   const status = usuario.assinatura_status ?? 'teste';

@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar, prepararCabecalho } from './api.js';
+import { api, avisar, avisarComAssinatura, frasePlanoGratis, el, limpar, prepararCabecalho } from './api.js';
 import { carregarCambio, preco, elementoVariacao } from './moeda.js';
 import { icone } from './icones.js';
 import { interpretarBusca, ordenarPorNome, pontuarNome } from './leitura-carta.js';
@@ -20,6 +20,17 @@ $btnSair.addEventListener('click', async () => {
 
 /** Quantas de cada carta a pessoa já tem (id da carta → quantidade), para mostrar "Qtd" nos resultados. */
 let possuidas = new Map();
+
+/** Cota do dia do plano grátis (null para quem está no teste ou assina). Atualizada na tela a cada carta cadastrada. */
+let cotaDoDia = null;
+
+async function carregarCota() {
+  try {
+    cotaDoDia = (await api('/assinatura')).cota;
+  } catch {
+    cotaDoDia = null; // sem a cota, o formulário funciona do mesmo jeito: quem barra de verdade é o servidor.
+  }
+}
 
 async function carregarPossuidas() {
   try {
@@ -62,6 +73,20 @@ function formularioAdicionar(carta, aoAdicionar) {
 
   const botao = el('button', 'botao botao--primario botao--pequeno w--full', 'Confirmar');
   botao.type = 'submit';
+
+  // Plano grátis: diz quanto ainda pode cadastrar hoje, limita a quantidade a isso e, esgotada a cota, oferece a assinatura.
+  if (cotaDoDia) {
+    campoQtd.max = String(Math.max(1, cotaDoDia.restantesHoje));
+    const nota = el('p', 'faixa text--xs', '');
+    nota.append(frasePlanoGratis(cotaDoDia));
+    if (cotaDoDia.restantesHoje === 0) {
+      botao.disabled = true;
+      const link = el('a', 'weight--semibold', ' Assinar sem limite');
+      link.href = '/assinatura/';
+      nota.append(link);
+    }
+    form.append(nota);
+  }
   form.append(botao);
 
   form.addEventListener('submit', async (ev) => {
@@ -82,9 +107,14 @@ function formularioAdicionar(carta, aoAdicionar) {
           adquiridoEm: dados.adquiridoEm || null,
         }),
       });
+      if (cotaDoDia) {
+        cotaDoDia.usadasHoje += quantidade;
+        cotaDoDia.restantesHoje = Math.max(0, cotaDoDia.restantesHoje - quantidade);
+      }
       aoAdicionar(quantidade);
     } catch (erro) {
-      avisar(avisoForm, erro.message);
+      avisarComAssinatura(avisoForm, erro);
+      if (erro.status === 429 && erro.corpo?.cota) cotaDoDia = erro.corpo.cota;
       botao.disabled = false;
       botao.textContent = 'Confirmar';
     }
@@ -167,7 +197,7 @@ function cartaoResultado(carta, variacao) {
 // No celular o foco automático abre o teclado e esconde os resultados: só foca onde há mouse.
 if (window.matchMedia('(hover: hover)').matches) $form.nome.focus();
 
-const prontos = Promise.all([carregarCambio(), carregarPossuidas()]);
+const prontos = Promise.all([carregarCambio(), carregarPossuidas(), carregarCota()]);
 
 /** Consulta a busca do servidor (por nome, ou por número impresso quando vem da foto). */
 async function consultar(parametros) {

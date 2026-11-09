@@ -102,7 +102,8 @@ ok('...e a coleção segue editável', r.s === 201, String(r.s));
 await webhook({ event: 'PAYMENT_REFUNDED', payment: { id: 'pay_rev_1', value: 9.97, externalReference: `usuario:${ana.id}` } });
 r = await ana.c.get('/assinatura');
 ok('estorno corta na hora, mesmo com dias pagos', r.j.bloqueado === true && r.j.diasRestantes === 0, JSON.stringify(r.j).slice(0, 140));
-ok('...e a escrita volta a ser barrada (402)', (await ana.c.post('/colecao', { cartaId: 'rev-1', quantidade: 1 })).s === 402);
+ok('...e a pessoa cai no plano grátis: 1 carta por dia, não fica trancada', (await ana.c.post('/colecao', { cartaId: 'rev-1', quantidade: 1 })).s === 201
+  && (await ana.c.post('/colecao', { cartaId: 'rev-1', quantidade: 1 })).s === 429);
 
 /* ---------- mensalidade da loja: não assina duas vezes ---------- */
 const beto = await conta('Beto Dias', 'beto@exemplo.com.br', 'beto_rev');

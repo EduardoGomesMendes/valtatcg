@@ -9,6 +9,7 @@ import { apagarBloqueiosAntigos } from './comunidade/moderacao.js';
 import { apagarHistoricoDeCartasNaoPossuidas } from './portfolio/precos.repo.js';
 import { limparAntigos as limparPedidosDeCadastro } from './auth/cadastros.repo.js';
 import { limparAntigos as limparPedidosDeSenha } from './auth/redefinicoes.repo.js';
+import { limparAntigas as limparCotasAntigas } from './portfolio/cota.repo.js';
 
 const log = criarLog('sistema');
 
@@ -89,6 +90,7 @@ async function iniciar() {
       // Prazos prometidos na Política de Privacidade: não podem depender de alguém fazer um novo pedido.
       limparPedidosDeCadastro();
       limparPedidosDeSenha();
+      limparCotasAntigas();
       const b = apagarBloqueiosAntigos();
       if (b) log.info(`registros antigos de mensagens bloqueadas apagados: ${b}`);
     } catch (erro) {

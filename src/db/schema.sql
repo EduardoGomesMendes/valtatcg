@@ -89,6 +89,15 @@ CREATE TABLE IF NOT EXISTS preco_historico (
   UNIQUE(carta_id, data)
 );
 
+-- Plano grátis: quantas cartas a pessoa já cadastrou em cada dia (dia de Brasília). É um contador, e não uma contagem das
+-- linhas de colecao_item, porque aumentar a quantidade de uma carta antiga também gasta a cota do dia.
+CREATE TABLE IF NOT EXISTS colecao_cota (
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  dia TEXT NOT NULL,
+  usadas INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (usuario_id, dia)
+);
+
 CREATE INDEX IF NOT EXISTS idx_colecao_item_usuario ON colecao_item(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_preco_historico_carta ON preco_historico(carta_id, data);
 

@@ -63,6 +63,29 @@ export function limpar(node) {
 }
 
 /** Mostra uma mensagem em um elemento reservado para isso. tipo: 'erro' | 'sucesso' | 'info' */
+/** Frase curta sobre a cota do dia do plano grátis (usada no banner e nas telas). */
+export function frasePlanoGratis(cota) {
+  if (!cota) return 'Plano grátis.';
+  if (cota.limiteDiario === 0) return 'Plano grátis: só consulta, sem cadastrar cartas novas.';
+  const por = `${cota.limiteDiario} ${cota.limiteDiario === 1 ? 'carta' : 'cartas'} por dia`;
+  return cota.restantesHoje > 0
+    ? `Plano grátis (${por}): hoje você ainda pode cadastrar ${cota.restantesHoje}.`
+    : `Plano grátis (${por}): a de hoje já foi cadastrada.`;
+}
+
+/**
+ * Mostra o erro e, se foi o limite do plano grátis, acrescenta o caminho para assinar: o limite é o gancho do plano,
+ * então a mensagem nunca pode ser um beco sem saída.
+ */
+export function avisarComAssinatura(elemento, erro) {
+  avisar(elemento, erro.message);
+  if (elemento && erro.status === 429 && erro.corpo?.limiteDiario) {
+    const link = el('a', 'weight--semibold', ' Assinar sem limite');
+    link.href = '/assinatura/';
+    elemento.append(link);
+  }
+}
+
 export function avisar(elemento, mensagem, tipo = 'erro') {
   if (!elemento) return;
   elemento.textContent = mensagem ?? '';
@@ -332,8 +355,9 @@ export async function prepararCabecalho() {
 
   try {
     const situacao = await api('/assinatura');
-    if (situacao.bloqueado) {
-      mostrarAvisoAssinatura($aviso, situacao.motivo ?? 'Assinatura inativa.', 'aviso--bloqueio');
+    if (situacao.gratis) {
+      // Plano grátis não é bloqueio: a pessoa segue usando, só com limite de cadastro. O tom é de convite, não de erro.
+      mostrarAvisoAssinatura($aviso, `${frasePlanoGratis(situacao.cota)} Assine para cadastrar sem limite.`, 'aviso--atencao', 'Assinar');
     } else if (situacao.status === 'teste' && situacao.avisar) {
       mostrarAvisoAssinatura($aviso, `Período de teste — ${situacao.diasRestantes} dia(s) restante(s).`, 'aviso--atencao');
     }

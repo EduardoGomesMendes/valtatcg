@@ -104,6 +104,9 @@ export const config = {
   assinatura: {
     // Dias de uso grátis desde o cadastro, antes de exigir pagamento.
     diasDeTeste: num(process.env.DIAS_DE_TESTE, 7),
+    // Depois do teste, quem não assina continua no plano grátis: pode cadastrar até este número de cartas POR DIA
+    // (Brasília). Assinante não tem limite — esse é o gancho do plano. 0 = o grátis só consulta, não cadastra.
+    limiteDiarioGratis: num(process.env.LIMITE_DIARIO_GRATIS, 1),
     // Plano único — sem isto o valtatcg não teria como cobrar ninguém.
     precoMensal: num(process.env.PRECO_MENSAL, 9.97),
   },

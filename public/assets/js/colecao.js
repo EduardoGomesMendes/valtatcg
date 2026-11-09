@@ -1,4 +1,4 @@
-import { api, avisar, el, limpar, dolar, prepararCabecalho } from './api.js';
+import { api, avisar, avisarComAssinatura, el, limpar, dolar, prepararCabecalho } from './api.js';
 import { carregarCambio, cambioAtual, preco, formatarReais, elementoVariacao, notaDoCambio } from './moeda.js';
 import { VARIANTES, CONDICOES, rotuloDaVariante, campoSelect, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
 
@@ -161,7 +161,7 @@ function formularioEdicao(item, aoSalvar) {
       });
       aoSalvar(true);
     } catch (erro) {
-      avisar(aviso, erro.message);
+      avisarComAssinatura(aviso, erro);
       salvar.disabled = false;
     }
   });

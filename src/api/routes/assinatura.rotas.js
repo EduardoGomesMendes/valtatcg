@@ -5,6 +5,7 @@ import { pagamento } from '../../pagamento/index.js';
 import { ErroDePagamento } from '../../pagamento/provedor.js';
 import { documentoValido, apenasDigitos, documentoFormatado } from '../../documento.js';
 import { criarLog } from '../../logger.js';
+import * as cota from '../../portfolio/cota.repo.js';
 
 const log = criarLog('assinatura');
 
@@ -21,6 +22,8 @@ export function rotasAssinatura() {
     res.json({
       ...situacao,
       plano: assinaturas.plano(),
+      // Só o plano grátis tem limite diário; para quem assina ou está no teste vem null.
+      cota: situacao.gratis && !req.usuario.admin ? cota.situacaoDaCota(req.usuario.id) : null,
       pagamentoAutomatico: gateway.configurado,
       cobranca: {
         // Nunca devolvemos o documento inteiro para a tela: já foi informado
