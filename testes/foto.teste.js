@@ -105,7 +105,11 @@ const csp = (await pedir('/buscar/')).headers.get('content-security-policy') ?? 
 const diretivaScript = csp.split(';').map((s) => s.trim()).find((s) => s.startsWith('script-src')) ?? '';
 ok("a CSP libera compilar WebAssembly ('wasm-unsafe-eval')", diretivaScript.includes("'wasm-unsafe-eval'"), diretivaScript);
 ok("a CSP continua sem 'unsafe-eval' nem 'unsafe-inline' nos scripts", !/'unsafe-eval'|'unsafe-inline'/.test(diretivaScript));
-ok('a CSP não abriu a rede para terceiros', csp.includes("connect-src 'self'") && !/https?:\/\/(?!fonts|images)/.test(csp.replace(/https:\/\/(fonts\.[a-z.]+|images\.[a-z.]+)/g, '')));
+// Só fontes e IMAGENS de terceiros (o CDN de imagens das cartas e o da TCGdex, do painel do mercado): nunca script, conexão ou frame.
+const semImagens = csp.replace(/https:\/\/(fonts\.[a-z.]+|images\.[a-z.]+|assets\.tcgdex\.net)/g, '');
+ok('a CSP não abriu a rede para terceiros', csp.includes("connect-src 'self'") && !/https?:\/\/(?!fonts|images)/.test(semImagens));
+const imgSrc = csp.split(';').map((s) => s.trim()).find((s) => s.startsWith('img-src')) ?? '';
+ok('o endereço da TCGdex só vale para imagens', imgSrc.includes('assets.tcgdex.net') && csp.split('assets.tcgdex.net').length === 2);
 
 for (const arquivo of [
   'tesseract.min.js',

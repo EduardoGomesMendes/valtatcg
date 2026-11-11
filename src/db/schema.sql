@@ -322,3 +322,22 @@ CREATE TABLE IF NOT EXISTS colecao_set (
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_carta_cache_set ON carta_cache(set_id);
+
+-- Painel do mercado (página inicial): preços atuais de cartas raras vindos da TCGdex, que atualiza todo dia
+-- (a pokemontcg.io, nossa fonte da coleção, tem preços com semanas ou meses de atraso e não serve para "em alta").
+-- O id é o da TCGdex ("sv03.5-199"), que NÃO é o da pokemontcg.io ("sv3pt5-199"): são tabelas independentes.
+CREATE TABLE IF NOT EXISTS mercado_carta (
+  id TEXT PRIMARY KEY,
+  nome TEXT NOT NULL,
+  colecao TEXT,
+  numero TEXT,
+  raridade TEXT,
+  imagem TEXT,                       -- endereço-base da imagem na TCGdex (sem qualidade nem extensão)
+  preco_usd REAL,                    -- TCGplayer, preço de mercado
+  tcg_atualizado_em TEXT,            -- quando a fonte diz ter atualizado o preço do TCGplayer
+  cm_media7_eur REAL,                -- Cardmarket: média dos últimos 7 dias
+  cm_media30_eur REAL,               -- Cardmarket: média dos últimos 30 dias
+  cm_atualizado_em TEXT,             -- quando a fonte diz ter atualizado o Cardmarket
+  consultado_em TEXT NOT NULL        -- quando NÓS fomos buscar
+);
+CREATE INDEX IF NOT EXISTS idx_mercado_carta_consulta ON mercado_carta(consultado_em);

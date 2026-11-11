@@ -3,6 +3,7 @@ import { criarLog } from './logger.js';
 import { criarServidor } from './api/servidor.js';
 import './db/index.js'; // cria/abre o banco antes de qualquer coisa
 import { iniciarJobDePrecos } from './portfolio/precos.job.js';
+import { iniciarJobDoMercado } from './mercado/mercado.job.js';
 import { pagamento } from './pagamento/index.js';
 import { apagarPassados } from './comunidade/eventos.repo.js';
 import { apagarBloqueiosAntigos } from './comunidade/moderacao.js';
@@ -88,6 +89,7 @@ async function iniciar() {
   if (!servidor) return; // a porta não subiu; a mensagem já foi explicada
 
   const pararJobDePrecos = iniciarJobDePrecos();
+  const pararJobDoMercado = iniciarJobDoMercado();
 
   // Evento que já aconteceu é apagado: no boot e a cada 6 horas.
   const limparEventos = () => {
@@ -112,6 +114,7 @@ async function iniciar() {
   const encerrar = (sinal) => {
     log.info(`recebido ${sinal}, encerrando...`);
     pararJobDePrecos();
+    pararJobDoMercado();
     servidor.close();
     process.exit(0);
   };

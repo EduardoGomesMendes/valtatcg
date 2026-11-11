@@ -83,4 +83,7 @@ echo.
 echo  --- fichario ---
 node testes/fichario.teste.js
 echo.
+echo  --- mercado ---
+node testes/mercado.teste.js
+echo.
 pause

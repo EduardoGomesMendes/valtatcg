@@ -155,6 +155,28 @@ quantas faltam, o custo para completar e o valor do que a pessoa tem.
   é uma estimativa, e a tela diz isso. Carta sem preço é contada à parte, não vira zero escondido.
 - Nomes de coleções e cartas vêm em inglês (a fonte só entrega assim).
 
+## Painel do mercado (página inicial, aberto a visitantes)
+
+Seção "O mercado hoje" na home, com quatro abas: **Em alta**, **Em queda**, **Mais valiosas** e **Mais adicionadas**.
+
+- **Não existe "mais negociadas".** Nenhuma fonte gratuita traz volume de vendas por carta, e o painel não promete o que
+  não sabe. Se um dia houver fonte paga de vendas (PokemonPriceTracker/Scrydex), aí sim; até lá, não usar esse nome.
+- Fonte dos preços: **TCGdex** (`src/mercado/tcgdex.js`), que atualiza todo dia. A pokemontcg.io (fonte da coleção)
+  tem preços com semanas ou meses de atraso e NÃO serve para "em alta". São bancos independentes: o id da TCGdex
+  ("sv03.5-199") não é o da pokemontcg.io ("sv3pt5-199"); tabela própria `mercado_carta`.
+- A TCGdex só dá preço carta a carta, então o conjunto é limitado (raridades de caça modernas, ~1,7 mil cartas, em
+  `RARIDADES`) e o job (`mercado.job.js`) é "considerado": 3 consultas simultâneas com pausa, só o que está velho
+  (mais de 20 h), retomável depois de reiniciar, desiste da rodada após 25 falhas seguidas. A TCGdex não publica
+  limite nem termos comerciais: **antes de crescer o uso, perguntar a eles** (Discord/GitHub); sem garantia de disponibilidade.
+- Variação = média de 7 dias contra a de 30 do Cardmarket (euro), sempre do MESMO par normal ou holo. Só entra carta com
+  média de 30 dias acima de € 3 (senão "4 para 6 centavos" vira +50%) e movimento de pelo menos 3%. Dado que a fonte não
+  atualiza há mais de 4 dias sai do painel: melhor painel menor que "em alta" velho.
+- "Mais adicionadas" é dado NOSSO e só agregado: pessoas diferentes nos últimos 7 dias, e só entra carta com 2 ou mais
+  pessoas (com 1 mostraria o que uma pessoa faz). Nunca expor quem.
+- A rota `GET /api/mercado/painel` é pública (antes do `exigirLogin`), com `Cache-Control: public, max-age=300`. As imagens vêm de
+  `assets.tcgdex.net` (liberado no CSP). A home some com o painel inteiro se a API falhar ou não houver nada.
+- O painel diz de onde vêm os dados e que são movimentos de mercado, não recomendação de compra ou venda.
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

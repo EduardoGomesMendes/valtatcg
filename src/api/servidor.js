@@ -9,6 +9,7 @@ import { rotasRedefinicao } from './routes/redefinicao.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
 import { rotasFichario } from './routes/fichario.rotas.js';
+import { rotasMercado } from './routes/mercado.rotas.js';
 import { rotasAdmin } from './routes/admin.rotas.js';
 import { rotasAssinatura } from './routes/assinatura.rotas.js';
 import { rotasPagamento } from './routes/pagamento.rotas.js';
@@ -48,7 +49,7 @@ export function criarServidor() {
         // As imagens das cartas vêm do CDN da pokemontcg.io — hoje servido via
         // images.scrydex.com, mas cartas mais antigas em cache ainda podem
         // apontar para images.pokemontcg.io, então os dois ficam liberados.
-        "img-src 'self' data: https://images.pokemontcg.io https://images.scrydex.com",
+        "img-src 'self' data: https://images.pokemontcg.io https://images.scrydex.com https://assets.tcgdex.net",
         "style-src 'self' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         // 'wasm-unsafe-eval' só libera compilar WebAssembly (o leitor de texto das fotos de carta); não libera eval de JavaScript.
@@ -81,6 +82,8 @@ export function criarServidor() {
   app.use('/api', rotasLojasPublicas());
   // Agenda de eventos: qualquer visitante vê.
   app.use('/api', rotasEventosPublicos());
+  // Painel do mercado da página inicial: aberto a visitantes (só preços de cartas e contagens agregadas).
+  app.use('/api', rotasMercado());
 
   // --- Daqui para baixo, tudo exige sessão válida ---
   app.use('/api', exigirLogin);

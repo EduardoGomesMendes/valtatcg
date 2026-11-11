@@ -949,3 +949,16 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   .grade--fichario { gap: var(--space-4); }
   .ficha { flex: 0 0 150px; }
 }
+
+/* ==========================================================================
+   Painel do mercado (página inicial, aberto a visitantes)
+   ========================================================================== */
+
+.grade--painel { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.painel--carta { flex: 0 0 calc(50% - var(--space-3) / 2); min-width: 0; padding: var(--space-3); gap: var(--space-1); }
+.painel--variacao { font-weight: var(--font-weight-bold); }
+
+@media (min-width: 640px) {
+  .grade--painel { gap: var(--space-4); }
+  .painel--carta { flex: 0 0 168px; }
+}
