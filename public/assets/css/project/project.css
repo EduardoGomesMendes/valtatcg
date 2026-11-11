@@ -892,3 +892,60 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
 /* Os campos que dividem a linha ficam lado a lado; em tela estreita quebram para uma coluna em vez de espremer. */
 .linha--campos { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .linha--campos > * { flex: 1 1 140px; min-width: 0; }
+
+/* ==========================================================================
+   Fichário (coleções do jogo, carta a carta)
+   ========================================================================== */
+
+/* Barra de progresso: o elemento <progress> nativo, só com as cores do tema. */
+.progresso {
+  width: 100%;
+  height: 8px;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-alt);
+  overflow: hidden;
+}
+.progresso::-webkit-progress-bar { background-color: var(--color-surface-alt); }
+.progresso::-webkit-progress-value { background-color: var(--color-primary); border-radius: var(--radius-full); }
+.progresso::-moz-progress-bar { background-color: var(--color-primary); border-radius: var(--radius-full); }
+
+.fichario--busca { min-width: 220px; }
+
+/* A logo da coleção costuma ser escura ou colorida: sobre o tema escuro some sem um fundo claro atrás. */
+.fichario--logo-caixa { height: 64px; }
+.fichario--logo {
+  max-width: 100%;
+  max-height: 56px;
+  object-fit: contain;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-logo-fundo);
+}
+
+.fichario--colecao { flex: 0 0 calc(50% - var(--space-3) / 2); min-width: 0; color: var(--color-text); }
+
+/* Ficha de uma carta: a que falta fica apagada e em preto e branco, a que a pessoa tem fica viva. */
+.grade--fichario { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.ficha { flex: 0 0 calc((100% - var(--space-3) * 2) / 3); min-width: 0; }
+.ficha--imagem { display: block; }
+.ficha--falta .imagem--carta { filter: grayscale(1); opacity: 0.5; }
+.ficha--tenho .imagem--carta { outline: 2px solid var(--color-success); outline-offset: -2px; }
+.ficha--nome {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.ficha--estado { margin-top: auto; }
+.ficha--acao { min-height: 40px; }
+
+@media (min-width: 640px) {
+  .fichario--colecao { flex: 0 0 200px; }
+  .grade--fichario { gap: var(--space-4); }
+  .ficha { flex: 0 0 150px; }
+}

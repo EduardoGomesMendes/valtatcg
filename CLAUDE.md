@@ -132,6 +132,29 @@ Mesmo desenho do cadastro, com estas regras:
   volta ao login (`/entrar/?senha=trocada`).
 - Sem e-mail configurado a tela avisa (`/senha/estado`). Em desenvolvimento, `EMAIL_MODO=console` imprime o link no log.
 
+## Fichário (o que falta em cada coleção)
+
+Tela `/fichario/`: lista as coleções (sets) do jogo e, aberta uma, mostra cada carta como "tenho" ou "falta",
+quantas faltam, o custo para completar e o valor do que a pessoa tem.
+
+- **Marcar "tenho" é cadastrar na coleção** (`POST /colecao`), e "Tirar" é `DELETE /colecao/:id`. O fichário é uma
+  VISÃO da coleção, não uma segunda lista: assim o limite do plano grátis (1 carta por dia, o gancho do site) vale
+  igual e nada de preço pago ou estado se perde. Nunca criar uma marcação própria que escape da cota.
+- Só leitura no servidor: `GET /fichario/colecoes` e `GET /fichario/colecoes/:id` (`src/api/routes/fichario.rotas.js`).
+- As contas ficam em `src/fichario/fichario.js` (puras, sem banco e sem rede); o banco em `colecoes.repo.js`; a busca
+  na pokemontcg.io em `sincronia.js`. A tabela `colecao_set` guarda o cadastro das coleções; as cartas ficam em `carta_cache`.
+- A lista de coleções vale 7 dias e as cartas de cada coleção 3 dias. Com a API fora, a tela segue com o que já está
+  guardado; coleção nunca baixada dá erro amigável (502 sem texto técnico). Poucas cartas no cache (de uma busca)
+  NÃO contam como coleção baixada: só `cartas_sync_em` preenchido vale.
+- O id da coleção só entra na consulta externa se existir em `colecao_set` (id inventado dá 404 sem chamar a API).
+- Baixar uma coleção NÃO marca as cartas como "vistas": senão o job diário acompanharia o preço de centenas de cartas
+  por coleção.
+- "Principal" = cartas numeradas (1 até o total impresso, o "165" de "025/165"); secretas e numeração própria
+  (TG01, GG05) ficam de fora, e a tela deixa ver a conta com e sem elas.
+- Custo para completar = preço da versão comum (mesma regra da busca) de cada carta que falta, em estado quase perfeito:
+  é uma estimativa, e a tela diz isso. Carta sem preço é contada à parte, não vira zero escondido.
+- Nomes de coleções e cartas vêm em inglês (a fonte só entrega assim).
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

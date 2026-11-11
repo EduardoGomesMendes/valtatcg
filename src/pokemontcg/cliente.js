@@ -86,6 +86,27 @@ export async function obterCartasPorIds(ids) {
   return dados.data ?? [];
 }
 
+/** Todas as coleções (sets) do jogo, da mais nova para a mais antiga. Cabem numa resposta só (~180). */
+export async function listarColecoes() {
+  const dados = await chamar('/sets?orderBy=-releaseDate&pageSize=250');
+  return dados.data ?? [];
+}
+
+/**
+ * Todas as cartas de uma coleção. A API entrega no máximo 250 por página, e coleções com cartas secretas passam
+ * disso: pagina até acabar. O id vem do nosso banco (já validado), mas só letras, dígitos, "-" e "." entram na consulta.
+ */
+export async function cartasDaColecao(colecaoId) {
+  if (!/^[A-Za-z0-9.-]{1,40}$/.test(String(colecaoId))) throw new Error('coleção inválida');
+  const cartas = [];
+  for (let pagina = 1; pagina <= 8; pagina += 1) {
+    const dados = await chamar(`/cards?q=${encodeURIComponent(`set.id:${colecaoId}`)}&page=${pagina}&pageSize=250`);
+    cartas.push(...(dados.data ?? []));
+    if (cartas.length >= (dados.totalCount ?? 0) || !(dados.data ?? []).length) break;
+  }
+  return cartas;
+}
+
 export async function obterCarta(id) {
   const dados = await chamar(`/cards/${encodeURIComponent(id)}`);
   return dados.data;

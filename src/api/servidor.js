@@ -8,6 +8,7 @@ import { rotasCadastro } from './routes/cadastro.rotas.js';
 import { rotasRedefinicao } from './routes/redefinicao.rotas.js';
 import { rotasCartas } from './routes/cartas.rotas.js';
 import { rotasColecao } from './routes/colecao.rotas.js';
+import { rotasFichario } from './routes/fichario.rotas.js';
 import { rotasAdmin } from './routes/admin.rotas.js';
 import { rotasAssinatura } from './routes/assinatura.rotas.js';
 import { rotasPagamento } from './routes/pagamento.rotas.js';
@@ -103,6 +104,7 @@ export function criarServidor() {
 
   app.use('/api', rotasCartas());
   app.use('/api', rotasColecao());
+  app.use('/api', rotasFichario());
   app.use('/api', rotasAdmin());
 
   app.use('/api', (req, res) => res.status(404).json({ erro: 'rota não encontrada' }));

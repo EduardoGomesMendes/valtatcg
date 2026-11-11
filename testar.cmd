@@ -80,4 +80,7 @@ echo.
 echo  --- estados-precos ---
 node testes/estados-precos.teste.js
 echo.
+echo  --- fichario ---
+node testes/fichario.teste.js
+echo.
 pause

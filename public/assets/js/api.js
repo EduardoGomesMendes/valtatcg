@@ -152,7 +152,7 @@ export function montarCabecalhoLogado(ativo) {
   marca.append(simbolo, texto);
 
   const nav = el('nav', 'flex items--center gap--5 topo--links', '');
-  [['/colecao/', 'Coleção'], ['/buscar/', 'Buscar cartas'], ['/lojas/', 'Lojas'], ['/eventos/', 'Eventos'], ['/forum/', 'Fórum'], ['/assinatura/', 'Assinatura']]
+  [['/colecao/', 'Coleção'], ['/fichario/', 'Fichário'], ['/buscar/', 'Buscar cartas'], ['/lojas/', 'Lojas'], ['/eventos/', 'Eventos'], ['/forum/', 'Fórum'], ['/assinatura/', 'Assinatura']]
     .forEach(([href, rotulo]) => {
       const a = el('a', `nao--encolhe ${href === ativo ? 'weight--semibold' : 'text--muted'}`, rotulo);
       a.href = href;
@@ -268,7 +268,7 @@ function inicializarMenuAvatar() {
 }
 
 const ATALHOS = [
-  { href: '/colecao/', rotulo: 'Coleção', icone: 'colecao', rotas: ['/colecao/', '/carta/'] },
+  { href: '/colecao/', rotulo: 'Coleção', icone: 'colecao', rotas: ['/colecao/', '/carta/', '/fichario/'] },
   { href: '/buscar/', rotulo: 'Buscar', icone: 'buscar', rotas: ['/buscar/'] },
   { href: '/lojas/', rotulo: 'Lojas', icone: 'lojas', rotas: ['/lojas/', '/minha-loja/'] },
   { href: '/eventos/', rotulo: 'Eventos', icone: 'eventos', rotas: ['/eventos/', '/meus-eventos/'] },
@@ -298,7 +298,7 @@ function adicionarItensDoMenuMovel(usuario) {
   const lista = document.getElementById('menu-avatar-lista');
   if (!lista || lista.querySelector('[data-movel]')) return;
   const antes = [...lista.children].find((c) => c.textContent === 'Configurações') ?? null;
-  const itens = [['/assinatura/', 'Assinatura']];
+  const itens = [['/fichario/', 'Fichário'], ['/assinatura/', 'Assinatura']];
   if (usuario?.admin) itens.push(['/admin/', 'Admin']);
   for (const [href, rotulo] of itens) {
     const a = el('a', 'menu--item menu--item--so-movel', rotulo);

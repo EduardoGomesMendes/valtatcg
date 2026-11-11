@@ -306,3 +306,19 @@ CREATE TABLE IF NOT EXISTS redefinicoes_senha (
 CREATE INDEX IF NOT EXISTS idx_redefinicoes_email ON redefinicoes_senha(email, criado_em);
 CREATE INDEX IF NOT EXISTS idx_redefinicoes_ip ON redefinicoes_senha(ip, criado_em);
 CREATE INDEX IF NOT EXISTS idx_redefinicoes_usuario ON redefinicoes_senha(usuario_id);
+
+-- Fichário: as coleções (sets) do jogo, com a lista de cartas de cada uma vindas da pokemontcg.io. As cartas em si ficam
+-- em carta_cache (carta_cache.set_id); aqui só o cadastro das coleções e quando as cartas de cada uma foram buscadas.
+CREATE TABLE IF NOT EXISTS colecao_set (
+  id TEXT PRIMARY KEY,
+  nome TEXT NOT NULL,
+  serie TEXT,
+  total INTEGER NOT NULL DEFAULT 0,            -- cartas da coleção, contando as secretas
+  total_impresso INTEGER NOT NULL DEFAULT 0,   -- as numeradas (o "165" de "025/165")
+  lancamento TEXT,                             -- AAAA-MM-DD
+  logo TEXT,
+  simbolo TEXT,
+  cartas_sync_em TEXT,                         -- última vez que as cartas desta coleção foram buscadas
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_carta_cache_set ON carta_cache(set_id);
