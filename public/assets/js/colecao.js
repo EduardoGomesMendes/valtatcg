@@ -1,5 +1,6 @@
 import { api, avisar, avisarComAssinatura, el, limpar, dolar, dataSimples, prepararCabecalho } from './api.js';
 import { carregarCambio, cambioAtual, preco, formatarReais, elementoVariacao, notaDoCambio } from './moeda.js';
+import { PERIODOS, periodoDaChave, periodoInicial, recortar, variacaoDoPeriodo, dataBr, hojeLocal, criarGrafico } from './grafico-colecao.js';
 import { VARIANTES, rotuloDaVariante, carregarEstados, campoSelect, campoEstado, campoComRotulo, campoPreco, campoData } from './opcoes-carta.js';
 
 prepararCabecalho();
@@ -21,65 +22,103 @@ $btnSair.addEventListener('click', async () => {
   window.location.href = '/entrar/';
 });
 
-function desenharGrafico(serie) {
-  const ctx = $canvas.getContext('2d');
-  const largura = $canvas.width;
-  const altura = $canvas.height;
-  ctx.clearRect(0, 0, largura, altura);
+const $graficoCabecalho = document.getElementById('grafico-cabecalho');
+const $graficoValor = document.getElementById('grafico-valor');
+const $graficoDetalhe = document.getElementById('grafico-detalhe');
+const $graficoPeriodos = document.getElementById('grafico-periodos');
+
+/* Estado do gráfico: a série inteira chega uma vez; trocar de período só recorta e redesenha (sem nova ida ao servidor). */
+let serieCompleta = [];
+let resumoAtual = null;
+let periodoAtual = periodoDaChave('1m');
+let formatarValor = formatarReais;
+
+function sinalDe(n) {
+  return n > 0 ? '+' : n < 0 ? '−' : '';
+}
+
+/** Cabeçalho do gráfico: o valor de hoje e a variação do período; com o dedo no gráfico, o valor e a data daquele dia. */
+function atualizarCabecalhoDoGrafico(ponto) {
+  const hoje = hojeLocal();
+  if (ponto) {
+    $graficoValor.textContent = formatarValor(ponto.valor);
+    $graficoDetalhe.className = 'text--sm text--muted';
+    $graficoDetalhe.textContent = [dataBr(ponto.data), Number(ponto.custo) > 0 ? `Pago: ${formatarValor(ponto.custo)}` : null].filter(Boolean).join(' · ');
+    return;
+  }
+
+  $graficoValor.textContent = formatarValor(resumoAtual.valorAtual);
+  const v = variacaoDoPeriodo(recortar(serieCompleta, periodoAtual, hoje), periodoAtual, hoje, resumoAtual.valorAtual);
+  if (!v) {
+    $graficoDetalhe.className = 'text--sm text--muted';
+    $graficoDetalhe.textContent = 'Poucos dias de histórico neste período.';
+    return;
+  }
+  const pct = v.percentual === null ? '' : ` (${sinalDe(v.delta)}${Math.abs(v.percentual).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`;
+  $graficoDetalhe.className = `text--sm weight--semibold ${v.delta > 0 ? 'text--success' : v.delta < 0 ? 'text--danger' : 'text--muted'}`;
+  $graficoDetalhe.textContent = `${sinalDe(v.delta)}${formatarValor(Math.abs(v.delta))}${pct} ${v.rotulo}`;
+}
+
+const grafico = criarGrafico($canvas, { aoSelecionar: atualizarCabecalhoDoGrafico });
+
+function mostrarPeriodo() {
+  const pontos = recortar(serieCompleta, periodoAtual, hojeLocal());
+  grafico.definir(pontos);
+  for (const botao of $graficoPeriodos.children) {
+    const ativo = botao.dataset.periodo === periodoAtual.chave;
+    botao.classList.toggle('botao--primario', ativo);
+    botao.classList.toggle('botao--secundario', !ativo);
+    botao.setAttribute('aria-pressed', String(ativo));
+  }
+  if (pontos.length < 2) {
+    avisar($avisoGrafico, 'Poucos dias de histórico neste período — escolha um período maior.', 'info');
+  } else {
+    avisar($avisoGrafico, null);
+  }
+  const partes = ['Linha cheia: o valor da sua coleção.'];
+  if (grafico.custoNoGrafico) partes.push('Linha tracejada: o que você pagou nas cartas com preço informado.');
+  else if (grafico.temCusto) partes.push('O quanto você pagou aparece ao tocar no gráfico.');
+  partes.push('A variação do período inclui as cartas que você adicionou nele.');
+  $legenda.textContent = partes.join(' ');
+  $legenda.classList.remove('hidden');
+}
+
+function montarSeletorDePeriodo() {
+  limpar($graficoPeriodos);
+  for (const p of PERIODOS) {
+    const botao = el('button', 'botao botao--secundario botao--pequeno', p.rotulo);
+    botao.type = 'button';
+    botao.dataset.periodo = p.chave;
+    botao.addEventListener('click', () => {
+      periodoAtual = p;
+      mostrarPeriodo();
+    });
+    $graficoPeriodos.append(botao);
+  }
+}
+
+function desenharGrafico(serie, resumo) {
+  serieCompleta = serie;
+  resumoAtual = resumo;
+  formatarValor = resumo.moeda === 'BRL' ? formatarReais : dolar;
   $legenda.classList.add('hidden');
 
   if (serie.length < 2) {
+    $graficoCabecalho.classList.add('hidden');
+    $graficoPeriodos.classList.add('hidden');
+    grafico.definir([]);
     avisar($avisoGrafico, 'O gráfico aparece depois de alguns dias com cartas na coleção — o histórico é construído dia a dia, a pokemontcg.io não tem preço retroativo.', 'info');
     return;
   }
-  avisar($avisoGrafico, null);
 
-  const estilo = getComputedStyle(document.documentElement);
-  const corLinha = estilo.getPropertyValue('--color-primary').trim();
-  const corPreenchimento = estilo.getPropertyValue('--color-primary-light').trim();
-  const corCusto = estilo.getPropertyValue('--color-warning').trim();
-
-  const valores = serie.map((p) => Number(p.valor) || 0);
-  // A linha do que a pessoa pagou só aparece se ela informou algum preço; sem isso seria uma linha reta em zero.
-  const custos = serie.map((p) => Number(p.custo) || 0);
-  const temCusto = custos.some((c) => c > 0);
-  const todos = temCusto ? [...valores, ...custos] : valores;
-  const min = Math.min(...todos);
-  const max = Math.max(...todos);
-  const amplitude = max - min || 1;
-  const margem = 16;
-
-  const pontoX = (i) => margem + (i / (serie.length - 1)) * (largura - margem * 2);
-  const pontoY = (v) => altura - margem - ((v - min) / amplitude) * (altura - margem * 2);
-
-  ctx.beginPath();
-  ctx.moveTo(pontoX(0), altura - margem);
-  valores.forEach((v, i) => ctx.lineTo(pontoX(i), pontoY(v)));
-  ctx.lineTo(pontoX(serie.length - 1), altura - margem);
-  ctx.closePath();
-  ctx.fillStyle = corPreenchimento;
-  ctx.fill();
-
-  ctx.beginPath();
-  valores.forEach((v, i) => {
-    if (i === 0) ctx.moveTo(pontoX(i), pontoY(v)); else ctx.lineTo(pontoX(i), pontoY(v));
-  });
-  ctx.strokeStyle = corLinha;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  if (temCusto) {
-    ctx.beginPath();
-    custos.forEach((c, i) => {
-      if (i === 0) ctx.moveTo(pontoX(i), pontoY(c)); else ctx.lineTo(pontoX(i), pontoY(c));
-    });
-    ctx.setLineDash([8, 6]);
-    ctx.strokeStyle = corCusto;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    $legenda.classList.remove('hidden');
+  // Na primeira vez (ou se o período escolhido ficou vazio) abre no menor período que já tem uma linha para mostrar.
+  if (!$graficoPeriodos.children.length) {
+    montarSeletorDePeriodo();
+    periodoAtual = periodoDaChave(periodoInicial(serie, hojeLocal()));
   }
+  $graficoCabecalho.classList.remove('hidden');
+  $graficoPeriodos.classList.remove('hidden');
+  mostrarPeriodo();
 }
 
 /** Preço pago por unidade, em reais: o que foi informado em reais, ou o antigo em dólar pela cotação de hoje. */
@@ -263,7 +302,7 @@ async function carregar() {
       $notaCusto.classList.add('hidden');
     }
 
-    desenharGrafico(resumo.serie);
+    desenharGrafico(resumo.serie, resumo);
 
     limpar($lista);
     if (!colecao.itens.length) {

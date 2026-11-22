@@ -177,6 +177,20 @@ Seção "O mercado hoje" na home, com quatro abas: **Em alta**, **Em queda**, **
   `assets.tcgdex.net` (liberado no CSP). A home some com o painel inteiro se a API falhar ou não houver nada.
 - O painel diz de onde vêm os dados e que são movimentos de mercado, não recomendação de compra ou venda.
 
+## Gráfico interativo da coleção
+
+Em `/colecao/`, "Evolução do portfólio": períodos **7D, 1M, 3M, 6M e Tudo** (liberados a todos, inclusive no plano grátis),
+cursor que segue o mouse, o dedo ou as setas do teclado, e o cabeçalho troca para o valor e a data do dia tocado.
+- Conta pura em `public/assets/js/grafico-colecao.js` (períodos, variação, ponto mais próximo; testada em
+  `testes/grafico-colecao.teste.js`); só `criarGrafico` desenha. O servidor entrega a série inteira (`DIAS_DA_SERIE`
+  em `colecao.rotas.js`) e trocar de período só recorta no navegador.
+- **Não existe "1D"**: guardamos um preço por carta por dia.
+- O rótulo da variação diz o que foi medido: "nos últimos 30 dias" só quando o histórico cobre o período; senão
+  "desde DD/MM". A variação inclui cartas adicionadas no período (a tela avisa); não é só valorização.
+- A escala segue o valor; a linha tracejada do custo só entra se não achatar a variação (senão o custo aparece
+  só no cabeçalho, ao tocar). `touch-action: pan-y` no canvas: arrastar na horizontal move o cursor, na vertical rola a página.
+- O gráfico da página de uma carta (`carta.js`) continua o antigo, estático.
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

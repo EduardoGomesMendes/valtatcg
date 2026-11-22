@@ -64,10 +64,15 @@
 
     <section class="cartao p--5 flex flex--col gap--3">
       <h2 class="text--md weight--semibold">Evolução do portfólio</h2>
-      <div class="grafico--caixa">
-        <canvas id="grafico" width="900" height="220"></canvas>
+      <div class="flex flex--col gap--1 grafico--cabecalho hidden" id="grafico-cabecalho" aria-live="polite">
+        <span class="text--2xl weight--bold" id="grafico-valor">—</span>
+        <span class="text--sm text--muted" id="grafico-detalhe"></span>
       </div>
-      <p class="hidden text--xs text--muted" id="legenda-grafico">Linha cheia: o valor da sua coleção. Linha tracejada: o que você pagou nas cartas com preço informado.</p>
+      <div class="grafico--caixa">
+        <canvas id="grafico" class="grafico--interativo" tabindex="0" role="img" aria-label="Gráfico do valor da sua coleção ao longo do tempo. Passe o mouse, arraste o dedo ou use as setas do teclado para ver o valor de cada dia."></canvas>
+      </div>
+      <div class="flex flex--wrap gap--2 hidden" id="grafico-periodos" role="group" aria-label="Período do gráfico"></div>
+      <p class="hidden text--xs text--muted" id="legenda-grafico"></p>
       <p class="hidden" id="aviso-grafico"></p>
     </section>
 

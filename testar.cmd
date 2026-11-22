@@ -86,4 +86,7 @@ echo.
 echo  --- mercado ---
 node testes/mercado.teste.js
 echo.
+echo  --- grafico da colecao ---
+node testes/grafico-colecao.teste.js
+echo.
 pause

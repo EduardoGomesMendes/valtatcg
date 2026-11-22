@@ -441,6 +441,23 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   display: block;
 }
 
+/* Gráfico com cursor (tela da coleção). Arrastar na horizontal move o cursor; na vertical a página continua rolando. */
+.grafico--interativo {
+  touch-action: pan-y;
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: var(--radius-md);
+}
+
+.grafico--interativo:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Reserva a altura das duas linhas do cabeçalho: o gráfico não pula ao trocar de período ou ao arrastar. */
+.grafico--cabecalho { min-height: 64px; }
+
 /* ==========================================================================
    Aviso / faixa de alerta
    ========================================================================== */

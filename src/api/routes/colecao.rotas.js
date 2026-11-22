@@ -56,6 +56,8 @@ function dataOuNula(valor) {
   return t;
 }
 
+const DIAS_DA_SERIE = 3650;
+
 export function rotasColecao() {
   const rotas = Router();
 
@@ -75,7 +77,8 @@ export function rotasColecao() {
     res.json(calcularResumo({
       itens: colecaoRepo.listar(req.usuario.id),
       taxa: cambio?.usdBrl ?? null,
-      serie: precosRepo.serieDoPortfolio(req.usuario.id),
+      // "Tudo" no gráfico: todo o histórico que existe (só cresce um ponto por dia), não os 90 dias padrão.
+      serie: precosRepo.serieDoPortfolio(req.usuario.id, DIAS_DA_SERIE),
       taxaDoDia,
     }));
   });
