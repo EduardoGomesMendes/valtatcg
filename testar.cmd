@@ -89,4 +89,7 @@ echo.
 echo  --- grafico da colecao ---
 node testes/grafico-colecao.teste.js
 echo.
+echo  --- app instalavel ---
+node testes/app.teste.js
+echo.
 pause

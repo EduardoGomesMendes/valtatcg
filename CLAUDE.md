@@ -191,6 +191,21 @@ cursor que segue o mouse, o dedo ou as setas do teclado, e o cabeçalho troca pa
   só no cabeçalho, ao tocar). `touch-action: pan-y` no canvas: arrastar na horizontal move o cursor, na vertical rola a página.
 - O gráfico da página de uma carta (`carta.js`) continua o antigo, estático.
 
+## App instalável no celular (PWA)
+
+Não é app de loja: é o próprio site instalado (`manifest.webmanifest`, ícones `app-*.png` e `apple-touch-icon.png`,
+`sw.js`, `offline.html`, `assets/js/app-instalavel.js`). Loja (Google Play/App Store) é decisão futura do dono.
+- "Instalar o app" aparece na home e no menu do avatar só onde dá para instalar; no iPhone abre o passo a passo.
+  Qualquer elemento com `data-instalar-app` vira botão. No iPhone o app tem sessão própria (entra de novo).
+- **O service worker não guarda páginas, scripts nem respostas da API** — só a tela "sem internet". Motivo: preço
+  velho parecer atual, conta de uma pessoa legível em celular compartilhado e arquivos velhos misturados com novos
+  depois de publicar. Não acrescentar cache de dados sem decidir isso com o dono. Mudou a tela sem internet ou os
+  arquivos dela? Suba a `VERSAO` em `sw.js`.
+- **Toda página nova** precisa das quatro linhas do cabeçalho (manifest, theme-color, apple-touch-icon e título do
+  app); `testes/app.teste.js` cobra.
+- Os ícones foram desenhados a partir de `logo-simbolo.svg`; mudou o logo, gerar de novo (192, 512, 512 com
+  margem para recorte e 180).
+
 ## Busca pela foto da carta
 
 O botão de câmera em Buscar lê a carta **no aparelho** (OCR Tesseract.js, sem IA paga e sem enviar a

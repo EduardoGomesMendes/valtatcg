@@ -6,6 +6,7 @@
 */
 
 import { icone } from './icones.js';
+import { atualizarBotoesDeInstalar } from './app-instalavel.js';
 
 const PUBLICAS = ['/entrar/'];
 
@@ -241,6 +242,15 @@ function inicializarMenuAvatar() {
   const $botao = document.getElementById('btn-avatar-menu');
   const $lista = document.getElementById('menu-avatar-lista');
   if (!$grupo || !$botao || !$lista) return;
+
+  // "Instalar o app" entra antes de "Sair"; o módulo decide se aparece (só onde dá para instalar).
+  if (!$lista.querySelector('[data-instalar-app]')) {
+    const instalar = el('button', 'menu--item hidden', 'Instalar o app');
+    instalar.type = 'button';
+    instalar.setAttribute('data-instalar-app', '');
+    $lista.insertBefore(instalar, $lista.querySelector('#btn-sair'));
+    atualizarBotoesDeInstalar();
+  }
 
   const fechar = () => {
     $lista.classList.add('hidden');

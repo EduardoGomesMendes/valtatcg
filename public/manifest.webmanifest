@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "ValtaTCG",
+  "short_name": "ValtaTCG",
+  "description": "Registre suas cartas Pokémon e acompanhe o valor da sua coleção.",
+  "lang": "pt-BR",
+  "start_url": "/colecao/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f0d",
+  "theme_color": "#121b17",
+  "icons": [
+    { "src": "/assets/img/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/app-512-recorte.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Buscar cartas", "url": "/buscar/", "icons": [{ "src": "/assets/img/app-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Fichário", "url": "/fichario/", "icons": [{ "src": "/assets/img/app-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

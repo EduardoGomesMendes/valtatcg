@@ -979,3 +979,22 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   .grade--painel { gap: var(--space-4); }
   .painel--carta { flex: 0 0 168px; }
 }
+
+/* ==========================================================================
+   App instalável (passo a passo no iPhone e tela sem internet)
+   ========================================================================== */
+
+.janela--instalar {
+  width: min(360px, calc(100% - var(--space-5) * 2));
+  margin: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+.janela--instalar[open] { display: flex; flex-direction: column; gap: var(--space-4); }
+.janela--instalar::backdrop { background-color: var(--color-camera-sombra); }
+.janela--passos { padding-left: var(--space-5); margin: 0; line-height: var(--line-height-normal); }
+
+.sem--internet { text-align: center; padding-top: 18vh; }
